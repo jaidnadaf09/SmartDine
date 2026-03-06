@@ -18,6 +18,7 @@
         "mysql2": "^3.18.2",
         "pg": "^8.20.0",
         "pg-hstore": "^2.3.4",
+        "razorpay": "^2.9.6",
         "sequelize": "^6.37.7"
     },
     "devDependencies": {

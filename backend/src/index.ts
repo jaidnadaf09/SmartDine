@@ -10,6 +10,7 @@ import bookingRoutes from "./routes/bookingRoutes";
 import menuRoutes from "./routes/menuRoutes";
 import inventoryRoutes from "./routes/inventoryRoutes";
 import adminRoutes from "./routes/adminRoutes";
+import paymentRoutes from "./routes/paymentRoutes";
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +39,7 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // Test route
 app.get("/", (req, res) => {
