@@ -5,12 +5,12 @@ import crypto from "crypto";
 
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const { amount } = req.body;
+        const amount = Number(req.body.amount);
         console.log('Backend: Creating Razorpay order for amount:', amount);
 
-        if (!amount) {
-            console.error('Backend: Amount missing in request');
-            return res.status(400).json({ message: "Amount is required" });
+        if (!amount || isNaN(amount)) {
+            console.error('Backend: Invalid amount in request:', req.body.amount);
+            return res.status(400).json({ message: "Valid amount is required" });
         }
 
         const options = {
@@ -19,8 +19,12 @@ export const createOrder = async (req: Request, res: Response) => {
             receipt: `receipt_order_${Date.now()}`,
         };
 
+        // Log keys partially for verification (security safe)
+        const keyId = process.env.RAZORPAY_KEY_ID || "";
+        console.log(`Backend: Using Razorpay Key ID: ${keyId.substring(0, 8)}...`);
+
         const order = await razorpay.orders.create(options);
-        console.log('Backend: Razorpay order created:', order.id);
+        console.log('Backend: Razorpay order created successfully:', order.id);
 
         res.json({
             orderId: order.id,
@@ -62,7 +66,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
             .digest("hex");
 
         if (generatedSignature !== razorpay_signature) {
-            console.error('Backend: Invalid signature');
+            console.error('Backend: Invalid signature mismatch');
             return res.status(400).json({ message: "Invalid payment signature" });
         }
 
@@ -72,20 +76,21 @@ export const verifyPayment = async (req: Request, res: Response) => {
         const tableNumber = await findAvailableTable(bookingData.date, bookingData.time);
         if (!tableNumber) {
             console.error('Backend: No tables available during verification');
-            return res.status(400).json({ message: "No tables available for this slot anymore. Please contact support for refund." });
+            return res.status(400).json({ message: "No tables available for this slot anymore. Please contact support." });
         }
 
         // 2. Create the booking record
-        console.log('Backend: Assigning table:', tableNumber);
+        console.log('Backend: Creating confirmed booking record for table:', tableNumber);
         const newBooking = await Booking.create({
             ...bookingData,
+            date: new Date(bookingData.date), // Ensure Date object
             tableNumber,
             paymentId: razorpay_payment_id,
             paymentStatus: "paid",
             status: "confirmed"
         });
 
-        console.log('Backend: Booking created successfully:', newBooking.id);
+        console.log('Backend: Booking created successfully. ID:', newBooking.id);
         res.json({
             success: true,
             message: "Payment verified and booking confirmed",
