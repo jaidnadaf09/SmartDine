@@ -47,20 +47,34 @@ export const loginUser = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     try {
-        const user = await User.findOne({ where: { email } });
+        const user: any = await User.findOne({ where: { email } });
 
-        if (user && user.password && (await bcrypt.compare(password, user.password))) {
-            res.json({
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                token: generateToken(user.id),
-            });
-        } else {
-            res.status(401).json({ message: 'Invalid email or password' });
+        if (!user) {
+            return res.status(401).json({ message: "Invalid email or password" });
         }
+
+        const storedPassword = user.password || user.dataValues?.password;
+
+        if (!storedPassword) {
+            return res.status(500).json({ message: "Password not found for user" });
+        }
+
+        const isMatch = await bcrypt.compare(password, storedPassword);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: "Invalid email or password" });
+        }
+
+        res.json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            token: generateToken(user.id),
+        });
+
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Login error:", error);
+        res.status(500).json({ message: "Server Error" });
     }
 };
