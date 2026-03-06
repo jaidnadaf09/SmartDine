@@ -41,6 +41,7 @@ const BookTablePage: React.FC = () => {
     }
 
     try {
+      // alert(`Attempting to book for ${user.email} at ${API_URL}`); // Debug alert
       const response = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: {
@@ -59,17 +60,19 @@ const BookTablePage: React.FC = () => {
 
       if (!response.ok) {
         const data = await response.json();
+        // alert(`Server responded with error: ${data.message || 'Unknown error'}`); // Debug alert
         throw new Error(data.message || 'Failed to book table');
       }
 
       setSubmitted(true);
-      console.log('Navigating to home page from BookTablePage...'); // Added for debugging
-      // navigate('/'); // Redirect to home page immediately - Or leave them explicitly on success page
+      // alert('Booking successful!'); // Debug alert
     } catch (err: any) {
       console.error('Error booking table:', err);
-      setError(err.message || 'Failed to book table. Please try again.');
+      const errorMsg = err.message || 'Failed to book table. Please try again.';
+      setError(errorMsg);
+      alert(`Booking Failed: ${errorMsg}`); // DEBUG ALERT FOR MOBILE
     } finally {
-      setLoading(false); // Set loading to false after submission attempt
+      setLoading(false);
     }
   };
 
