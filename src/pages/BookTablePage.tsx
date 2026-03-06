@@ -228,6 +228,16 @@ const BookTablePage: React.FC = () => {
 
         {error && <div className="error-message" style={{ background: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>{error}</div>}
 
+        {!submitted && (
+          <div className="system-status" style={{ marginBottom: '15px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
+            {import.meta.env.VITE_RAZORPAY_KEY_ID?.startsWith('rzp_live') ? (
+              <span style={{ color: '#16a34a', fontWeight: 600 }}>● Live Payment Mode Active</span>
+            ) : (
+              <span style={{ color: '#f59e0b', fontWeight: 600 }}>● Test/Placeholder Mode Active</span>
+            )}
+          </div>
+        )}
+
         {submitted ? (
           <div className="success-message" style={{ textAlign: 'center', padding: '20px' }}>
             <h3 style={{ color: '#16a34a' }}>✓ Table Booked Successfully!</h3>
