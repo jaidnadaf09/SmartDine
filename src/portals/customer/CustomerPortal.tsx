@@ -98,7 +98,7 @@ const CustomerPortal: React.FC = () => {
   return (
     <div className="portal-container">
       <header className="portal-header">
-        <h1>☕ Customer Portal</h1>
+        <h1>🍽️ Customer Portal</h1>
         <div className="user-info">
           <span>Welcome, {user.name}!</span>
           <button className="logout-btn" onClick={handleLogout}>
@@ -153,7 +153,7 @@ const CustomerPortal: React.FC = () => {
           <div className="portal-card" onClick={() => navigate('/')}>
             <div className="card-icon">📋</div>
             <h3>Browse Menu</h3>
-            <p>Explore our delicious coffee selection</p>
+            <p>Explore our delicious menu selection</p>
           </div>
 
           <div className="portal-card" onClick={() => navigate('/order')}>

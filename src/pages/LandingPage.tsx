@@ -92,7 +92,7 @@ const LandingPage: React.FC = () => {
         </section>
       )}
 
-      {/* Coffee Shop Showcase Section */}
+      {/* SmartDine Restaurant Showcase Section */}
       <section className="showcase">
         <div className="showcase-content">
           <div className="showcase-text">
