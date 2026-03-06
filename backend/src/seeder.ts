@@ -33,10 +33,12 @@ const seedDatabase = async () => {
 
         // 2. Create Menu Items
         await MenuItem.bulkCreate([
-            { name: 'Latte', category: 'Coffee', price: 4.5, status: 'available' },
-            { name: 'Croissant', category: 'Pastries', price: 3.0, status: 'available' },
-            { name: 'Avocado Toast', category: 'Sandwiches', price: 5.5, status: 'unavailable' },
-            { name: 'Chocolate Cake', category: 'Desserts', price: 4.0, status: 'available' },
+            { name: 'Paneer Butter Masala', category: 'Main Course', price: 280, status: 'available' },
+            { name: 'Veg Biryani', category: 'Main Course', price: 220, status: 'available' },
+            { name: 'Masala Dosa', category: 'Breakfast', price: 120, status: 'available' },
+            { name: 'Chicken Tikka', category: 'Starters', price: 320, status: 'available' },
+            { name: 'Butter Naan', category: 'Bread', price: 40, status: 'available' },
+            { name: 'Gulab Jamun', category: 'Desserts', price: 90, status: 'available' },
         ]);
         console.log('Menu seeded successfully');
 
@@ -51,11 +53,11 @@ const seedDatabase = async () => {
 
         // 4. Create Inventory Items
         await InventoryItem.bulkCreate([
-            { name: 'Coffee Beans', quantity: 50, unit: 'kg', status: 'sufficient' },
-            { name: 'Milk', quantity: 30, unit: 'L', status: 'sufficient' },
-            { name: 'Sugar', quantity: 20, unit: 'kg', status: 'low' },
-            { name: 'Cups', quantity: 500, unit: 'pcs', status: 'sufficient' },
-            { name: 'Croissants', quantity: 15, unit: 'pcs', status: 'critical' },
+            { name: 'Paneer', quantity: 20, unit: 'kg', status: 'sufficient' },
+            { name: 'Basmati Rice', quantity: 50, unit: 'kg', status: 'sufficient' },
+            { name: 'Chicken', quantity: 15, unit: 'kg', status: 'low' },
+            { name: 'Cooking Oil', quantity: 40, unit: 'L', status: 'sufficient' },
+            { name: 'Vegetables', quantity: 10, unit: 'kg', status: 'critical' },
         ]);
         console.log('Inventory seeded successfully');
 

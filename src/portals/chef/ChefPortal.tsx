@@ -18,21 +18,21 @@ const ChefPortal: React.FC = () => {
     {
       id: 1,
       tableNumber: 1,
-      items: ['Cappuccino', 'Latte'],
+      items: ['Paneer Butter Masala', 'Garlic Naan'],
       status: 'pending',
       timeStarted: '2:30 PM',
     },
     {
       id: 2,
       tableNumber: 5,
-      items: ['Espresso', 'Americano', 'Pastry'],
+      items: ['Chicken Biryani', 'Coke'],
       status: 'preparing',
       timeStarted: '2:25 PM',
     },
     {
       id: 3,
       tableNumber: 3,
-      items: ['Mocha', 'Croissant'],
+      items: ['Veg Fried Rice', 'Manchurian'],
       status: 'ready',
       timeStarted: '2:20 PM',
     },
@@ -67,7 +67,7 @@ const ChefPortal: React.FC = () => {
   return (
     <div className="portal-container">
       <header className="portal-header">
-        <h1>☕ Chef Portal</h1>
+        <h1>👨🏻‍🍳 Chef Portal</h1>
         <div className="user-info">
           <span>Welcome, {user.name}!</span>
           <button className="logout-btn" onClick={handleLogout}>
