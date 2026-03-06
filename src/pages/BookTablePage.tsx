@@ -67,7 +67,7 @@ const BookTablePage: React.FC = () => {
       // navigate('/'); // Redirect to home page immediately - Or leave them explicitly on success page
     } catch (err: any) {
       console.error('Error booking table:', err);
-      setError('Failed to book table. Please try again.');
+      setError(err.message || 'Failed to book table. Please try again.');
     } finally {
       setLoading(false); // Set loading to false after submission attempt
     }
