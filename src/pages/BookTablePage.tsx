@@ -130,11 +130,13 @@ const BookTablePage: React.FC = () => {
       console.log('Frontend: Initializing Razorpay with Key:', razorpayKey ? `${razorpayKey.substring(0, 8)}...` : 'MISSING');
 
       if (!razorpayKey || razorpayKey === 'rzp_live_placeholder') {
-        throw new Error('Razorpay Key is not configured correctly in Netlify. Please set VITE_RAZORPAY_KEY_ID.');
+        import.meta.env.DEV
+          ? console.warn('Razorpay Key is not configured correctly. Using default/placeholder.')
+          : console.error('CRITICAL: VITE_RAZORPAY_KEY_ID is missing in production!');
       }
 
       const options = {
-        key: razorpayKey,
+        key: razorpayKey || "rzp_live_placeholder",
         amount: orderData.amount, // Already in paise from backend
         currency: orderData.currency,
         name: "SmartDine",
