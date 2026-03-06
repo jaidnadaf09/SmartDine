@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-backend.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-l22i.onrender.com/api";
 
 const Payments: React.FC = () => {
     const [payments, setPayments] = useState<any[]>([]);
