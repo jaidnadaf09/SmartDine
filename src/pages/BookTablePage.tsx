@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Replaced Firebase with backend API
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '../context/AuthContext';
 import '../styles/BookTable.css';
 
 const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-l22i.onrender.com/api";
 
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get the current user
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,8 +17,11 @@ const BookTablePage: React.FC = () => {
     guests: '2',
   });
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false); // Add loading state
-  const [error, setError] = useState(''); // Add error state
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [bookingDetails, setBookingDetails] = useState<any>(null);
+
+  const isAdmin = user?.role?.toLowerCase() === 'admin';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -29,10 +31,47 @@ const BookTablePage: React.FC = () => {
     }));
   };
 
+  const handleAdminBook = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({
+          userId: user?.id || null,
+          customerName: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          date: formData.date,
+          time: formData.time,
+          guests: parseInt(formData.guests, 10),
+          status: 'confirmed'
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to create booking');
+      }
+
+      const data = await res.json();
+      setBookingDetails(data);
+      setSubmitted(true);
+    } catch (err: any) {
+      setError(err.message || 'Admin booking failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setLoading(true); // Set loading to true on submission
+    setLoading(true);
 
     if (!user) {
       setError('You must be logged in to book a table.');
@@ -41,52 +80,31 @@ const BookTablePage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/bookings`, {
+      // 1. Check Availability
+      const availRes = await fetch(`${API_URL}/bookings/check-availability`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id || null,
-          customerName: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          date: formData.date,
-          time: formData.time,
-          guests: parseInt(formData.guests, 10),
-          status: 'pending'
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: formData.date, time: formData.time })
       });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Failed to create booking record');
+      const availData = await availRes.json();
+      if (!availData.available) {
+        throw new Error(availData.message || 'No tables available for this slot.');
       }
 
-      const bookingData = await response.json();
-      const bookingId = bookingData.id;
-
-      // Now create Razorpay Order
-      const paymentAmount = 10; // Minimum Rs. 10 as requested
+      // 2. Create Razorpay Order
+      const paymentAmount = 10;
       const orderResponse = await fetch(`${API_URL}/payment/create-order`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: paymentAmount,
-          bookingId: bookingId,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: paymentAmount }),
       });
 
-      if (!orderResponse.ok) {
-        throw new Error('Failed to create payment order');
-      }
-
+      if (!orderResponse.ok) throw new Error('Failed to create payment order');
       const orderData = await orderResponse.json();
 
+      // 3. Open Razorpay
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SNwvXavTYIUZAn",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_default_if_not_set",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "SmartDine",
@@ -95,28 +113,35 @@ const BookTablePage: React.FC = () => {
         handler: async (response: any) => {
           setLoading(true);
           try {
-            // Verify payment
             const verifyRes = await fetch(`${API_URL}/payment/verify`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                bookingId: bookingId,
+                bookingData: {
+                  userId: user.id || null,
+                  customerName: formData.name,
+                  email: formData.email,
+                  phone: formData.phone,
+                  date: formData.date,
+                  time: formData.time,
+                  guests: parseInt(formData.guests, 10),
+                }
               }),
             });
 
             if (verifyRes.ok) {
+              const result = await verifyRes.json();
+              setBookingDetails(result.booking);
               setSubmitted(true);
-              alert('Payment Successful and Table Booked!');
             } else {
-              throw new Error('Payment verification failed');
+              const errData = await verifyRes.json();
+              throw new Error(errData.message || 'Payment verification failed');
             }
           } catch (err: any) {
-            setError(err.message || 'Payment verification failed');
+            setError(err.message);
             alert(`Error: ${err.message}`);
           } finally {
             setLoading(false);
@@ -127,130 +152,98 @@ const BookTablePage: React.FC = () => {
           email: formData.email,
           contact: formData.phone,
         },
-        theme: {
-          color: "#0f172a",
-        },
+        theme: { color: "#d4af37" },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+            setError('Payment cancelled. Table not booked.');
+          }
+        }
       };
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-        alert(`Payment Failed: ${response.error.description}`);
+        setError(`Payment Failed: ${response.error.description}`);
+        setLoading(false);
       });
       rzp.open();
-      setLoading(false); // Stop loading while user is in Razorpay UI
-
     } catch (err: any) {
-      console.error('Error during booking/payment flow:', err);
-      const errorMsg = err.message || 'Failed to book table. Please try again.';
-      setError(errorMsg);
-      alert(`Booking Failed: ${errorMsg}`);
+      setError(err.message || 'Booking failed');
       setLoading(false);
     }
   };
 
   return (
     <div className="book-table-container">
-      <button className="back-btn" onClick={() => navigate('/')}>
-        ← Back
-      </button>
+      <button className="back-btn" onClick={() => navigate('/')}>← Back</button>
 
       <div className="book-table-box">
-        <h1>🍽️ RASOI GHAR </h1>
-        <h2>Book Your Table</h2>
+        <h1>🍽️ SMART DINE</h1>
+        <h2>Premium Table Booking</h2>
 
-        {error && <div className="error-message">{error}</div>} {/* Display error messages */}
+        {error && <div className="error-message" style={{ background: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>{error}</div>}
 
         {submitted ? (
-          <div className="success-message">
-            <h3>✓ Table Booked Successfully!</h3>
-            <p>We'll see you soon at RASOI GHAR</p>
+          <div className="success-message" style={{ textAlign: 'center', padding: '20px' }}>
+            <h3 style={{ color: '#16a34a' }}>✓ Table Booked Successfully!</h3>
+            <div style={{ marginTop: '15px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <p><strong>Table Number:</strong> {bookingDetails?.tableNumber}</p>
+              <p><strong>Date:</strong> {new Date(bookingDetails?.date).toLocaleDateString()}</p>
+              <p><strong>Time:</strong> {bookingDetails?.time}</p>
+              {bookingDetails?.paymentId && <p><strong>Payment ID:</strong> {bookingDetails.paymentId}</p>}
+            </div>
+            <p style={{ marginTop: '15px' }}>We'll see you soon at SMART DINE</p>
+            <button onClick={() => navigate('/')} className="submit-btn" style={{ marginTop: '20px' }}>Go Home</button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="booking-form">
             <div className="form-group">
               <label htmlFor="name">Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Your name"
-                required
-              />
+              <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required />
             </div>
 
             <div className="form-group">
               <label htmlFor="email">Email</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="your@email.com"
-                required
-              />
+              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="your@email.com" required />
             </div>
 
             <div className="form-group">
               <label htmlFor="phone">Phone Number</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="(+91)1234567890"
-                required
-              />
+              <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone number" required />
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="date">Date</label>
-                <input
-                  type="date"
-                  id="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} required min={new Date().toISOString().split('T')[0]} />
               </div>
 
               <div className="form-group">
                 <label htmlFor="time">Time</label>
-                <input
-                  type="time"
-                  id="time"
-                  name="time"
-                  value={formData.time}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="time" id="time" name="time" value={formData.time} onChange={handleChange} required />
               </div>
             </div>
 
             <div className="form-group">
               <label htmlFor="guests">Number of Guests</label>
-              <select
-                id="guests"
-                name="guests"
-                value={formData.guests}
-                onChange={handleChange}
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                  <option key={num} value={num}>
-                    {num} {num === 1 ? 'Guest' : 'Guests'}
-                  </option>
+              <select id="guests" name="guests" value={formData.guests} onChange={handleChange}>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                  <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
                 ))}
               </select>
             </div>
 
-            <button type="submit" className="submit-btn" disabled={loading}>
-              {loading ? 'Booking...' : 'Book Table'}
-            </button>
+            <div className="button-group" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button type="submit" className="submit-btn" disabled={loading}>
+                {loading ? 'Processing...' : 'Pay & Book Table'}
+              </button>
+
+              {isAdmin && (
+                <button type="button" onClick={handleAdminBook} className="admin-book-btn" disabled={loading} style={{ background: '#64748b', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                  Admin: Book (No Payment)
+                </button>
+              )}
+            </div>
           </form>
         )}
       </div>

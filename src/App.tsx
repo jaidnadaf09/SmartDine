@@ -47,7 +47,14 @@ function App() {
           <Route path="/customer" element={<CustomerPortal />} />
           <Route path="/waiter" element={<WaiterPortal />} />
           <Route path="/chef" element={<ChefPortal />} />
-          <Route path="/admin" element={<AdminPortal />} />
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminPortal />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Legal Pages */}
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />

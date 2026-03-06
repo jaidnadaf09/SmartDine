@@ -5,25 +5,19 @@ import crypto from "crypto";
 
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const { amount, bookingId } = req.body;
+        const { amount } = req.body;
 
-        if (!amount || !bookingId) {
-            return res.status(400).json({ message: "Amount and bookingId are required" });
+        if (!amount) {
+            return res.status(400).json({ message: "Amount is required" });
         }
 
         const options = {
             amount: amount * 100, // Rs to Paise
             currency: "INR",
-            receipt: `receipt_booking_${bookingId}`,
+            receipt: `receipt_order_${Date.now()}`,
         };
 
         const order = await razorpay.orders.create(options);
-
-        // Update booking with amount (optional but good for records)
-        await Booking.update(
-            { amount: amount * 100 },
-            { where: { id: bookingId } }
-        );
 
         res.json({
             orderId: order.id,
@@ -36,13 +30,15 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 };
 
+import { findAvailableTable } from "../utils/bookingUtils";
+
 export const verifyPayment = async (req: Request, res: Response) => {
     try {
         const {
             razorpay_payment_id,
             razorpay_order_id,
             razorpay_signature,
-            bookingId
+            bookingData // All details from frontend
         } = req.body;
 
         const key_secret = process.env.RAZORPAY_KEY_SECRET;
@@ -59,17 +55,26 @@ export const verifyPayment = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Invalid payment signature" });
         }
 
-        // Update booking status
-        await Booking.update(
-            {
-                paymentId: razorpay_payment_id,
-                paymentStatus: "paid",
-                status: "confirmed" // Confirmation usually happens after payment
-            },
-            { where: { id: bookingId } }
-        );
+        // 1. Double check availability
+        const tableNumber = await findAvailableTable(bookingData.date, bookingData.time);
+        if (!tableNumber) {
+            return res.status(400).json({ message: "No tables available for this slot anymore. Please contact support for refund." });
+        }
 
-        res.json({ success: true, message: "Payment verified and booking confirmed" });
+        // 2. Create the booking record
+        const newBooking = await Booking.create({
+            ...bookingData,
+            tableNumber,
+            paymentId: razorpay_payment_id,
+            paymentStatus: "paid",
+            status: "confirmed"
+        });
+
+        res.json({
+            success: true,
+            message: "Payment verified and booking confirmed",
+            booking: newBooking
+        });
     } catch (error: any) {
         console.error("Error verifying payment:", error);
         res.status(500).json({ message: "Payment verification failed", error: error.message });
