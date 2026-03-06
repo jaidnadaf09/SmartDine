@@ -19,9 +19,11 @@ export const createOrder = async (req: Request, res: Response) => {
             receipt: `receipt_order_${Date.now()}`,
         };
 
+        console.log('Backend: Sending options to Razorpay:', options);
+
         // Log keys partially for verification (security safe)
         const keyId = process.env.RAZORPAY_KEY_ID || "";
-        console.log(`Backend: Using Razorpay Key ID: ${keyId.substring(0, 8)}...`);
+        console.log(`Backend: Order Attempt using Key ID: ${keyId.substring(0, 8)}...`);
 
         const order = await razorpay.orders.create(options);
         console.log('Backend: Razorpay order created successfully:', order.id);
@@ -33,10 +35,12 @@ export const createOrder = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error("Backend: Error creating Razorpay order:", error);
+        // Provide more detail if available in error objects from SDK
+        const errorDetail = error.response ? JSON.stringify(error.response) : error.message;
         res.status(500).json({
             success: false,
-            message: "Failed to create payment order",
-            error: error.message
+            message: "Failed to create payment order. Check if your account is active and KYC is complete.",
+            error: errorDetail
         });
     }
 };
