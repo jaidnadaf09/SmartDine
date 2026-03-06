@@ -1,0 +1,138 @@
+/* Book Table Page Styles */
+.book-table-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5e6d3 0%, #e8d4c0 100%);
+  padding: 2rem;
+  position: relative;
+}
+
+.book-table-container .back-btn {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  background: white;
+  color: #6f4e37;
+  border: 2px solid #6f4e37;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.book-table-container .back-btn:hover {
+  background: #6f4e37;
+  color: white;
+}
+
+.book-table-box {
+  background: white;
+  max-width: 500px;
+  margin: 4rem auto 0;
+  padding: 2.5rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.book-table-box h1 {
+  text-align: center;
+  color: #6f4e37;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.book-table-box h2 {
+  text-align: center;
+  color: #8b5a3c;
+  font-size: 1.3rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  color: #6f4e37;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.75rem;
+  border: 2px solid #e8d4c0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #6f4e37 0%, #8b5a3c 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(111, 78, 55, 0.3);
+}
+
+.success-message {
+  text-align: center;
+  padding: 2rem;
+  background: #efe;
+  border-radius: 10px;
+  border-left: 4px solid #3c3;
+}
+
+.success-message h3 {
+  color: #3c3;
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.success-message p {
+  color: #666;
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .book-table-container .back-btn {
+    top: 1rem;
+    left: 1rem;
+  }
+}
