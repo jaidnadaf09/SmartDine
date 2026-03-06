@@ -233,9 +233,19 @@ const BookTablePage: React.FC = () => {
         {!submitted && (
           <div className="system-status" style={{ marginBottom: '15px', textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
             {import.meta.env.VITE_RAZORPAY_KEY_ID?.startsWith('rzp_live') ? (
-              <span style={{ color: '#16a34a', fontWeight: 600 }}>● Live Payment Mode Active</span>
+              <>
+                <span style={{ color: '#16a34a', fontWeight: 600 }}>● Live Payment Mode Active</span>
+                <div style={{ fontSize: '10px', marginTop: '4px' }}>
+                  Key ID starts with: {import.meta.env.VITE_RAZORPAY_KEY_ID.substring(0, 10)}...
+                </div>
+              </>
             ) : (
-              <span style={{ color: '#f59e0b', fontWeight: 600 }}>● Test/Placeholder Mode Active</span>
+              <>
+                <span style={{ color: '#f59e0b', fontWeight: 600 }}>● Test/Placeholder Mode Active</span>
+                <div style={{ fontSize: '10px', marginTop: '4px' }}>
+                  Key in use: {import.meta.env.VITE_RAZORPAY_KEY_ID ? `${import.meta.env.VITE_RAZORPAY_KEY_ID.substring(0, 10)}...` : 'NONE'}
+                </div>
+              </>
             )}
           </div>
         )}
