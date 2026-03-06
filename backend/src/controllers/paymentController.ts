@@ -6,18 +6,21 @@ import crypto from "crypto";
 export const createOrder = async (req: Request, res: Response) => {
     try {
         const { amount } = req.body;
+        console.log('Backend: Creating Razorpay order for amount:', amount);
 
         if (!amount) {
+            console.error('Backend: Amount missing in request');
             return res.status(400).json({ message: "Amount is required" });
         }
 
         const options = {
-            amount: amount * 100, // Rs to Paise
+            amount: Math.round(amount * 100), // Rs to Paise, ensure integer
             currency: "INR",
             receipt: `receipt_order_${Date.now()}`,
         };
 
         const order = await razorpay.orders.create(options);
+        console.log('Backend: Razorpay order created:', order.id);
 
         res.json({
             orderId: order.id,
@@ -25,8 +28,12 @@ export const createOrder = async (req: Request, res: Response) => {
             currency: order.currency,
         });
     } catch (error: any) {
-        console.error("Error creating Razorpay order:", error);
-        res.status(500).json({ message: "Failed to create payment order", error: error.message });
+        console.error("Backend: Error creating Razorpay order:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to create payment order",
+            error: error.message
+        });
     }
 };
 
@@ -38,11 +45,14 @@ export const verifyPayment = async (req: Request, res: Response) => {
             razorpay_payment_id,
             razorpay_order_id,
             razorpay_signature,
-            bookingData // All details from frontend
+            bookingData
         } = req.body;
+
+        console.log('Backend: Verifying payment for order:', razorpay_order_id);
 
         const key_secret = process.env.RAZORPAY_KEY_SECRET;
         if (!key_secret) {
+            console.error('Backend: RAZORPAY_KEY_SECRET missing');
             return res.status(500).json({ message: "Razorpay secret key not configured" });
         }
 
@@ -52,16 +62,21 @@ export const verifyPayment = async (req: Request, res: Response) => {
             .digest("hex");
 
         if (generatedSignature !== razorpay_signature) {
+            console.error('Backend: Invalid signature');
             return res.status(400).json({ message: "Invalid payment signature" });
         }
+
+        console.log('Backend: Signature verified. Checking table availability...');
 
         // 1. Double check availability
         const tableNumber = await findAvailableTable(bookingData.date, bookingData.time);
         if (!tableNumber) {
+            console.error('Backend: No tables available during verification');
             return res.status(400).json({ message: "No tables available for this slot anymore. Please contact support for refund." });
         }
 
         // 2. Create the booking record
+        console.log('Backend: Assigning table:', tableNumber);
         const newBooking = await Booking.create({
             ...bookingData,
             tableNumber,
@@ -70,13 +85,18 @@ export const verifyPayment = async (req: Request, res: Response) => {
             status: "confirmed"
         });
 
+        console.log('Backend: Booking created successfully:', newBooking.id);
         res.json({
             success: true,
             message: "Payment verified and booking confirmed",
             booking: newBooking
         });
     } catch (error: any) {
-        console.error("Error verifying payment:", error);
-        res.status(500).json({ message: "Payment verification failed", error: error.message });
+        console.error("Backend: Error verifying payment:", error);
+        res.status(500).json({
+            success: false,
+            message: "Payment verification failed",
+            error: error.message
+        });
     }
 };

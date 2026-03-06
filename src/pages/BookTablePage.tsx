@@ -80,12 +80,26 @@ const BookTablePage: React.FC = () => {
     }
 
     try {
+      console.log('Initiating booking flow for:', formData.date, formData.time);
+
       // 1. Check Availability
       const availRes = await fetch(`${API_URL}/bookings/check-availability`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ date: formData.date, time: formData.time })
       });
+
+      if (!availRes.ok) {
+        const text = await availRes.text();
+        console.error('Availability check failed:', text);
+        try {
+          const data = JSON.parse(text);
+          throw new Error(data.message || 'Availability check failed');
+        } catch (e) {
+          throw new Error(`Server Error: ${availRes.status}. Please check backend logs.`);
+        }
+      }
+
       const availData = await availRes.json();
       if (!availData.available) {
         throw new Error(availData.message || 'No tables available for this slot.');
@@ -93,24 +107,33 @@ const BookTablePage: React.FC = () => {
 
       // 2. Create Razorpay Order
       const paymentAmount = 10;
+      console.log('Creating Razorpay Order for amount:', paymentAmount);
+
       const orderResponse = await fetch(`${API_URL}/payment/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: paymentAmount }),
       });
 
-      if (!orderResponse.ok) throw new Error('Failed to create payment order');
+      if (!orderResponse.ok) {
+        const text = await orderResponse.text();
+        console.error('Order creation failed:', text);
+        throw new Error('Failed to create payment order. Is the backend running?');
+      }
+
       const orderData = await orderResponse.json();
+      console.log('Order created successfully:', orderData.orderId);
 
       // 3. Open Razorpay
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_default_if_not_set",
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_placeholder",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "SmartDine",
         description: "Table Booking Payment",
         order_id: orderData.orderId,
         handler: async (response: any) => {
+          console.log('Payment success received from Razorpay:', response.razorpay_payment_id);
           setLoading(true);
           try {
             const verifyRes = await fetch(`${API_URL}/payment/verify`, {
@@ -134,13 +157,21 @@ const BookTablePage: React.FC = () => {
 
             if (verifyRes.ok) {
               const result = await verifyRes.json();
+              console.log('Payment verified and booking created:', result.booking);
               setBookingDetails(result.booking);
               setSubmitted(true);
             } else {
-              const errData = await verifyRes.json();
-              throw new Error(errData.message || 'Payment verification failed');
+              const text = await verifyRes.text();
+              console.error('Verification failed:', text);
+              try {
+                const errData = JSON.parse(text);
+                throw new Error(errData.message || 'Payment verification failed');
+              } catch (e) {
+                throw new Error('Payment verification failed on server.');
+              }
             }
           } catch (err: any) {
+            console.error('VERIFICATION ERROR:', err);
             setError(err.message);
             alert(`Error: ${err.message}`);
           } finally {
@@ -155,6 +186,7 @@ const BookTablePage: React.FC = () => {
         theme: { color: "#d4af37" },
         modal: {
           ondismiss: function () {
+            console.log('Razorpay modal closed by user');
             setLoading(false);
             setError('Payment cancelled. Table not booked.');
           }
@@ -163,11 +195,13 @@ const BookTablePage: React.FC = () => {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
+        console.error('Razorpay Payment Failed:', response.error);
         setError(`Payment Failed: ${response.error.description}`);
         setLoading(false);
       });
       rzp.open();
     } catch (err: any) {
+      console.error('BOOKING FLOW ERROR:', err);
       setError(err.message || 'Booking failed');
       setLoading(false);
     }

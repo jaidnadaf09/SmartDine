@@ -22,15 +22,19 @@ export const getBookings = async (req: Request, res: Response) => {
 export const checkAvailability = async (req: Request, res: Response) => {
     try {
         const { date, time } = req.body;
+        console.log('Backend: Checking availability for:', date, time);
+
         const availableTable = await findAvailableTable(date, time);
 
         if (availableTable) {
+            console.log('Backend: Table available:', availableTable);
             res.json({ available: true, tableNumber: availableTable });
         } else {
+            console.warn('Backend: No tables available for this slot');
             res.json({ available: false, message: 'No tables available for this time slot.' });
         }
     } catch (error: any) {
-        console.error('Error checking availability:', error);
+        console.error('Backend: Error checking availability:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
     }
 };
