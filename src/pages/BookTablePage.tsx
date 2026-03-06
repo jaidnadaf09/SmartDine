@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import '../styles/BookTable.css';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-l22i.onrender.com/api";
 
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
@@ -41,7 +41,6 @@ const BookTablePage: React.FC = () => {
     }
 
     try {
-      console.log('Step 1: Creating booking record at', `${API_URL}/bookings`);
       const response = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: {
@@ -61,17 +60,14 @@ const BookTablePage: React.FC = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        console.error('Booking creation failed:', data);
         throw new Error(data.message || 'Failed to create booking record');
       }
 
       const bookingData = await response.json();
       const bookingId = bookingData.id;
-      console.log('Step 2: Booking created with ID:', bookingId);
 
       // Now create Razorpay Order
       const paymentAmount = 10; // Minimum Rs. 10 as requested
-      console.log('Step 3: Creating Razorpay order for Rs.', paymentAmount);
       const orderResponse = await fetch(`${API_URL}/payment/create-order`, {
         method: 'POST',
         headers: {
@@ -84,13 +80,10 @@ const BookTablePage: React.FC = () => {
       });
 
       if (!orderResponse.ok) {
-        const errorData = await orderResponse.json();
-        console.error('Order creation failed:', errorData);
         throw new Error('Failed to create payment order');
       }
 
       const orderData = await orderResponse.json();
-      console.log('Step 4: Razorpay order created:', orderData);
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_SNwvXavTYIUZAn",
@@ -100,7 +93,6 @@ const BookTablePage: React.FC = () => {
         description: "Table Booking Payment",
         order_id: orderData.orderId,
         handler: async (response: any) => {
-          console.log('Step 5: Payment handled, verifying...', response);
           setLoading(true);
           try {
             // Verify payment
@@ -118,12 +110,9 @@ const BookTablePage: React.FC = () => {
             });
 
             if (verifyRes.ok) {
-              console.log('Step 6: Payment verified successfully');
               setSubmitted(true);
               alert('Payment Successful and Table Booked!');
             } else {
-              const verifyError = await verifyRes.json();
-              console.error('Verification failed:', verifyError);
               throw new Error('Payment verification failed');
             }
           } catch (err: any) {
@@ -143,10 +132,8 @@ const BookTablePage: React.FC = () => {
         },
       };
 
-      console.log('Step 7: Opening Razorpay popup');
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-        console.error('Payment failed event:', response.error);
         alert(`Payment Failed: ${response.error.description}`);
       });
       rzp.open();

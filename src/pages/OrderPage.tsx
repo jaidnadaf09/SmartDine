@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import '../styles/Order.css';
 
-const API_URL = "https://smartdine-l22i.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-l22i.onrender.com/api";
 
 interface OrderItem {
   id: number;
