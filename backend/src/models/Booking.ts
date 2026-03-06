@@ -13,6 +13,9 @@ export interface BookingAttributes {
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     specialRequests?: string;
     userId?: number;
+    amount?: number;
+    paymentId?: string;
+    paymentStatus?: 'pending' | 'paid' | 'failed';
 }
 
 export class Booking extends Model<BookingAttributes> implements BookingAttributes {
@@ -27,6 +30,9 @@ export class Booking extends Model<BookingAttributes> implements BookingAttribut
     public status!: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     public specialRequests!: string;
     public userId!: number;
+    public amount!: number;
+    public paymentId!: string;
+    public paymentStatus!: 'pending' | 'paid' | 'failed';
 }
 
 Booking.init(
@@ -76,6 +82,18 @@ Booking.init(
         userId: {
             type: DataTypes.INTEGER,
             allowNull: true,
+        },
+        amount: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        paymentId: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        paymentStatus: {
+            type: DataTypes.ENUM('pending', 'paid', 'failed'),
+            defaultValue: 'pending',
         },
     },
     {
