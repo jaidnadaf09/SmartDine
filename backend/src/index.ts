@@ -46,6 +46,20 @@ app.get("/", (req, res) => {
     res.send("SmartDine API is running");
 });
 
+// 404 Handler
+app.use((req, res) => {
+    res.status(404).json({ message: `Route ${req.originalUrl} not found` });
+});
+
+// Global Error Handler
+app.use((err: any, req: any, res: any, next: any) => {
+    console.error("GLOBAL ERROR:", err);
+    res.status(500).json({
+        message: "Internal Server Error",
+        error: process.env.NODE_ENV === "development" ? err.message : undefined
+    });
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
