@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 // Removed Firebase imports
 import '../../styles/Portals.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 interface Booking {
   id: string;
   name: string;
@@ -50,13 +52,13 @@ const CustomerPortal: React.FC = () => {
 
       try {
         // Fetch Bookings
-        const bookingsRes = await fetch(`http://localhost:5000/api/bookings/user/${user.id}`);
+        const bookingsRes = await fetch(`${API_URL}/bookings/user/${user.id}`);
         if (!bookingsRes.ok) throw new Error('Failed to fetch bookings');
         const fetchedBookings: Booking[] = await bookingsRes.json();
         setBookings(fetchedBookings);
 
         // Fetch Orders
-        const ordersRes = await fetch(`http://localhost:5000/api/orders/user/${user.id}`);
+        const ordersRes = await fetch(`${API_URL}/orders/user/${user.id}`);
         if (!ordersRes.ok) throw new Error('Failed to fetch orders');
         const fetchedOrders: Order[] = await ordersRes.json();
         setOrders(fetchedOrders);

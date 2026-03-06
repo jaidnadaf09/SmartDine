@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import '../styles/BookTable.css';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth(); // Get the current user
@@ -39,7 +41,7 @@ const BookTablePage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/bookings', {
+      const response = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
