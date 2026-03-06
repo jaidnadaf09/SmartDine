@@ -33,10 +33,28 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      await login(formData.email, formData.password);
+      const loggedInUser = await login(formData.email, formData.password);
 
-      // Redirect to home page after successful login
-      navigate('/');
+      // Redirect based on role
+      console.log('--- Login Successful ---');
+      console.log('User ID:', loggedInUser.id);
+      console.log('User Name:', loggedInUser.name);
+      console.log('Raw Role from API:', loggedInUser.role);
+
+      const role = (loggedInUser.role || '').toLowerCase();
+      console.log('Normalized Role:', role);
+
+      if (role === 'admin') {
+        console.log('Redirecting to Admin Dashboard...');
+        navigate('/admin/dashboard');
+      } else if (role === 'chef') {
+        navigate('/chef');
+      } else if (role === 'waiter') {
+        navigate('/waiter');
+      } else {
+        console.log('Redirecting to Home (Customer)...');
+        navigate('/');
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || 'Invalid email or password');

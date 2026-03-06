@@ -1,5 +1,5 @@
 import express from 'express';
-import { getBookings, createBooking, updateBooking, getUserBookings } from '../controllers/bookingController';
+import { getBookings, createBooking, updateBooking, getUserBookings, checkAvailability } from '../controllers/bookingController';
 import { protect, staffOnly } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -7,6 +7,8 @@ const router = express.Router();
 router.route('/')
     .get(protect, staffOnly, getBookings)
     .post(createBooking);
+
+router.post('/check-availability', checkAvailability);
 
 router.route('/user/:userId')
     .get(getUserBookings);

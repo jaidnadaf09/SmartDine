@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import Booking from '../models/Booking';
 
+import { findAvailableTable } from '../utils/bookingUtils';
+
 // @desc    Get all bookings
 // @route   GET /api/bookings
 // @access  Private/Staff
@@ -14,13 +16,49 @@ export const getBookings = async (req: Request, res: Response) => {
     }
 };
 
+// @desc    Check availability for a slot
+// @route   POST /api/bookings/check-availability
+// @access  Public
+export const checkAvailability = async (req: Request, res: Response) => {
+    try {
+        const { date, time } = req.body;
+        const availableTable = await findAvailableTable(date, time);
+
+        if (availableTable) {
+            res.json({ available: true, tableNumber: availableTable });
+        } else {
+            res.json({ available: false, message: 'No tables available for this time slot.' });
+        }
+    } catch (error: any) {
+        console.error('Error checking availability:', error);
+        res.status(500).json({ message: error.message || 'Server Error' });
+    }
+};
+
 // @desc    Create a booking
 // @route   POST /api/bookings
 // @access  Public
 export const createBooking = async (req: Request, res: Response) => {
     try {
         console.log('Received booking request:', req.body);
-        const booking = await Booking.create(req.body);
+
+        const { date, time, tableNumber } = req.body;
+
+        // If tableNumber is not provided (e.g., admin quick book or public bypass), find one
+        let assignedTable = tableNumber;
+        if (!assignedTable) {
+            assignedTable = await findAvailableTable(date, time);
+            if (!assignedTable) {
+                return res.status(400).json({ message: 'No tables available for this time slot.' });
+            }
+        }
+
+        const booking = await Booking.create({
+            ...req.body,
+            tableNumber: assignedTable,
+            status: req.body.status || 'confirmed' // Default to confirmed for direct creation
+        });
+
         res.status(201).json(booking);
     } catch (error: any) {
         console.error('CRITICAL BOOKING ERROR:', error);

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-export type UserRole = 'customer' | 'waiter' | 'chef' | 'admin' | 'CHEF' | 'WAITER' | null;
+export type UserRole = 'customer' | 'waiter' | 'chef' | 'admin' | null;
 
 interface User {
   id: number;
@@ -12,8 +12,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  signup: (name: string, email: string, password: string) => Promise<User>;
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
@@ -32,7 +32,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const storedUser = localStorage.getItem('smartdine_user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        // Normalize role on load to fix stale session data
+        if (parsedUser.role) {
+          parsedUser.role = parsedUser.role.toLowerCase() as UserRole;
+        }
+        console.log('AuthContext: Restored user from storage:', parsedUser.email, 'Role:', parsedUser.role);
+        setUser(parsedUser);
       } catch (e) {
         console.error('Failed to parse user from local storage');
       }
@@ -40,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
@@ -51,6 +57,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       const data = await response.json();
+      console.log('AuthContext DEBUG: Raw API Response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to login');
@@ -60,13 +67,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: data.id,
         name: data.name,
         email: data.email,
-        role: data.role as UserRole,
+        role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
       };
 
+      console.log('AuthContext DEBUG: Normalized User Object:', loggedInUser);
+
+      // Clear old data first to ensure clean state
+      localStorage.removeItem('smartdine_user');
       setUser(loggedInUser);
       localStorage.setItem('smartdine_user', JSON.stringify(loggedInUser));
 
+      return loggedInUser;
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new Error(error.message || 'Wrong email or password.');
@@ -76,7 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signup = async (name: string, email: string, password: string) => {
+  const signup = async (name: string, email: string, password: string): Promise<User> => {
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
@@ -96,13 +108,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: data.id,
         name: data.name,
         email: data.email,
-        role: data.role as UserRole,
+        role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
       };
 
+      localStorage.removeItem('smartdine_user');
       setUser(newUser);
       localStorage.setItem('smartdine_user', JSON.stringify(newUser));
 
+      return newUser;
     } catch (error: unknown) {
       if (error instanceof Error) {
         throw new Error(error.message || 'Failed to register.');
