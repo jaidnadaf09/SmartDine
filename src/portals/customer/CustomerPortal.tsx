@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 // Removed Firebase imports
 import '../../styles/Portals.css';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-l22i.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-backend.onrender.com/api";
 
 interface Booking {
   id: string;
