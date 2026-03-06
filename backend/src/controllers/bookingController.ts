@@ -19,11 +19,15 @@ export const getBookings = async (req: Request, res: Response) => {
 // @access  Public
 export const createBooking = async (req: Request, res: Response) => {
     try {
+        console.log('Received booking request:', req.body);
         const booking = await Booking.create(req.body);
         res.status(201).json(booking);
     } catch (error: any) {
-        console.error('Booking Error:', error);
-        res.status(400).json({ message: error.message || 'Invalid booking data', error });
+        console.error('CRITICAL BOOKING ERROR:', error);
+        res.status(400).json({
+            message: error.message || 'Invalid booking data',
+            details: error.errors?.map((e: any) => e.message) || []
+        });
     }
 };
 
