@@ -122,18 +122,26 @@ const BookTablePage: React.FC = () => {
       }
 
       const orderData = await orderResponse.json();
-      console.log('Order created successfully:', orderData.orderId);
+      console.log('Order created successfully on backend:', orderData.orderId);
+      console.log('Order Details:', orderData);
 
       // 3. Open Razorpay
+      const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+      console.log('Frontend: Initializing Razorpay with Key:', razorpayKey ? `${razorpayKey.substring(0, 8)}...` : 'MISSING');
+
+      if (!razorpayKey || razorpayKey === 'rzp_live_placeholder') {
+        throw new Error('Razorpay Key is not configured correctly in Netlify. Please set VITE_RAZORPAY_KEY_ID.');
+      }
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_live_placeholder",
-        amount: orderData.amount,
+        key: razorpayKey,
+        amount: orderData.amount, // Already in paise from backend
         currency: orderData.currency,
         name: "SmartDine",
         description: "Table Booking Payment",
         order_id: orderData.orderId,
         handler: async (response: any) => {
-          console.log('Payment success received from Razorpay:', response.razorpay_payment_id);
+          console.log('Payment success callback from Razorpay:', response.razorpay_payment_id);
           setLoading(true);
           try {
             const verifyRes = await fetch(`${API_URL}/payment/verify`, {
@@ -162,18 +170,20 @@ const BookTablePage: React.FC = () => {
               setSubmitted(true);
             } else {
               const text = await verifyRes.text();
-              console.error('Verification failed:', text);
+              console.error('Verification failed on server:', text);
+              let errorMsg = 'Payment verification failed';
               try {
                 const errData = JSON.parse(text);
-                throw new Error(errData.message || 'Payment verification failed');
+                errorMsg = errData.message || errorMsg;
               } catch (e) {
-                throw new Error('Payment verification failed on server.');
+                errorMsg = `Server Error: ${verifyRes.status}`;
               }
+              throw new Error(errorMsg);
             }
           } catch (err: any) {
             console.error('VERIFICATION ERROR:', err);
             setError(err.message);
-            alert(`Error: ${err.message}`);
+            alert(`Booking Error: ${err.message}`);
           } finally {
             setLoading(false);
           }
@@ -193,10 +203,11 @@ const BookTablePage: React.FC = () => {
         }
       };
 
+      console.log('Opening Razorpay Checkout with options...');
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
-        console.error('Razorpay Payment Failed:', response.error);
-        setError(`Payment Failed: ${response.error.description}`);
+        console.error('Razorpay Payment Failed Detailed:', response.error);
+        setError(`Payment Failed: ${response.error.description} (Code: ${response.error.code})`);
         setLoading(false);
       });
       rzp.open();
