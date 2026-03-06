@@ -1,0 +1,369 @@
+/* Landing Page Styles */
+.landing-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5e6d3 0%, #e8d4c0 100%);
+}
+
+.header {
+  background: linear-gradient(135deg, #6f4e37 0%, #8b5a3c 100%);
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.nav-btn {
+  background: transparent;
+  color: white;
+  border: 2px solid white;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.nav-btn:hover {
+  background: white;
+  color: #6f4e37;
+  transform: translateY(-2px);
+}
+
+.login-btn {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.signup-btn {
+  background: #d4af37;
+  color: #6f4e37;
+  border-color: #d4af37;
+}
+
+.signup-btn:hover {
+  background: #ffd700;
+}
+
+/* Hero Section */
+
+.hero {
+  text-align: center;
+  padding: 100px 2rem;
+  color: #6f4e37;
+}
+
+.hero-content h2 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  font-size: 1.3rem;
+  margin-bottom: 2rem;
+  opacity: 0.8;
+}
+
+.cta-btn {
+  background: linear-gradient(135deg, #6f4e37 0%, #8b5a3c 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(111, 78, 55, 0.3);
+}
+
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(111, 78, 55, 0.4);
+}
+
+/* Restaurant Menu Section */
+
+.menu-section {
+  padding: 4rem 2rem;
+  background: white;
+  margin: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.menu-section h2 {
+  text-align: center;
+  color: #6f4e37;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  letter-spacing: 1px;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.menu-item {
+  background: #f9f6f3;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid #e8d4c0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-height: 160px;
+}
+
+.menu-item-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e8d4c0 0%, #f5e6d3 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+.menu-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.menu-item:hover .menu-item-image img {
+  transform: scale(1.1);
+}
+
+.menu-item-image.image-loading-failed {
+  background: linear-gradient(135deg, #d4af37 0%, #f4e4c1 100%);
+}
+
+.menu-item-image.image-loading-failed::after {
+  content: '🍽️';
+  font-size: 3rem;
+}
+
+.menu-item h3 {
+  color: #6f4e37;
+  font-size: 1.2rem;
+  margin: 1rem;
+  font-weight: 700;
+  min-height: 20px;
+}
+
+.menu-item .description {
+  color: #888;
+  font-size: 14px;
+  min-height: 36px;
+  margin: 0.5rem 1rem;
+  font-style: italic;
+  flex-grow: 1;
+}
+
+.menu-item .price {
+  color: #d4af37;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin: 1rem;
+  border-top: 1px solid #e8d4c0;
+  padding-top: 0.5rem;
+}
+
+.menu-item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(111, 78, 55, 0.25);
+  border-color: #d4af37;
+  background: white;
+}
+
+/* Features Section */
+
+.features {
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, #6f4e37 0%, #8b5a3c 100%);
+  color: white;
+}
+
+.features h2 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 10px;
+  text-align: center;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.feature:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.feature h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature p {
+  opacity: 0.9;
+}
+
+/* Restaurant Showcase Section */
+
+.showcase {
+  padding: 4rem 2rem;
+  max-width: 1400px;
+  margin: 3rem auto;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.showcase-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.showcase-text h2 {
+  font-size: 2.5rem;
+  color: #6f4e37;
+  margin-bottom: 1.5rem;
+}
+
+.showcase-text p {
+  font-size: 1.1rem;
+  color: #555;
+  line-height: 1.8;
+}
+
+.showcase-features {
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+}
+
+.showcase-features li {
+  font-size: 1rem;
+  color: #666;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #e8d4c0;
+}
+
+.showcase-image {
+  width: 100%;
+  height: 500px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.showcase-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Footer */
+
+.footer {
+  background: #2d2420;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  margin-top: 4rem;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: #e8d4c0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* Responsive */
+
+@media (max-width:768px) {
+
+  .nav-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-btn {
+    width: 100%;
+  }
+
+  .hero-content h2 {
+    font-size: 2rem;
+  }
+
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .showcase-content {
+    grid-template-columns: 1fr;
+  }
+}
