@@ -4,7 +4,8 @@ import bcrypt from 'bcrypt';
 import User from '../models/User';
 
 const generateToken = (id: number) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET as string, { expiresIn: '30d' });
+    const secret = process.env.JWT_SECRET || 'fallback_secret_key_12345';
+    return jwt.sign({ id }, secret, { expiresIn: '30d' });
 };
 
 export const registerUser = async (req: Request, res: Response) => {
@@ -38,8 +39,9 @@ export const registerUser = async (req: Request, res: Response) => {
         } else {
             res.status(400).json({ message: 'Invalid user data' });
         }
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+    } catch (error: any) {
+        console.error("Register error:", error);
+        res.status(500).json({ message: error.message || 'Server Error' });
     }
 };
 
@@ -73,8 +75,8 @@ export const loginUser = async (req: Request, res: Response) => {
             token: generateToken(user.id),
         });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Login error:", error);
-        res.status(500).json({ message: "Server Error" });
+        res.status(500).json({ message: error.message || "Server Error" });
     }
 };
