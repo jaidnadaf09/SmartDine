@@ -58,7 +58,8 @@ const BookTablePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to book table');
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to book table');
       }
 
       setSubmitted(true);
