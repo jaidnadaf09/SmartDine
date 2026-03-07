@@ -1,7 +1,16 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { connectDB } from "./config/db";
+import sequelize from "./config/db";
+
+// Import all models to ensure they are registered with Sequelize before sync
+import "./models/User";
+import "./models/Booking";
+import "./models/Table";
+import "./models/Order";
+import "./models/OrderItem";
+import "./models/MenuItem";
+import "./models/InventoryItem";
 
 import authRoutes from "./routes/authRoutes";
 import orderRoutes from "./routes/orderRoutes";
@@ -14,9 +23,6 @@ import paymentRoutes from "./routes/paymentRoutes";
 
 // Load environment variables
 dotenv.config();
-
-// Connect database
-connectDB();
 
 const app = express();
 
@@ -66,6 +72,21 @@ app.use((err: any, req: any, res: any, next: any) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+const startServer = async () => {
+    try {
+        await sequelize.authenticate();
+        console.log("Database connected successfully");
+
+        await sequelize.sync({ alter: true });
+        console.log("Database tables synchronized");
+
+        app.listen(PORT, () => {
+            console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+        });
+
+    } catch (error) {
+        console.error("Database connection failed:", error);
+    }
+};
+
+startServer();
