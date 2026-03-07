@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-l22i.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -67,8 +67,8 @@ const Users: React.FC = () => {
     };
 
     return (
-        <div className="management-card">
-            <h3><span>👥</span> Users Management</h3>
+        <div className="management-page">
+            <h2 className="dashboard-title">Customers</h2>
 
             {loading ? (
                 <div className="loading-state">

@@ -23,7 +23,11 @@ const app = express();
 // Middleware
 app.use(
     cors({
-        origin: "*", // allows Netlify frontend to access backend
+        origin: [
+            "http://localhost:5173",
+            "https://smartdine-l22i.onrender.com",
+            process.env.FRONTEND_URL || ""
+        ].filter(Boolean),
         methods: ["GET", "POST", "PUT", "DELETE"],
         credentials: true,
     })

@@ -12,32 +12,44 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
             token = req.headers.authorization.split(' ')[1];
+            console.log("Processing token:", token ? "Token present" : "Token missing");
+
             const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as { id: number };
+            console.log("Decoded user ID:", decoded.id);
 
             const user = await User.findByPk(decoded.id, {
                 attributes: { exclude: ['password'] }
             });
 
             if (!user) {
+                console.warn(`User with ID ${decoded.id} not found in database`);
                 return res.status(401).json({ message: 'Not authorized, user not found' });
             }
 
             req.user = user.get() as UserAttributes;
             next();
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            console.error("Auth error:", error.message);
             res.status(401).json({ message: 'Not authorized, token failed' });
         }
     } else {
+        console.warn("No Authorization header found or doesn't start with Bearer");
         res.status(401).json({ message: 'Not authorized, no token' });
     }
 };
 
 export const adminOnly = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user && req.user.role === 'admin') {
-        next();
+    if (req.user) {
+        console.log(`Checking admin role for user: ${req.user.email}, Role: ${req.user.role}`);
+        if (req.user.role === 'admin') {
+            next();
+        } else {
+            console.warn(`Access denied for role: ${req.user.role}. Admin only.`);
+            res.status(403).json({ message: 'Not authorized as an admin' });
+        }
     } else {
-        res.status(403).json({ message: 'Not authorized as an admin' });
+        console.warn("req.user is undefined in adminOnly check");
+        res.status(401).json({ message: 'Not authorized, user missing' });
     }
 };
 

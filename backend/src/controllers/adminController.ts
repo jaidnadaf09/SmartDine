@@ -9,6 +9,7 @@ import Booking from '../models/Booking';
 // @route   GET /api/admin/users
 // @access  Private/Admin
 export const getUsers = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching all users");
     try {
         const users = await User.findAll({
             where: { role: 'customer' },
@@ -40,6 +41,7 @@ export const deleteUser = async (req: Request, res: Response) => {
 // @route   GET /api/admin/bookings
 // @access  Private/Admin
 export const getBookings = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching all bookings");
     try {
         const bookings = await Booking.findAll({
             order: [['createdAt', 'DESC']]
@@ -100,6 +102,7 @@ export const assignTable = async (req: Request, res: Response) => {
 // @route   GET /api/admin/tables
 // @access  Private/Admin
 export const getTables = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching all tables");
     try {
         const tables = await Table.findAll();
         res.json(tables);
@@ -158,6 +161,7 @@ export const deleteTable = async (req: Request, res: Response) => {
 // @route   GET /api/admin/orders
 // @access  Private/Admin
 export const getOrders = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching all orders");
     try {
         const orders = await Order.findAll({
             include: [{
@@ -195,6 +199,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 // @route   GET /api/admin/payments
 // @access  Private/Admin
 export const getPayments = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching all payments/successful bookings");
     try {
         // Since we store payments in Bookings for now (Razorpay integration)
         const payments = await Booking.findAll({
@@ -235,6 +240,7 @@ export const getStaffMembers = async (req: Request, res: Response) => {
 // @route   GET /api/admin/stats
 // @access  Private/Admin
 export const getDashboardStats = async (req: Request, res: Response) => {
+    console.log("Admin: Calculating dashboard statistics");
     try {
         const totalOrders = await Order.count();
         const ordersList = await Order.findAll();
@@ -242,21 +248,12 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
         const totalUsers = await User.count({ where: { role: 'customer' } });
         const totalBookings = await Booking.count();
-        const pendingBookings = await Booking.count({ where: { status: 'pending' } });
-
-        const activeUsersCount = await User.count({ where: { status: 'active' } });
-        const tablesList = await Table.findAll();
-        const tableCapacity = tablesList.reduce((acc, table) => acc + table.capacity, 0);
 
         res.json({
-            totalOrders,
-            totalRevenue,
             totalUsers,
             totalBookings,
-            pendingBookings,
-            activeUsers: activeUsersCount,
-            tableCapacity,
-            averageRating: 4.8 // Mock average rating
+            totalOrders,
+            totalRevenue,
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });

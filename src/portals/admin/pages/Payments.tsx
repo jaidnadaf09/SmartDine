@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = import.meta.env.VITE_API_URL || "https://smartdine-l22i.onrender.com/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const Payments: React.FC = () => {
     const [payments, setPayments] = useState<any[]>([]);
@@ -41,8 +41,8 @@ const Payments: React.FC = () => {
     }, []);
 
     return (
-        <div className="management-card">
-            <h3><span>💰</span> Payments History</h3>
+        <div className="management-page">
+            <h2 className="dashboard-title">Transaction History</h2>
 
             {loading ? (
                 <div className="loading-state">
