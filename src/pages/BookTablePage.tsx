@@ -169,13 +169,16 @@ const BookTablePage: React.FC = () => {
           : console.error('CRITICAL: VITE_RAZORPAY_KEY_ID is missing in production!');
       }
 
+      console.log("Razorpay Key:", razorpayKey);
+      console.log("Order Data:", orderData);
+
       const options = {
-        key: razorpayKey || "rzp_live_placeholder",
-        amount: orderData.amount, // Already in paise from backend
+        key: razorpayKey,
+        amount: orderData.amount,
         currency: orderData.currency,
+        order_id: orderData.id || orderData.orderId,
         name: "SmartDine",
         description: "Table Booking Payment",
-        order_id: orderData.orderId,
         handler: async (response: any) => {
           console.log('Payment success callback from Razorpay:', response.razorpay_payment_id);
           setLoading(true);
