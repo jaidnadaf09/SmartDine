@@ -61,17 +61,18 @@ const Orders: React.FC = () => {
     };
 
     return (
-        <div className="management-card">
-            <h3><span>📋</span> Orders Management</h3>
+        <div className="management-page">
+            <h2 className="dashboard-title">Orders</h2>
 
             {loading ? (
                 <div className="loading-state">
-                    <p>Loading orders...</p>
+                    <div className="spinner"></div>
+                    <p>Fetching active orders...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p>❌ {error}</p>
-                    <button onClick={fetchOrders}>Retry</button>
+                    <p><span>⚠️</span> {error}</p>
+                    <button className="retry-btn" onClick={fetchOrders}>Retry</button>
                 </div>
             ) : orders.length === 0 ? (
                 <div className="empty-state">
@@ -82,27 +83,35 @@ const Orders: React.FC = () => {
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Order ID</th>
-                                <th>Table #</th>
+                                <th>Order</th>
+                                <th>Customer</th>
+                                <th>Table</th>
                                 <th>Amount</th>
                                 <th>Status</th>
-                                <th>Placed At</th>
-                                <th>Update Status</th>
+                                <th>Time</th>
+                                <th>Update</th>
                             </tr>
                         </thead>
                         <tbody>
                             {orders.map(order => (
                                 <tr key={order.id}>
                                     <td><strong>#{order.id}</strong></td>
+                                    <td>
+                                        <div className="customer-info-cell">
+                                            <strong>{order.customer?.name || 'Walk-in'}</strong>
+                                            <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'block' }}>{order.customer?.email || ''}</span>
+                                        </div>
+                                    </td>
                                     <td>Table {order.tableNumber || order.Table?.tableNumber || 'N/A'}</td>
-                                    <td>₹{order.totalAmount}</td>
+                                    <td><span style={{ fontWeight: 800, color: '#6f4e37' }}>₹{order.totalAmount}</span></td>
                                     <td><span className={`status-pill pill-${order.status}`}>{order.status}</span></td>
-                                    <td>{new Date(order.createdAt).toLocaleTimeString()}</td>
+                                    <td>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                     <td>
                                         <select
                                             className="admin-select"
                                             value={order.status}
                                             onChange={(e) => updateStatus(order.id, e.target.value)}
+                                            style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid #e8d4c0', color: '#6f4e37', fontWeight: 600 }}
                                         >
                                             <option value="pending">Pending</option>
                                             <option value="preparing">Preparing</option>

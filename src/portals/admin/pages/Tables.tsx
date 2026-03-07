@@ -84,34 +84,71 @@ const Tables: React.FC = () => {
         }
     };
 
-    return (
-        <div className="management-card">
-            <h3><span>🪑</span> Table Management</h3>
+    const updateCapacity = async (id: number, capacity: number) => {
+        try {
+            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
+            const res = await fetch(`${API_URL}/admin/tables/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userData.token}`
+                },
+                body: JSON.stringify({ capacity })
+            });
 
-            <div className="add-form">
-                <input
-                    type="number"
-                    placeholder="Table Number"
-                    value={newTable.tableNumber}
-                    onChange={e => setNewTable({ ...newTable, tableNumber: e.target.value })}
-                />
-                <input
-                    type="number"
-                    placeholder="Capacity"
-                    value={newTable.capacity}
-                    onChange={e => setNewTable({ ...newTable, capacity: Number(e.target.value) })}
-                />
-                <button onClick={addTable}>Add New Table</button>
+            if (res.ok) {
+                setTables(tables.map(t => t.id === id ? { ...t, capacity } : t));
+                alert('Capacity updated!');
+            }
+        } catch (err) {
+            console.error('Failed to update capacity:', err);
+            alert('Failed to update capacity');
+        }
+    };
+
+    return (
+        <div className="management-page">
+            <h2 className="dashboard-title">Dining Tables</h2>
+
+            <div className="admin-guidance-section" style={{ marginTop: '0', marginBottom: '3rem' }}>
+                <div className="guidance-card table-management-card">
+                    <div className="guidance-header">
+                        <span className="icon">🪑</span>
+                        <h3>Floor Plan Configuration</h3>
+                    </div>
+                    <div className="add-table-form">
+                        <div className="input-group">
+                            <label>Table #</label>
+                            <input
+                                type="number"
+                                placeholder="e.g. 10"
+                                value={newTable.tableNumber}
+                                onChange={e => setNewTable({ ...newTable, tableNumber: e.target.value })}
+                            />
+                        </div>
+                        <div className="input-group">
+                            <label>Capacity</label>
+                            <input
+                                type="number"
+                                placeholder="Seats"
+                                value={newTable.capacity}
+                                onChange={e => setNewTable({ ...newTable, capacity: Number(e.target.value) })}
+                            />
+                        </div>
+                        <button className="add-btn" onClick={addTable}>Add New Table</button>
+                    </div>
+                </div>
             </div>
 
             {loading ? (
                 <div className="loading-state">
-                    <p>Loading tables...</p>
+                    <div className="spinner"></div>
+                    <p>Loading floor plan...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p>❌ {error}</p>
-                    <button onClick={fetchTables}>Retry</button>
+                    <p><span>⚠️</span> {error}</p>
+                    <button className="retry-btn" onClick={fetchTables}>Retry</button>
                 </div>
             ) : tables.length === 0 ? (
                 <div className="empty-state">
@@ -122,7 +159,7 @@ const Tables: React.FC = () => {
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Table Number</th>
+                                <th>Table</th>
                                 <th>Capacity</th>
                                 <th>Status</th>
                                 <th>Action</th>
@@ -132,10 +169,24 @@ const Tables: React.FC = () => {
                             {tables.map(table => (
                                 <tr key={table.id}>
                                     <td><strong>Table {table.tableNumber}</strong></td>
-                                    <td>{table.capacity} Seats</td>
+                                    <td>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <input
+                                                type="number"
+                                                defaultValue={table.capacity}
+                                                onBlur={(e) => {
+                                                    const val = Number(e.target.value);
+                                                    if (val !== table.capacity) updateCapacity(table.id, val);
+                                                }}
+                                                className="capacity-input"
+                                                style={{ width: '60px', padding: '0.3rem', borderRadius: '5px', border: '1px solid #e8d4c0' }}
+                                            />
+                                            <span>Seats</span>
+                                        </div>
+                                    </td>
                                     <td><span className={`status-pill pill-${table.status}`}>{table.status}</span></td>
                                     <td>
-                                        <button className="btn-delete" onClick={() => deleteTable(table.id)}>Delete</button>
+                                        <button className="btn-delete" onClick={() => deleteTable(table.id)} style={{ padding: '0.5rem 1rem', background: '#f8d7da', color: '#721c24', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
                                     </td>
                                 </tr>
                             ))}

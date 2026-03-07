@@ -175,7 +175,7 @@ const OrderPage: React.FC = () => {
                       </button>
                     </div>
                     <div className="item-total">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ₹{(item.price * item.quantity).toFixed(2)}
                     </div>
                     <button
                       className="remove-btn"
@@ -190,15 +190,15 @@ const OrderPage: React.FC = () => {
               <div className="cart-summary">
                 <div className="summary-row">
                   <span>Subtotal:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>₹{total.toFixed(2)}</span>
                 </div>
                 <div className="summary-row">
                   <span>Tax (10%):</span>
-                  <span>${(total * 0.1).toFixed(2)}</span>
+                  <span>₹{(total * 0.1).toFixed(2)}</span>
                 </div>
                 <div className="summary-row total">
                   <span>Total:</span>
-                  <span>${(total * 1.1).toFixed(2)}</span>
+                  <span>₹{(total * 1.1).toFixed(2)}</span>
                 </div>
 
                 {error && <div className="error-message">{error}</div>}

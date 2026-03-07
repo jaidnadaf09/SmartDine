@@ -81,8 +81,20 @@ const Bookings: React.FC = () => {
     };
 
     return (
-        <div className="management-card">
-            <h3><span>📅</span> Table Bookings</h3>
+        <div className="management-page">
+            <h2 className="dashboard-title">Reservations</h2>
+
+            <div className="admin-guidance-section" style={{ marginTop: '0', marginBottom: '3rem' }}>
+                <div className="guidance-card" style={{ padding: '2rem' }}>
+                    <div className="guidance-header" style={{ marginBottom: '1rem' }}>
+                        <span className="icon">📅</span>
+                        <h3 style={{ fontSize: '1.4rem' }}>Table Management</h3>
+                    </div>
+                    <p style={{ color: '#5a3f2d', opacity: 0.8 }}>
+                        Approve incoming requests, allocate the best tables, and keep the floor moving.
+                    </p>
+                </div>
+            </div>
 
             {loading ? (
                 <div className="loading-state">

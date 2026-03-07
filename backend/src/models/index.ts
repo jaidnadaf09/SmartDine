@@ -21,6 +21,10 @@ User.hasMany(OrderItem, { foreignKey: 'assignedChef' });
 Booking.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(Booking, { foreignKey: 'userId' });
 
+// Order -> User (Customer) (Many-to-One)
+Order.belongsTo(User, { foreignKey: 'userId', as: 'customer' });
+User.hasMany(Order, { foreignKey: 'userId' });
+
 export {
     sequelize,
     User,
