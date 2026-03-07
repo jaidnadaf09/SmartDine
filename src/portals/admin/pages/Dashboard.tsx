@@ -41,47 +41,60 @@ const Dashboard: React.FC = () => {
     }, []);
 
     const statCards = [
-        { label: 'Total Orders', value: stats?.totalOrders || 0, icon: '📋', color: '#6f4e37' },
+        { label: 'Total Users', value: stats?.totalUsers || 0, icon: '👥', color: '#6f4e37' },
+        { label: 'Total Bookings', value: stats?.totalBookings || 0, icon: '📅', color: '#a67c52' },
+        { label: 'Pending Bookings', value: stats?.pendingBookings || 0, icon: '⏳', color: '#d4af37' },
+        { label: 'Total Orders', value: stats?.totalOrders || 0, icon: '📋', color: '#8b5a3c' },
         { label: 'Total Revenue', value: `₹${stats?.totalRevenue || 0}`, icon: '💰', color: '#d4af37' },
-        { label: 'Active Users', value: stats?.activeUsers || 0, icon: '👥', color: '#8b5a3c' },
-        { label: 'Total Bookings', value: stats?.totalBookings || stats?.staffMembers || 0, icon: '📅', color: '#a67c52' },
     ];
 
     return (
         <div className="stats-container">
-            <h2 style={{ color: '#6f4e37', marginBottom: '2rem', fontWeight: 800 }}>Restaurant Overview</h2>
+            <h2 className="dashboard-title">Admin Insights</h2>
 
             {loading ? (
                 <div className="loading-state">
-                    <p>Calculating statistics...</p>
+                    <div className="spinner"></div>
+                    <p>Fetching restaurant metrics...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p>❌ {error}</p>
-                    <button onClick={fetchStats}>Retry</button>
+                    <p><span>⚠️</span> {error}</p>
+                    <button className="retry-btn" onClick={fetchStats}>Try Again</button>
                 </div>
             ) : (
-                <div className="stats-grid">
+                <div className="stats-grid premium-grid">
                     {statCards.map(stat => (
-                        <div key={stat.label} className="stat-card">
-                            <div className="stat-info">
-                                <span className="stat-label">{stat.label}</span>
-                                <span className="stat-value">{stat.value}</span>
-                            </div>
-                            <div className="stat-icon-wrapper">
+                        <div key={stat.label} className="stat-card premium-card">
+                            <div className="stat-icon-circle" style={{ backgroundColor: `${stat.color}15`, color: stat.color }}>
                                 {stat.icon}
+                            </div>
+                            <div className="stat-info">
+                                <span className="stat-value">{stat.value}</span>
+                                <span className="stat-label">{stat.label}</span>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
 
-            <div className="management-card" style={{ marginTop: '2rem' }}>
-                <h3><span>💡</span> Admin Quick Tips</h3>
-                <div style={{ color: '#5a3f2d', lineHeight: '1.6' }}>
-                    <p>• Use the <strong>Bookings</strong> tab to approve customer table requests and assign specific tables.</p>
-                    <p>• Update <strong>Order Status</strong> in the Orders tab to keep customers informed of their meal progress.</p>
-                    <p>• Manage your restaurant layout in the <strong>Tables</strong> tab by adding new tables or updating capacities.</p>
+            <div className="admin-guidance-section">
+                <div className="guidance-card">
+                    <div className="guidance-header">
+                        <span className="icon">💡</span>
+                        <h3>Operational Excellence</h3>
+                    </div>
+                    <ul className="guidance-list">
+                        <li>
+                            <strong>Optimize Bookings:</strong> Use the <em>Bookings</em> tab to confirm new requests and allocate table numbers efficiently.
+                        </li>
+                        <li>
+                            <strong>Service Speed:</strong> Monitor <em>Orders</em> to update statuses in real-time, ensuring customers stay informed.
+                        </li>
+                        <li>
+                            <strong>Space Management:</strong> Maintain your floor plan in the <em>Tables</em> tab to maximize seating capacity.
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>

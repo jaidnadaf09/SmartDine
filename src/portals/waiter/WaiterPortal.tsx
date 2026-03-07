@@ -24,8 +24,8 @@ const WaiterPortal: React.FC = () => {
   ]);
 
   const [pendingOrders] = useState([
-    { id: 1, tableNumber: 1, items: ['Cappuccino', 'Croissant'], status: 'ready' },
-    { id: 2, tableNumber: 5, items: ['Espresso', 'Latte'], status: 'preparing' },
+    { id: 1, tableNumber: 1, items: ['Paneer Tikka', 'Butter Naan'], status: 'ready' },
+    { id: 2, tableNumber: 5, items: ['Veg Biryani', 'Raita'], status: 'preparing' },
   ]);
 
   const handleLogout = () => {
@@ -45,7 +45,7 @@ const WaiterPortal: React.FC = () => {
   return (
     <div className="portal-container">
       <header className="portal-header">
-        <h1>☕ Waiter Portal</h1>
+        <h1>🍽️ Waiter Portal</h1>
         <div className="user-info">
           <span>Welcome, {user.name}!</span>
           <button className="logout-btn" onClick={handleLogout}>

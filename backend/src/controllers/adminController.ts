@@ -160,6 +160,11 @@ export const deleteTable = async (req: Request, res: Response) => {
 export const getOrders = async (req: Request, res: Response) => {
     try {
         const orders = await Order.findAll({
+            include: [{
+                model: User,
+                as: 'customer',
+                attributes: ['name', 'email']
+            }],
             order: [['createdAt', 'DESC']]
         });
         res.json(orders);
@@ -235,23 +240,22 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const ordersList = await Order.findAll();
         const totalRevenue = ordersList.reduce((acc, order) => acc + Number(order.totalAmount), 0);
 
-        const activeUsers = await User.count({ where: { status: 'active' } });
+        const totalUsers = await User.count({ where: { role: 'customer' } });
+        const totalBookings = await Booking.count();
+        const pendingBookings = await Booking.count({ where: { status: 'pending' } });
+
+        const activeUsersCount = await User.count({ where: { status: 'active' } });
         const tablesList = await Table.findAll();
         const tableCapacity = tablesList.reduce((acc, table) => acc + table.capacity, 0);
-        const staffMembers = await User.count({
-            where: {
-                role: {
-                    [Op.in]: ['CHEF', 'WAITER', 'admin']
-                }
-            }
-        });
 
         res.json({
             totalOrders,
             totalRevenue,
-            activeUsers,
+            totalUsers,
+            totalBookings,
+            pendingBookings,
+            activeUsers: activeUsersCount,
             tableCapacity,
-            staffMembers,
             averageRating: 4.8 // Mock average rating
         });
     } catch (error) {
