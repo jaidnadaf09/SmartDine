@@ -67,8 +67,8 @@ const Users: React.FC = () => {
     };
 
     return (
-        <div className="management-card">
-            <h3><span>👥</span> Users Management</h3>
+        <div className="management-page">
+            <h2 className="dashboard-title">Customers</h2>
 
             {loading ? (
                 <div className="loading-state">

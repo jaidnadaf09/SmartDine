@@ -43,7 +43,6 @@ const Dashboard: React.FC = () => {
     const statCards = [
         { label: 'Total Users', value: stats?.totalUsers || 0, icon: '👥', color: '#6f4e37' },
         { label: 'Total Bookings', value: stats?.totalBookings || 0, icon: '📅', color: '#a67c52' },
-        { label: 'Pending Bookings', value: stats?.pendingBookings || 0, icon: '⏳', color: '#d4af37' },
         { label: 'Total Orders', value: stats?.totalOrders || 0, icon: '📋', color: '#8b5a3c' },
         { label: 'Total Revenue', value: `₹${stats?.totalRevenue || 0}`, icon: '💰', color: '#d4af37' },
     ];

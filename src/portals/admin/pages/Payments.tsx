@@ -41,8 +41,8 @@ const Payments: React.FC = () => {
     }, []);
 
     return (
-        <div className="management-card">
-            <h3><span>💰</span> Payments History</h3>
+        <div className="management-page">
+            <h2 className="dashboard-title">Transaction History</h2>
 
             {loading ? (
                 <div className="loading-state">
