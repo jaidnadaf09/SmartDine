@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/BookTable.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+
+    document.body.appendChild(script);
+  });
+};
 
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
@@ -20,6 +36,8 @@ const BookTablePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bookingDetails, setBookingDetails] = useState<any>(null);
+
+  const bookingInProgress = useRef(false);
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
 
@@ -70,16 +88,24 @@ const BookTablePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
 
-    if (!user) {
-      setError('You must be logged in to book a table.');
-      setLoading(false);
+    if (bookingInProgress.current) {
+      console.warn("Booking already in progress");
       return;
     }
 
+    bookingInProgress.current = true;
+
     try {
+      setError('');
+      setLoading(true);
+
+      if (!user) {
+        setError('You must be logged in to book a table.');
+        setLoading(false);
+        return;
+      }
+
       console.log('Initiating booking flow for:', formData.date, formData.time);
 
       // 1. Check Availability
@@ -128,6 +154,14 @@ const BookTablePage: React.FC = () => {
       // 3. Open Razorpay
       const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
       console.log('Frontend: Initializing Razorpay with Key:', razorpayKey ? `${razorpayKey.substring(0, 8)}...` : 'MISSING');
+
+      const scriptLoaded = await loadRazorpayScript();
+
+      if (!scriptLoaded) {
+        setError("Failed to load Razorpay checkout.");
+        setLoading(false);
+        return;
+      }
 
       if (!razorpayKey || razorpayKey === 'rzp_live_placeholder') {
         import.meta.env.DEV
@@ -217,6 +251,8 @@ const BookTablePage: React.FC = () => {
       console.error('BOOKING FLOW ERROR:', err);
       setError(err.message || 'Booking failed');
       setLoading(false);
+    } finally {
+      bookingInProgress.current = false;
     }
   };
 
