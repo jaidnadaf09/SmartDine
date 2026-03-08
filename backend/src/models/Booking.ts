@@ -9,7 +9,7 @@ export interface BookingAttributes {
     date: Date;
     time: string;
     guests: number;
-    tableNumber?: number;
+    tableNumber?: number | null;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     specialRequests?: string;
     userId?: number;
@@ -26,7 +26,7 @@ export class Booking extends Model<BookingAttributes> implements BookingAttribut
     public date!: Date;
     public time!: string;
     public guests!: number;
-    public tableNumber!: number;
+    public tableNumber!: number | null;
     public status!: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     public specialRequests!: string;
     public userId!: number;
