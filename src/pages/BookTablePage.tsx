@@ -1,5 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/BookTable.css';
 
@@ -79,8 +80,14 @@ const BookTablePage: React.FC = () => {
       const data = await res.json();
       setBookingDetails(data);
       setSubmitted(true);
+      if (data.tableNumber) {
+        toast.success(`Admin Booking Confirmed! Assigned Table: ${data.tableNumber}`);
+      } else {
+        toast.success('Admin Booking Confirmed! (Table pending assignment)');
+      }
     } catch (err: any) {
       setError(err.message || 'Admin booking failed');
+      toast.error(err.message || 'Admin booking failed');
     } finally {
       setLoading(false);
     }
@@ -102,6 +109,7 @@ const BookTablePage: React.FC = () => {
 
       if (!user) {
         setError('You must be logged in to book a table.');
+        toast.error('You must be logged in to book a table.');
         setLoading(false);
         return;
       }
@@ -159,6 +167,7 @@ const BookTablePage: React.FC = () => {
 
       if (!scriptLoaded) {
         setError("Failed to load Razorpay checkout.");
+        toast.error("Failed to load Razorpay checkout.");
         setLoading(false);
         return;
       }
@@ -207,6 +216,11 @@ const BookTablePage: React.FC = () => {
               console.log('Payment verified and booking created:', result.booking);
               setBookingDetails(result.booking);
               setSubmitted(true);
+              if (result.booking.tableNumber) {
+                toast.success(`Booking Confirmed! Assigned Table: ${result.booking.tableNumber}`);
+              } else {
+                toast.success('Booking Confirmed! (Table pending assignment)');
+              }
             } else {
               const text = await verifyRes.text();
               console.error('Verification failed on server:', text);
@@ -217,12 +231,13 @@ const BookTablePage: React.FC = () => {
               } catch (e) {
                 errorMsg = `Server Error: ${verifyRes.status}`;
               }
+              toast.error(errorMsg);
               throw new Error(errorMsg);
             }
           } catch (err: any) {
             console.error('VERIFICATION ERROR:', err);
             setError(err.message);
-            alert(`Booking Error: ${err.message}`);
+            toast.error(err.message || 'Booking Error');
           } finally {
             setLoading(false);
           }

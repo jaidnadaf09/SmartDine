@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 // Removed Firebase imports
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import '../styles/Order.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
+const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
 interface OrderItem {
   id: number;
@@ -12,6 +14,20 @@ interface OrderItem {
   price: number;
   quantity: number;
 }
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
@@ -80,27 +96,104 @@ const OrderPage: React.FC = () => {
     setLoading(true); // Set loading to true on checkout
 
     try {
-      const response = await fetch(`${API_URL}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tableNumber: 1, // Default table for now
-          totalAmount: parseFloat((total * 1.1).toFixed(2)),
-          items: cart.map(item => ({
-            itemName: item.name,
-            quantity: item.quantity,
-          }))
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to place order');
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        throw new Error('Razorpay SDK failed to load. Are you online?');
       }
 
-      alert(`Order placed! Total: ₹{(total * 1.1).toFixed(2)}`);
-      setCart([]);
-      console.log('Navigating to home page from OrderPage...'); // Added for debugging
-      navigate('/'); // Redirect to home page immediately
+      const totalAmountFloat = parseFloat((total * 1.1).toFixed(2));
+
+      // 1. Create Razorpay order on our backend
+      const orderRes = await fetch(`${API_URL}/payment/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: totalAmountFloat }),
+      });
+
+      if (!orderRes.ok) {
+        throw new Error('Failed to create payment order');
+      }
+
+      const orderData = await orderRes.json();
+
+      // 2. Initialize Razorpay Checkout
+      const options = {
+        key: razorpayKey,
+        amount: orderData.amount, // in paise
+        currency: "INR",
+        name: "SmartDine",
+        description: "Food Order Payment",
+        order_id: orderData.id || orderData.orderId,
+        handler: async (response: any) => {
+          try {
+            setLoading(true);
+            // 3. Verify Payment Signature
+            const verifyRes = await fetch(`${API_URL}/payment/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                // Omitting bookingData explicitly triggers the standalone payment verification flow
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.success) {
+              // 4. Save the order now that payment is confirmed
+              const finalOrderRes = await fetch(`${API_URL}/orders`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: user.id, // Track the user who placed it
+                  tableNumber: 1, // Default table for now
+                  totalAmount: totalAmountFloat,
+                  paymentId: response.razorpay_payment_id,
+                  paymentStatus: 'paid',
+                  items: cart.map(item => ({
+                    itemName: item.name,
+                    quantity: item.quantity,
+                  }))
+                })
+              });
+
+              if (!finalOrderRes.ok) {
+                throw new Error('Payment succeeded, but failed to save order details.');
+              }
+
+              toast.success(`Payment successful! Order placed. Total: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmountFloat)}`);
+              setCart([]);
+              navigate('/');
+            } else {
+              setError("Payment signature verification failed.");
+            }
+          } catch (err: any) {
+            console.error("Order completion error:", err);
+            setError(err.message || 'Payment processing failed');
+          } finally {
+            setLoading(false);
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+          contact: (user as any).phone || ""
+        },
+        theme: {
+          color: "#6f4e37",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        console.error("Payment failed", response.error);
+        setError(`Payment Failed: ${response.error.description || 'Unknown error'}`);
+        setLoading(false);
+      });
+      rzp.open();
+
     } catch (err: unknown) {
       console.error('Error placing order:', err);
       if (err instanceof Error) {
@@ -108,8 +201,7 @@ const OrderPage: React.FC = () => {
       } else {
         setError('Failed to place order. Please try again.');
       }
-    } finally {
-      setLoading(false); // Set loading to false after checkout attempt
+      setLoading(false); // Only stop loading if we hit an error early. If checkout opens, loading stops on success/fail inside callback
     }
   };
 
@@ -126,7 +218,7 @@ const OrderPage: React.FC = () => {
             {menuItems.map((item) => (
               <div key={item.id} className="menu-card">
                 <h3>{item.name}</h3>
-                <p className="price">₹{item.price.toFixed(2)}</p>
+                <p className="price">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}</p>
                 <button
                   className="add-btn"
                   onClick={() => addToCart(item)}
@@ -149,7 +241,7 @@ const OrderPage: React.FC = () => {
                   <div key={item.id} className="cart-item">
                     <div className="item-info">
                       <h4>{item.name}</h4>
-                      <p>₹{item.price.toFixed(2)}</p>
+                      <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}</p>
                     </div>
                     <div className="item-controls">
                       <button
@@ -175,7 +267,7 @@ const OrderPage: React.FC = () => {
                       </button>
                     </div>
                     <div className="item-total">
-                      ₹{(item.price * item.quantity).toFixed(2)}
+                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
                     </div>
                     <button
                       className="remove-btn"
@@ -190,15 +282,15 @@ const OrderPage: React.FC = () => {
               <div className="cart-summary">
                 <div className="summary-row">
                   <span>Subtotal:</span>
-                  <span>₹{total.toFixed(2)}</span>
+                  <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total)}</span>
                 </div>
                 <div className="summary-row">
                   <span>Tax (10%):</span>
-                  <span>₹{(total * 0.1).toFixed(2)}</span>
+                  <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total * 0.1)}</span>
                 </div>
                 <div className="summary-row total">
                   <span>Total:</span>
-                  <span>₹{(total * 1.1).toFixed(2)}</span>
+                  <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total * 1.1)}</span>
                 </div>
 
                 {error && <div className="error-message">{error}</div>}

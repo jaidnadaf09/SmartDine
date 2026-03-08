@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { Toaster } from "react-hot-toast";
 import LandingPage from './pages/LandingPage';
 import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
@@ -20,6 +21,18 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: "#1f2937",
+            color: "#fff",
+            borderRadius: "8px",
+            fontSize: "14px"
+          }
+        }}
+      />
       <Router>
         <Routes>
           {/* Main Pages */}

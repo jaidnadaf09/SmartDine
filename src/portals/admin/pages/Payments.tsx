@@ -73,7 +73,7 @@ const Payments: React.FC = () => {
                             {payments.map(payment => (
                                 <tr key={payment.id}>
                                     <td><strong>{payment.customerName}</strong></td>
-                                    <td>₹{payment.amount}</td>
+                                    <td>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payment.amount)}</td>
                                     <td><code>{payment.paymentId || 'N/A'}</code></td>
                                     <td>
                                         <span className={`status-pill pill-${payment.paymentStatus === 'paid' ? 'confirmed' : 'cancelled'}`}>

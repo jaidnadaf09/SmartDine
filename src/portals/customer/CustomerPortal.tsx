@@ -108,6 +108,10 @@ const CustomerPortal: React.FC = () => {
       </header>
 
       <div className="portal-content">
+        <button className="back-btn" onClick={() => navigate('/')} style={{ marginBottom: "20px" }}>
+          ← Back
+        </button>
+
         <div className="portal-section">
           <h2>My Bookings</h2>
           {bookings.length === 0 ? (
@@ -135,12 +139,12 @@ const CustomerPortal: React.FC = () => {
               {orders.map((order) => (
                 <div key={order.id} className="order-item">
                   <p><strong>Order Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
-                  <p><strong>Total:</strong> ${order.totalAmount || order.total}</p>
+                  <p><strong>Total:</strong> {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount || order.total))}</p>
                   <p><strong>Items:</strong></p>
                   <ul>
-                    {order.items.map((item, index) => (
-                      <li key={index}>{item.name} x {item.quantity} (${item.price.toFixed(2)})</li>
-                    ))}
+                    {order.items && Array.isArray(order.items) ? order.items.map((item: any, index: number) => (
+                      <li key={index}>{item.itemName || item.name} x {item.quantity} {item.price ? `(${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)})` : ''}</li>
+                    )) : <li>No items details</li>}
                   </ul>
                 </div>
               ))}

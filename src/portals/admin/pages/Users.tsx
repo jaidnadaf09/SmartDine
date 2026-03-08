@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -45,24 +46,29 @@ const Users: React.FC = () => {
         fetchUsers();
     }, []);
 
-    const deleteUser = async (id: number) => {
+    const deleteUser = async (userId: number) => {
         if (!window.confirm('Are you sure you want to delete this user?')) return;
         try {
             const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/admin/users/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${userData.token}` }
-            });
+            const token = userData.token;
 
+            if (!token) {
+                toast.error('Authentication token missing. Please login again.');
+                return;
+            }
+            const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (res.ok) {
-                setUsers(users.filter(u => u.id !== id));
-                alert('User deleted successfully');
+                toast.success('User deleted successfully');
+                setUsers(users.filter(u => u.id !== userId));
             } else {
-                alert('Failed to delete user');
+                toast.error('Failed to delete user');
             }
         } catch (err) {
-            console.error('Failed to delete user:', err);
-            alert('Error deleting user');
+            console.error(err);
+            toast.error('Error deleting user');
         }
     };
 

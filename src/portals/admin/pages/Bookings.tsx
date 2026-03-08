@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -55,10 +56,13 @@ const Bookings: React.FC = () => {
             });
             if (res.ok) {
                 setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
+                toast.success('Status updated');
+            } else {
+                toast.error('Failed to update status');
             }
         } catch (err) {
             console.error('Failed to update booking status:', err);
-            alert('Failed to update status');
+            toast.error('Failed to update status');
         }
     };
 
@@ -71,12 +75,14 @@ const Bookings: React.FC = () => {
                 body: JSON.stringify({ tableId })
             });
             if (res.ok) {
-                alert('Table assigned!');
+                toast.success('Table assigned!');
                 fetchData(); // Refresh to see updated statuses
+            } else {
+                toast.error('Failed to assign table');
             }
         } catch (err) {
             console.error('Failed to assign table:', err);
-            alert('Failed to assign table');
+            toast.error('Failed to assign table');
         }
     };
 

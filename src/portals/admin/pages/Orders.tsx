@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -20,7 +21,7 @@ const Orders: React.FC = () => {
                 return;
             }
 
-            const res = await fetch(`${API_URL}/admin/orders`, {
+            const res = await fetch(`${API_URL}/orders`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -43,8 +44,8 @@ const Orders: React.FC = () => {
     const updateStatus = async (id: number, status: string) => {
         try {
             const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/admin/orders/${id}/status`, {
-                method: 'PUT',
+            const res = await fetch(`${API_URL}/orders/${id}/status`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${userData.token}`
@@ -53,10 +54,13 @@ const Orders: React.FC = () => {
             });
             if (res.ok) {
                 setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
+                toast.success('Order status updated');
+            } else {
+                toast.error('Failed to update status on server');
             }
         } catch (err) {
             console.error('Failed to update order status:', err);
-            alert('Failed to update status');
+            toast.error('Failed to update status');
         }
     };
 
@@ -83,8 +87,8 @@ const Orders: React.FC = () => {
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Order</th>
-                                <th>Customer</th>
+                                <th>Order ID</th>
+                                <th>Items</th>
                                 <th>Table</th>
                                 <th>Amount</th>
                                 <th>Status</th>
@@ -97,13 +101,14 @@ const Orders: React.FC = () => {
                                 <tr key={order.id}>
                                     <td><strong>#{order.id}</strong></td>
                                     <td>
-                                        <div className="customer-info-cell">
-                                            <strong>{order.customer?.name || 'Walk-in'}</strong>
-                                            <span style={{ fontSize: '0.8rem', opacity: 0.6, display: 'block' }}>{order.customer?.email || ''}</span>
+                                        <div style={{ fontSize: '0.9rem' }}>
+                                            {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
+                                                <div key={idx}>{item.quantity}x {item.itemName}</div>
+                                            )) : 'No items data'}
                                         </div>
                                     </td>
                                     <td>Table {order.tableNumber || order.Table?.tableNumber || 'N/A'}</td>
-                                    <td><span style={{ fontWeight: 800, color: '#6f4e37' }}>₹{order.totalAmount}</span></td>
+                                    <td><span style={{ fontWeight: 800, color: '#6f4e37' }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
                                     <td><span className={`status-pill pill-${order.status}`}>{order.status}</span></td>
                                     <td>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                     <td>
@@ -115,8 +120,7 @@ const Orders: React.FC = () => {
                                         >
                                             <option value="pending">Pending</option>
                                             <option value="preparing">Preparing</option>
-                                            <option value="ready">Ready</option>
-                                            <option value="delivered">Delivered</option>
+                                            <option value="completed">Completed</option>
                                         </select>
                                     </td>
                                 </tr>
