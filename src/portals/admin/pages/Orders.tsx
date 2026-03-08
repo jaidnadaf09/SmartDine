@@ -88,6 +88,7 @@ const Orders: React.FC = () => {
                         <thead>
                             <tr>
                                 <th>Order ID</th>
+                                <th>Customer</th>
                                 <th>Items</th>
                                 <th>Table</th>
                                 <th>Amount</th>
@@ -101,6 +102,10 @@ const Orders: React.FC = () => {
                                 <tr key={order.id}>
                                     <td><strong>#{order.id}</strong></td>
                                     <td>
+                                        <div><strong>{order.customer?.name || 'Walk-in'}</strong></div>
+                                        <div style={{ fontSize: '0.8rem', color: '#666' }}>{order.customer?.email || 'N/A'}</div>
+                                    </td>
+                                    <td>
                                         <div style={{ fontSize: '0.9rem' }}>
                                             {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
                                                 <div key={idx}>{item.quantity}x {item.itemName}</div>
@@ -109,7 +114,14 @@ const Orders: React.FC = () => {
                                     </td>
                                     <td>Table {order.tableNumber || order.Table?.tableNumber || 'N/A'}</td>
                                     <td><span style={{ fontWeight: 800, color: '#6f4e37' }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
-                                    <td><span className={`status-pill pill-${order.status}`}>{order.status}</span></td>
+                                    <td>
+                                        <span
+                                            className={`status-pill pill-${order.status === 'ready' ? 'confirmed' : order.status === 'completed' ? 'delivered' : order.status === 'pending' ? 'pending' : 'preparing'}`}
+                                            style={{ textTransform: 'capitalize' }}
+                                        >
+                                            {order.status}
+                                        </span>
+                                    </td>
                                     <td>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                     <td>
                                         <select
@@ -120,6 +132,7 @@ const Orders: React.FC = () => {
                                         >
                                             <option value="pending">Pending</option>
                                             <option value="preparing">Preparing</option>
+                                            <option value="ready">Ready</option>
                                             <option value="completed">Completed</option>
                                         </select>
                                     </td>

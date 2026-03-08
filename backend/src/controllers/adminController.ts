@@ -243,8 +243,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     console.log("Admin: Calculating dashboard statistics");
     try {
         const totalOrders = await Order.count();
-        const ordersList = await Order.findAll();
-        const totalRevenue = ordersList.reduce((acc, order) => acc + Number(order.totalAmount), 0);
+        const paidOrders = await Order.findAll({
+            where: { paymentStatus: 'paid' }
+        });
+        const totalRevenue = paidOrders.reduce((acc, order) => acc + Number(order.totalAmount), 0);
 
         const totalUsers = await User.count({ where: { role: 'customer' } });
         const totalBookings = await Booking.count();

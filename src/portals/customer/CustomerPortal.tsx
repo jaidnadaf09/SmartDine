@@ -16,6 +16,7 @@ interface Booking {
   guests: string;
   customerName?: string;
   createdAt: any; // Change to any to handle Firestore Timestamp
+  table?: { tableNumber: number; capacity: number; status: string } | null;
 }
 
 interface OrderItem {
@@ -32,6 +33,7 @@ interface Order {
   items: OrderItem[];
   total: string;
   totalAmount?: string;
+  status: 'pending' | 'preparing' | 'ready' | 'completed';
   createdAt: any; // Change to any to handle Firestore Timestamp
 }
 
@@ -51,14 +53,21 @@ const CustomerPortal: React.FC = () => {
       }
 
       try {
+        const token = user.token;
+        if (!token) throw new Error('Token missing');
+
         // Fetch Bookings
-        const bookingsRes = await fetch(`${API_URL}/bookings/user/${user.id}`);
+        const bookingsRes = await fetch(`${API_URL}/bookings/my`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (!bookingsRes.ok) throw new Error('Failed to fetch bookings');
         const fetchedBookings: Booking[] = await bookingsRes.json();
         setBookings(fetchedBookings);
 
         // Fetch Orders
-        const ordersRes = await fetch(`${API_URL}/orders/user/${user.id}`);
+        const ordersRes = await fetch(`${API_URL}/orders/my`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (!ordersRes.ok) throw new Error('Failed to fetch orders');
         const fetchedOrders: Order[] = await ordersRes.json();
         setOrders(fetchedOrders);
@@ -119,11 +128,17 @@ const CustomerPortal: React.FC = () => {
           ) : (
             <div className="bookings-list">
               {bookings.map((booking) => (
-                <div key={booking.id} className="booking-item">
-                  <p><strong>Date:</strong> {new Date(booking.createdAt).toLocaleDateString()}</p>
-                  <p><strong>Time:</strong> {booking.time} on {booking.date}</p>
+                <div key={booking.id} className="booking-item" style={{ position: 'relative' }}>
+                  {booking.table ? (
+                    <span className="status-pill pill-ready" style={{ position: 'absolute', top: '10px', right: '10px' }}>Table Assigned</span>
+                  ) : (
+                    <span className="status-pill pill-pending" style={{ position: 'absolute', top: '10px', right: '10px' }}>Waiting for Table</span>
+                  )}
+                  <p><strong>Date:</strong> {new Date(booking.date).toLocaleDateString()}</p>
+                  <p><strong>Time:</strong> {booking.time}</p>
                   <p><strong>Guests:</strong> {booking.guests}</p>
-                  <p><strong>Contact:</strong> {booking.name || booking.customerName} ({booking.email}, {booking.phone})</p>
+                  <p><strong>Table:</strong> {booking.table ? `Table ${booking.table.tableNumber} (Seats: ${booking.table.capacity})` : 'Not assigned yet'}</p>
+                  <p><strong>Contact:</strong> {booking.name || booking.customerName}</p>
                 </div>
               ))}
             </div>
@@ -137,8 +152,15 @@ const CustomerPortal: React.FC = () => {
           ) : (
             <div className="orders-list">
               {orders.map((order) => (
-                <div key={order.id} className="order-item">
-                  <p><strong>Order Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+                <div key={order.id} className="order-item" style={{ position: 'relative' }}>
+                  <span
+                    className={`status-pill pill-${order.status === 'ready' ? 'confirmed' : order.status === 'completed' ? 'delivered' : order.status === 'pending' ? 'pending' : 'preparing'}`}
+                    style={{ position: 'absolute', top: '10px', right: '10px', textTransform: 'capitalize' }}
+                  >
+                    {order.status}
+                  </span>
+                  <p><strong>Order #{order.id}</strong></p>
+                  <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
                   <p><strong>Total:</strong> {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount || order.total))}</p>
                   <p><strong>Items:</strong></p>
                   <ul>
