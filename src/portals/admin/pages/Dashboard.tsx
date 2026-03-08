@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
         { label: 'Total Users', value: stats?.totalUsers || 0, icon: '👥', color: '#6f4e37' },
         { label: 'Total Bookings', value: stats?.totalBookings || 0, icon: '📅', color: '#a67c52' },
         { label: 'Total Orders', value: stats?.totalOrders || 0, icon: '📋', color: '#8b5a3c' },
-        { label: 'Total Revenue', value: `₹${stats?.totalRevenue || 0}`, icon: '💰', color: '#d4af37' },
+        { label: 'Total Revenue', value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(stats?.totalRevenue || 0), icon: '💰', color: '#d4af37' },
     ];
 
     return (

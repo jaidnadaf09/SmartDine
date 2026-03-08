@@ -8,7 +8,6 @@ import "./models/User";
 import "./models/Booking";
 import "./models/Table";
 import "./models/Order";
-import "./models/OrderItem";
 import "./models/MenuItem";
 import "./models/InventoryItem";
 

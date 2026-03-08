@@ -74,32 +74,44 @@ export const verifyPayment = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Invalid payment signature" });
         }
 
-        console.log('Backend: Signature verified. Checking table availability...');
+        console.log('Backend: Signature verified.');
 
-        // 1. Double check availability
-        const tableNumber = await findAvailableTable(bookingData.date, bookingData.time);
-        if (!tableNumber) {
-            console.error('Backend: No tables available during verification');
-            return res.status(400).json({ message: "No tables available for this slot anymore. Please contact support." });
+        // If bookingData exists, proceed to create the booking
+        if (bookingData) {
+            console.log('Backend: Checking table availability for booking...');
+
+            // 1. Double check availability
+            const tableNumber = await findAvailableTable(bookingData.date, bookingData.time);
+            if (!tableNumber) {
+                console.error('Backend: No tables available during verification');
+                return res.status(400).json({ message: "No tables available for this slot anymore. Please contact support." });
+            }
+
+            // 2. Create the booking record
+            console.log('Backend: Creating confirmed booking record for table:', tableNumber);
+            const newBooking = await Booking.create({
+                ...bookingData,
+                date: new Date(bookingData.date), // Ensure Date object
+                tableNumber,
+                paymentId: razorpay_payment_id,
+                paymentStatus: "paid",
+                status: "confirmed"
+            });
+
+            console.log('Backend: Booking created successfully. ID:', newBooking.id);
+            return res.json({
+                success: true,
+                message: "Payment verified and booking confirmed",
+                booking: newBooking
+            });
         }
 
-        // 2. Create the booking record
-        console.log('Backend: Creating confirmed booking record for table:', tableNumber);
-        const newBooking = await Booking.create({
-            ...bookingData,
-            date: new Date(bookingData.date), // Ensure Date object
-            tableNumber,
-            paymentId: razorpay_payment_id,
-            paymentStatus: "paid",
-            status: "confirmed"
+        // If bookingData doesn't exist, this is just a standard order verification
+        return res.json({
+            success: true,
+            message: "Payment verified successfully"
         });
 
-        console.log('Backend: Booking created successfully. ID:', newBooking.id);
-        res.json({
-            success: true,
-            message: "Payment verified and booking confirmed",
-            booking: newBooking
-        });
     } catch (error: any) {
         console.error("Backend: Error verifying payment:", error);
         res.status(500).json({

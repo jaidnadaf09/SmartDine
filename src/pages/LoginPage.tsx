@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
 
@@ -27,13 +28,14 @@ const LoginPage: React.FC = () => {
     setLoading(true);
 
     if (!formData.email || !formData.password) {
-      setError('Email and password are required');
+      toast.error('Email and password are required');
       setLoading(false);
       return;
     }
 
     try {
       const loggedInUser = await login(formData.email, formData.password);
+      toast.success('Login Successful');
 
       // Redirect based on role
       console.log('--- Login Successful ---');
@@ -57,9 +59,9 @@ const LoginPage: React.FC = () => {
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message || 'Invalid email or password');
+        toast.error(err.message || 'Invalid email or password');
       } else {
-        setError('Invalid email or password');
+        toast.error('Invalid email or password');
       }
     } finally {
       setLoading(false);
@@ -71,8 +73,6 @@ const LoginPage: React.FC = () => {
       <div className="auth-box">
         <h1>🍽️ RASOI GHAR</h1>
         <h2>Login</h2>
-
-        {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           {/* Removed "Select Portal" section */}

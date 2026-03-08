@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -55,14 +56,16 @@ const Tables: React.FC = () => {
             });
 
             if (res.ok) {
-                const data = await res.json();
-                setTables([...tables, data]);
+                const addedTable = await res.json();
+                setTables([...tables, addedTable]);
                 setNewTable({ tableNumber: '', capacity: 2 });
-                alert('Table added!');
+                toast.success('Table added!');
+            } else {
+                toast.error('Failed to add table');
             }
         } catch (err) {
             console.error('Failed to add table:', err);
-            alert('Failed to add table');
+            toast.error('Failed to add table');
         }
     };
 
@@ -77,10 +80,13 @@ const Tables: React.FC = () => {
 
             if (res.ok) {
                 setTables(tables.filter(t => t.id !== id));
+                toast.success('Table deleted!');
+            } else {
+                toast.error('Failed to delete table');
             }
         } catch (err) {
             console.error('Failed to delete table:', err);
-            alert('Failed to delete table');
+            toast.error('Failed to delete table');
         }
     };
 
@@ -95,14 +101,16 @@ const Tables: React.FC = () => {
                 },
                 body: JSON.stringify({ capacity })
             });
-
             if (res.ok) {
-                setTables(tables.map(t => t.id === id ? { ...t, capacity } : t));
-                alert('Capacity updated!');
+                const updated = await res.json();
+                setTables(tables.map(t => t.id === updated.id ? updated : t));
+                toast.success('Capacity updated!');
+            } else {
+                toast.error('Failed to update capacity');
             }
         } catch (err) {
             console.error('Failed to update capacity:', err);
-            alert('Failed to update capacity');
+            toast.error('Failed to update capacity');
         }
     };
 

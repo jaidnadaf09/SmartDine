@@ -6,7 +6,7 @@ import restaurantImage from '../assets/Restaurant_business_plan_main.jpg';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth(); // Use isAuthenticated and logout
+  const { user, isAuthenticated, logout } = useAuth(); // Use isAuthenticated, user, and logout
   const [showMenu, setShowMenu] = useState(false);
 
   const foodMenu = [
@@ -40,9 +40,17 @@ const LandingPage: React.FC = () => {
               Order
             </button>
             {isAuthenticated && ( // Only show "My Order" if authenticated
-              <button className="nav-btn" onClick={() => navigate('/customer')}>
-                My Order
-              </button>
+              <>
+                <button className="nav-btn" onClick={() => navigate('/customer')}>
+                  My Order
+                </button>
+                {/* Admin button only visible for admin role */}
+                {user?.role?.toLowerCase() === 'admin' && (
+                  <button className="nav-btn" onClick={() => navigate('/admin/dashboard')}>
+                    Admin Panel
+                  </button>
+                )}
+              </>
             )}
             {isAuthenticated ? (
               <button className="nav-btn logout-btn" onClick={logout}>

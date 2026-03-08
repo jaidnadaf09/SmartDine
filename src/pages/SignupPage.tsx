@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
 
@@ -30,31 +31,32 @@ const SignupPage: React.FC = () => {
 
     // Validation
     if (!formData.name || !formData.email || !formData.password) {
-      setError('All fields are required');
+      toast.error('All fields are required');
       setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      toast.error('Passwords do not match');
       setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+      toast.error('Password must be at least 6 characters');
       setLoading(false);
       return;
     }
 
     try {
       await signup(formData.name, formData.email, formData.password);
+      toast.success('Account created successfully!');
       navigate('/');
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message || 'Failed to create account');
+        toast.error(err.message || 'Failed to create account');
       } else {
-        setError('Failed to create account');
+        toast.error('Failed to create account');
       }
     } finally {
       setLoading(false);
@@ -66,8 +68,6 @@ const SignupPage: React.FC = () => {
       <div className="auth-box">
         <h1>🍽️ RASOI GHAR</h1>
         <h2>Create Account</h2>
-
-        {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
