@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '../context/AuthContext';
 import '../styles/LandingPage.css';
 import restaurantImage from '../assets/Restaurant_business_plan_main.jpg';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth(); // Use isAuthenticated, user, and logout
+  const { user, isAuthenticated, logout } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
 
   const foodMenu = [
-    { id: 1, name: 'Paneer Butter Masala', price: '₹280', description: 'Paneer in tomato gravy' },
-    { id: 2, name: 'Veg Biryani', price: '₹220', description: 'Spiced basmati rice' },
-    { id: 3, name: 'Masala Dosa', price: '₹120', description: 'Crispy dosa with potato' },
-    { id: 4, name: 'Chicken Tikka', price: '₹320', description: 'Grilled spicy chicken' },
-    { id: 5, name: 'Butter Naan', price: '₹40', description: 'Soft butter bread' },
-    { id: 6, name: 'Gulab Jamun', price: '₹90', description: 'Sweet milk dumplings' },
-    { id: 7, name: 'Chole Bhature', price: '₹150', description: 'Chickpeas with fried bread' },
-    { id: 8, name: 'Veg Fried Rice', price: '₹180', description: 'Stir-fried rice with vegetables' },
+    { id: 1, name: 'Chicken Tandoori', price: '₹120', description: 'Classic Indian roasted chicken' },
+    { id: 2, name: 'Chicken Pahadi', price: '₹150', description: 'Green herbs and spices marinated chicken' },
+    { id: 3, name: 'Paneer Tikka', price: '₹110', description: 'Cottage cheese grilled in tandoor' },
+    { id: 4, name: 'Veg Manchurian', price: '₹130', description: 'Indo-Chinese vegetable dumplings' },
+    { id: 5, name: 'Chicken Tikka', price: '₹320', description: 'Grilled spicy chicken' },
+    { id: 6, name: 'Butter Naan', price: '₹40', description: 'Soft butter bread' },
+    { id: 7, name: 'Veg Biryani', price: '₹220', description: 'Spiced basmati rice' },
+    { id: 8, name: 'Gulab Jamun', price: '₹90', description: 'Sweet milk dumplings' },
   ];
 
   return (
@@ -25,7 +25,7 @@ const LandingPage: React.FC = () => {
       {/* Header */}
       <header className="header">
         <div className="header-content">
-          <h1 className="logo">🍽️ Smart Dine </h1>
+          <h1 className="logo">🍽️ SmartDine</h1>
           <nav className="nav-buttons">
             <button
               className="nav-btn"
@@ -87,13 +87,14 @@ const LandingPage: React.FC = () => {
       {/* Menu Section */}
       {showMenu && (
         <section className="menu-section">
-          <h2>Our Menu</h2>
-          <div className="menu-grid">
+          <h2>🍽 Our Menu</h2>
+          <p className="menu-subtitle">Freshly prepared dishes crafted with authentic flavors.</p>
+          <div className="landing-menu-list">
             {foodMenu.map((item) => (
-              <div key={item.id} className="menu-item">
-                <h3>{item.name}</h3>
-                <p className="description">{item.description}</p>
-                <p className="price">{item.price}</p>
+              <div key={item.id} className="landing-menu-row">
+                <span className="landing-menu-name">{item.name}</span>
+                <span className="landing-menu-dots"></span>
+                <span className="landing-menu-price">{item.price}</span>
               </div>
             ))}
           </div>

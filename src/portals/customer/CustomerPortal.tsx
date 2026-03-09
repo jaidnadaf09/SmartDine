@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-// Removed Firebase imports
 import '../../styles/Portals.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -98,7 +97,7 @@ const CustomerPortal: React.FC = () => {
   return (
     <div className="portal-container">
       <header className="portal-header">
-        <h1>🍽️ Customer Portal</h1>
+        <h1>🍽️ SmartDine</h1>
         <div className="user-info">
           <span>Welcome, {user.name}!</span>
           <button className="logout-btn" onClick={handleLogout}>
@@ -108,8 +107,8 @@ const CustomerPortal: React.FC = () => {
       </header>
 
       <div className="portal-content">
-        <button className="back-btn" onClick={() => navigate('/')} style={{ marginBottom: "20px" }}>
-          ← Back
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          ← Go Back
         </button>
 
         <div className="portal-section">

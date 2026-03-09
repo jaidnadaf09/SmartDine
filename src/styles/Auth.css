@@ -117,23 +117,7 @@
   text-decoration: underline;
 }
 
-.back-btn {
-  width: 100%;
-  background: #f9f6f3;
-  color: #6f4e37;
-  border: 2px solid #e8d4c0;
-  padding: 0.75rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
-}
 
-.back-btn:hover {
-  background: #e8d4c0;
-  border-color: #6f4e37;
-}
 
 /* Responsive */
 @media (max-width: 480px) {
