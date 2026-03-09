@@ -32,23 +32,32 @@ const loadRazorpayScript = () => {
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth(); // Get the current user
+  const [menuItems, setMenuItems] = useState<any[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
-  const [loading, setLoading] = useState(false); // Add loading state
-  const [error, setError] = useState(''); // Add error state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const menuItems = [
-    { id: 1, name: 'Paneer Butter Masala', price: 280 },
-    { id: 2, name: 'Veg Biryani', price: 220 },
-    { id: 3, name: 'Masala Dosa', price: 120 },
-    { id: 4, name: 'Chicken Tikka', price: 320 },
-    { id: 5, name: 'Butter Naan', price: 40 },
-    { id: 6, name: 'Dal Tadka', price: 150 },
-    { id: 7, name: 'Fried Rice', price: 180 },
-    { id: 8, name: 'Gulab Jamun', price: 90 },
-    { id: 9, name: 'Paneer Tikka', price: 260 },
-  ];
+  React.useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        const response = await fetch(`${API_URL}/menu`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch menu items');
+        }
+        const data = await response.json();
+        setMenuItems(data);
+      } catch (err: any) {
+        console.error('Error fetching menu:', err);
+        setError('Failed to load menu. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const addToCart = (item: typeof menuItems[0]) => {
+    fetchMenuItems();
+  }, []);
+
+  const addToCart = (item: any) => {
     const existingItem = cart.find((cartItem) => cartItem.id === item.id);
     if (existingItem) {
       setCart(
@@ -62,6 +71,26 @@ const OrderPage: React.FC = () => {
       setCart([...cart, { ...item, quantity: 1 }]);
     }
   };
+
+  // Group items by category
+  const groupedMenu = menuItems.reduce((acc: { [key: string]: any[] }, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = [];
+    }
+    acc[item.category].push(item);
+    return acc;
+  }, {});
+
+  const categories = [
+    'Chicken Starters',
+    'Veg Main Course',
+    'Chicken Main Course',
+    'Indian Breads',
+    'Mandi Special',
+    'Biryani Course',
+    'Rice',
+    'Orders Per KG'
+  ];
 
   const removeFromCart = (id: number) => {
     setCart(cart.filter((item) => item.id !== id));
@@ -93,7 +122,7 @@ const OrderPage: React.FC = () => {
       return;
     }
 
-    setLoading(true); // Set loading to true on checkout
+    setLoading(true);
 
     try {
       const isLoaded = await loadRazorpayScript();
@@ -135,7 +164,6 @@ const OrderPage: React.FC = () => {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
-                // Omitting bookingData explicitly triggers the standalone payment verification flow
               }),
             });
 
@@ -147,8 +175,8 @@ const OrderPage: React.FC = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  userId: user.id, // Track the user who placed it
-                  tableNumber: 1, // Default table for now
+                  userId: user.id,
+                  tableNumber: 1,
                   totalAmount: totalAmountFloat,
                   paymentId: response.razorpay_payment_id,
                   paymentStatus: 'paid',
@@ -201,7 +229,7 @@ const OrderPage: React.FC = () => {
       } else {
         setError('Failed to place order. Please try again.');
       }
-      setLoading(false); // Only stop loading if we hit an error early. If checkout opens, loading stops on success/fail inside callback
+      setLoading(false);
     }
   };
 
@@ -214,20 +242,41 @@ const OrderPage: React.FC = () => {
       <div className="order-content">
         <div className="menu-section">
           <h2>🍽️ Menu</h2>
-          <div className="menu-grid">
-            {menuItems.map((item) => (
-              <div key={item.id} className="menu-card">
-                <h3>{item.name}</h3>
-                <p className="price">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}</p>
-                <button
-                  className="add-btn"
-                  onClick={() => addToCart(item)}
-                >
-                  Add to Cart
-                </button>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="loading-spinner">Loading menu...</div>
+          ) : error ? (
+            <div className="error-message">{error}</div>
+          ) : (
+            <div className="categories-container">
+              {categories.map((category) => (
+                groupedMenu[category] && (
+                  <div key={category} className="category-group">
+                    <h3 className="category-title">{category}</h3>
+                    <div className="menu-grid">
+                      {groupedMenu[category].map((item) => (
+                        <div key={item.id} className="menu-card">
+                          <h4>{item.name}</h4>
+                          <p className="price">
+                            {new Intl.NumberFormat('en-IN', {
+                              style: 'currency',
+                              currency: 'INR',
+                              maximumFractionDigits: 0
+                            }).format(item.price)}
+                          </p>
+                          <button
+                            className="add-btn"
+                            onClick={() => addToCart(item)}
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="cart-section">

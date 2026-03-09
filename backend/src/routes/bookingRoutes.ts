@@ -1,5 +1,6 @@
 import express from 'express';
-import { getBookings, createBooking, updateBooking, getUserBookings, checkAvailability, getMyBookings } from '../controllers/bookingController';
+import { getBookings, createBooking, updateBooking, getUserBookings, checkAvailability } from '../controllers/bookingController';
+import { updateBookingTable } from '../controllers/adminController';
 import { protect, staffOnly } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -10,12 +11,13 @@ router.route('/')
 
 router.post('/check-availability', checkAvailability);
 
-router.get('/my', protect, getMyBookings);
-
 router.route('/user/:userId')
     .get(getUserBookings);
 
 router.route('/:id')
     .put(protect, staffOnly, updateBooking);
+
+router.route('/:id/table')
+    .put(protect, staffOnly, updateBookingTable);
 
 export default router;

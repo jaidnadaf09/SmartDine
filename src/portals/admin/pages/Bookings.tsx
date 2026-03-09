@@ -8,6 +8,8 @@ const Bookings: React.FC = () => {
     const [tables, setTables] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
 
     const fetchData = async () => {
         setLoading(true);
@@ -24,7 +26,7 @@ const Bookings: React.FC = () => {
 
             const [bRes, tRes] = await Promise.all([
                 fetch(`${API_URL}/admin/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/admin/tables`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`${API_URL}/admin/tables/available`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             if (!bRes.ok || !tRes.ok) throw new Error('Failed to fetch data');
@@ -66,24 +68,44 @@ const Bookings: React.FC = () => {
         }
     };
 
-    const assignTable = async (id: number, tableId: number) => {
+    const updateTableAPI = async (id: number, tableId: number | null) => {
         try {
             const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
-            const res = await fetch(`${API_URL}/admin/bookings/${id}/assign-table`, {
+            const res = await fetch(`${API_URL}/bookings/${id}/table`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ tableId })
             });
             if (res.ok) {
-                toast.success('Table assigned!');
-                fetchData(); // Refresh to see updated statuses
+                const data = await res.json();
+                setBookings(prev => prev.map(b => b.id === id ? data.booking : b));
+
+                if (tableId === null) {
+                    toast.success('Table unassigned successfully');
+                } else {
+                    toast.success('Table updated successfully');
+                }
+
+                // Optionally refresh to sync tables array (free/occupied counts)
+                fetchData();
             } else {
-                toast.error('Failed to assign table');
+                toast.error('Failed to update table');
             }
         } catch (err) {
-            console.error('Failed to assign table:', err);
-            toast.error('Failed to assign table');
+            console.error('Failed to update table:', err);
+            toast.error('Failed to update table');
         }
+    };
+
+    const handleOpenModal = (bookingId: number) => {
+        setSelectedBookingId(bookingId);
+        setIsModalOpen(true);
+    };
+
+    const handleAssignFromModal = async (tableId: number) => {
+        if (!selectedBookingId) return;
+        setIsModalOpen(false);
+        await updateTableAPI(selectedBookingId, tableId);
     };
 
     return (
@@ -137,17 +159,43 @@ const Bookings: React.FC = () => {
                                     <td>{booking.guests} Guests</td>
                                     <td><span className={`status-pill pill-${booking.status}`}>{booking.status}</span></td>
                                     <td><span className={`status-pill pill-${booking.paymentStatus === 'paid' ? 'confirmed' : 'cancelled'}`}>{booking.paymentStatus}</span></td>
-                                    <td>
-                                        <select
-                                            className="admin-select"
-                                            onChange={(e) => assignTable(booking.id, Number(e.target.value))}
-                                            defaultValue=""
-                                        >
-                                            <option value="" disabled>Select Table</option>
-                                            {tables.filter(t => t.status === 'available').map(t => (
-                                                <option key={t.id} value={t.id}>Table {t.tableNumber} (Seats: {t.capacity})</option>
-                                            ))}
-                                        </select>
+                                    <td style={{ minWidth: '220px' }}>
+                                        {(booking.tableId || booking.tableNumber) ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#5a3f2d' }}>
+                                                    Assigned Table: Table {booking.tableId || booking.tableNumber}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        className="btn-confirm"
+                                                        onClick={() => handleOpenModal(booking.id)}
+                                                        style={{ padding: '4px 8px', fontSize: '0.8rem', flex: 1 }}
+                                                    >
+                                                        Change Table
+                                                    </button>
+                                                    <button
+                                                        className="btn-cancel"
+                                                        onClick={() => updateTableAPI(booking.id, null)}
+                                                        style={{ padding: '4px 8px', fontSize: '0.8rem', minWidth: '70px' }}
+                                                    >
+                                                        Unassign
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#888' }}>
+                                                    Assigned Table: Not Assigned
+                                                </div>
+                                                <button
+                                                    className="btn-confirm"
+                                                    onClick={() => handleOpenModal(booking.id)}
+                                                    style={{ padding: '6px 12px', fontSize: '0.9rem', width: '100%' }}
+                                                >
+                                                    Assign Table
+                                                </button>
+                                            </div>
+                                        )}
                                     </td>
                                     <td>
                                         {booking.status === 'pending' && (
@@ -161,6 +209,53 @@ const Bookings: React.FC = () => {
                             ))}
                         </tbody>
                     </table>
+                </div>
+            )}
+            {isModalOpen && (
+                <div className="modal-overlay" style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+                    alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div className="modal-content" style={{
+                        background: '#fff', padding: '2rem', borderRadius: '12px',
+                        width: '400px', maxWidth: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                    }}>
+                        <h3 style={{ marginTop: 0, color: '#5a3f2d', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                            Select a Table
+                        </h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', marginBottom: '1.5rem' }}>
+                            {tables.filter(t => t.status === 'available').length === 0 ? (
+                                <p style={{ color: '#888', textAlign: 'center' }}>No available tables.</p>
+                            ) : (
+                                tables.filter(t => t.status === 'available').map(t => (
+                                    <button
+                                        key={t.id}
+                                        onClick={() => handleAssignFromModal(t.id)}
+                                        style={{
+                                            padding: '12px', background: '#f9f6f0', border: '1px solid #e8d4c0',
+                                            borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
+                                            fontWeight: 600, color: '#5a3f2d', display: 'flex', justifyContent: 'space-between'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#e8d4c0'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = '#f9f6f0'}
+                                    >
+                                        <span>Table {t.tableNumber}</span>
+                                        <span style={{ fontSize: '0.85em', color: '#888' }}>Seats: {t.capacity}</span>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                className="btn-cancel"
+                                onClick={() => setIsModalOpen(false)}
+                                style={{ padding: '8px 16px' }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

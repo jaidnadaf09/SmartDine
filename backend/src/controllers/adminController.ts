@@ -70,30 +70,39 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
     }
 };
 
-// @desc    Assign table to booking
-// @route   PUT /api/admin/bookings/:id/assign-table
+// @desc    Update table for booking (Assign, Change, Unassign)
+// @route   PUT /api/admin/bookings/:id/table
 // @access  Private/Admin
-export const assignTable = async (req: Request, res: Response) => {
+export const updateBookingTable = async (req: Request, res: Response) => {
     try {
         const { tableId } = req.body;
+        console.log("API /table: Booking ID:", req.params.id);
+        console.log("API /table: Table ID:", tableId);
+
         const booking = await Booking.findByPk(req.params.id);
+
         if (!booking) {
+            console.log("API /table ERROR: Booking not found");
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        const table = await Table.findByPk(tableId);
-        if (!table) {
-            return res.status(404).json({ message: 'Table not found' });
+        if (tableId === null) {
+            booking.tableId = null;
+            booking.tableNumber = null as any;
+        } else {
+            const table = await Table.findByPk(tableId);
+            if (!table) {
+                return res.status(404).json({ message: 'Table not found' });
+            }
+            booking.tableId = table.id;
+            booking.tableNumber = table.tableNumber;
         }
 
-        // Additional logic could be added here to mark table as occupied
-        await table.update({ status: 'occupied' });
-
-        booking.status = 'confirmed';
         await booking.save();
 
-        res.json({ message: 'Table assigned and booking confirmed', booking, table });
+        res.json({ message: 'Table updated successfully', booking });
     } catch (error) {
+        console.error('Error updating booking table:', error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -105,8 +114,49 @@ export const getTables = async (req: Request, res: Response) => {
     console.log("Admin: Fetching all tables");
     try {
         const tables = await Table.findAll();
+        const bookings = await Booking.findAll({
+            where: { tableId: { [Op.ne]: null } }
+        });
+
+        const assignedTableIds = bookings.map((b: any) => b.tableId);
+
+        const updatedTables = tables.map(table => {
+            const tableData = table.toJSON();
+            const isReserved = assignedTableIds.includes(table.id);
+            return {
+                ...tableData,
+                status: isReserved ? 'RESERVED' : 'AVAILABLE'
+            };
+        });
+
+        res.json(updatedTables);
+    } catch (error) {
+        console.error("Error fetching tables:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get available tables
+// @route   GET /api/admin/tables/available
+// @access  Private/Admin
+export const getAvailableTables = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching available tables");
+    try {
+        const bookings = await Booking.findAll({
+            where: { tableId: { [Op.ne]: null } }
+        });
+
+        const assignedTableIds = bookings.map(b => b.tableId);
+
+        let whereClause = {};
+        if (assignedTableIds.length > 0) {
+            whereClause = { id: { [Op.notIn]: assignedTableIds } };
+        }
+
+        const tables = await Table.findAll({ where: whereClause });
         res.json(tables);
     } catch (error) {
+        console.error("Error fetching available tables:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -243,10 +293,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     console.log("Admin: Calculating dashboard statistics");
     try {
         const totalOrders = await Order.count();
-        const paidOrders = await Order.findAll({
-            where: { paymentStatus: 'paid' }
-        });
-        const totalRevenue = paidOrders.reduce((acc, order) => acc + Number(order.totalAmount), 0);
+        const ordersList = await Order.findAll();
+        const totalRevenue = ordersList.reduce((acc, order) => acc + Number(order.totalAmount), 0);
 
         const totalUsers = await User.count({ where: { role: 'customer' } });
         const totalBookings = await Booking.count();

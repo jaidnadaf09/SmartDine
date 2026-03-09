@@ -45,8 +45,6 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 };
 
-import { findAvailableTable } from "../utils/bookingUtils";
-
 export const verifyPayment = async (req: Request, res: Response) => {
     try {
         const {
@@ -78,21 +76,12 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
         // If bookingData exists, proceed to create the booking
         if (bookingData) {
-            console.log('Backend: Checking table availability for booking...');
-
-            // 1. Double check availability
-            const tableNumber = await findAvailableTable(bookingData.date, bookingData.time);
-            if (!tableNumber) {
-                console.error('Backend: No tables available during verification');
-                return res.status(400).json({ message: "No tables available for this slot anymore. Please contact support." });
-            }
-
-            // 2. Create the booking record
-            console.log('Backend: Creating confirmed booking record for table:', tableNumber);
+            console.log('Backend: Creating booking record (pending table assignment)...');
             const newBooking = await Booking.create({
                 ...bookingData,
                 date: new Date(bookingData.date), // Ensure Date object
-                tableNumber,
+                tableNumber: null,
+                tableId: null,
                 paymentId: razorpay_payment_id,
                 paymentStatus: "paid",
                 status: "confirmed"

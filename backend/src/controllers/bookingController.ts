@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import Booking from '../models/Booking';
-import Table from '../models/Table';
-import { AuthRequest } from '../middleware/authMiddleware';
+
 import { findAvailableTable } from '../utils/bookingUtils';
 
 // @desc    Get all bookings
@@ -47,21 +46,11 @@ export const createBooking = async (req: Request, res: Response) => {
     try {
         console.log('Received booking request:', req.body);
 
-        const { date, time, tableNumber } = req.body;
-
-        // If tableNumber is not provided (e.g., admin quick book or public bypass), find one
-        let assignedTable = tableNumber;
-        if (!assignedTable) {
-            assignedTable = await findAvailableTable(date, time);
-            if (!assignedTable) {
-                return res.status(400).json({ message: 'No tables available for this time slot.' });
-            }
-        }
-
         const booking = await Booking.create({
             ...req.body,
-            tableNumber: assignedTable,
-            status: req.body.status || 'confirmed' // Default to confirmed for direct creation
+            tableId: null,
+            tableNumber: null,
+            status: 'pending' // Correctly default to pending so Admin can assign it
         });
 
         res.status(201).json(booking);
@@ -101,41 +90,10 @@ export const updateBooking = async (req: Request, res: Response) => {
 // @access  Public (for now, based on frontend implementation)
 export const getUserBookings = async (req: Request, res: Response) => {
     try {
-        const bookings = await Booking.findAll({
-            where: { userId: req.params.userId },
-            include: [{
-                model: Table,
-                as: 'table',
-                attributes: ['tableNumber', 'capacity', 'status']
-            }]
-        });
+        const bookings = await Booking.findAll({ where: { userId: req.params.userId } });
         res.json(bookings);
     } catch (error: any) {
         console.error('Error fetching user bookings:', error);
-        res.status(500).json({ message: error.message || 'Server Error' });
-    }
-};
-
-// @desc    Get my bookings
-// @route   GET /api/bookings/my
-// @access  Private
-export const getMyBookings = async (req: AuthRequest, res: Response) => {
-    try {
-        if (!req.user) {
-            return res.status(401).json({ message: 'Not authorized' });
-        }
-
-        const bookings = await Booking.findAll({
-            where: { userId: req.user.id },
-            include: [{
-                model: Table,
-                as: 'table',
-                attributes: ['tableNumber', 'capacity', 'status']
-            }]
-        });
-        res.json(bookings);
-    } catch (error: any) {
-        console.error('Error fetching my bookings:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
     }
 };

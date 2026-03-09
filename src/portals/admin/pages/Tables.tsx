@@ -114,29 +114,6 @@ const Tables: React.FC = () => {
         }
     };
 
-    const unassignTable = async (id: number) => {
-        if (!window.confirm('Are you sure you want to unassign this table and cancel any active bookings holding it?')) return;
-        try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/admin/tables/${id}/unassign`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${userData.token}` }
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                // Find table and auto refresh
-                setTables(tables.map(t => t.id === id ? data.table : t));
-                toast.success('Table unassigned successfully!');
-            } else {
-                toast.error('Failed to unassign table');
-            }
-        } catch (err) {
-            console.error('Failed to unassign table:', err);
-            toast.error('Error connecting to Server');
-        }
-    };
-
     return (
         <div className="management-page">
             <h2 className="dashboard-title">Dining Tables</h2>
@@ -215,19 +192,13 @@ const Tables: React.FC = () => {
                                             <span>Seats</span>
                                         </div>
                                     </td>
-                                    <td><span className={`status-pill pill-${table.status}`}>{table.status}</span></td>
                                     <td>
-                                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                            {table.status !== 'available' && (
-                                                <button
-                                                    onClick={() => unassignTable(table.id)}
-                                                    style={{ padding: '0.5rem 1rem', background: '#ffeeba', color: '#856404', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}
-                                                >
-                                                    Unassign
-                                                </button>
-                                            )}
-                                            <button className="btn-delete" onClick={() => deleteTable(table.id)} style={{ padding: '0.5rem 1rem', background: '#f8d7da', color: '#721c24', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
-                                        </div>
+                                        <span className={`status-pill pill-${table.status === 'RESERVED' ? 'pending' : 'confirmed'}`}>
+                                            {table.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button className="btn-delete" onClick={() => deleteTable(table.id)} style={{ padding: '0.5rem 1rem', background: '#f8d7da', color: '#721c24', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
                                     </td>
                                 </tr>
                             ))}
