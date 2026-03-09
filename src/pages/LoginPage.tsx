@@ -11,7 +11,6 @@ const LoginPage: React.FC = () => {
     email: '',
     password: '',
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -24,7 +23,6 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     if (!formData.email || !formData.password) {
@@ -71,7 +69,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <h1>🍽️ RASOI GHAR</h1>
+        <h1>🍽️ SmartDine</h1>
         <h2>Login</h2>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -113,8 +111,8 @@ const LoginPage: React.FC = () => {
           <a onClick={() => navigate('/signup')}>Sign up here</a>
         </p>
 
-        <button className="back-btn" onClick={() => navigate('/')}>
-          Back to Home
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          ← Go Back
         </button>
       </div>
     </div>

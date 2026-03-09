@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -276,10 +276,10 @@ const BookTablePage: React.FC = () => {
 
   return (
     <div className="book-table-container">
-      <button className="back-btn" onClick={() => navigate('/')}>← Back</button>
+      <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
 
       <div className="book-table-box">
-        <h1>🍽️ SMART DINE</h1>
+        <h1>🍽️ SmartDine</h1>
         <h2>Premium Table Booking</h2>
 
         {error && <div className="error-message" style={{ background: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>{error}</div>}

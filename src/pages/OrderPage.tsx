@@ -36,6 +36,9 @@ const OrderPage: React.FC = () => {
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [assignedTable, setAssignedTable] = useState<number | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   React.useEffect(() => {
     const fetchMenuItems = async () => {
@@ -54,8 +57,27 @@ const OrderPage: React.FC = () => {
       }
     };
 
+    const fetchUserBooking = async () => {
+      if (user) {
+        try {
+          const res = await fetch(`${API_URL}/bookings/user/${user.id}`);
+          if (res.ok) {
+            const bookings = await res.json();
+            // Find a confirmed booking with a table number
+            const active = bookings.find((b: any) => b.status === 'confirmed' && b.tableNumber);
+            if (active) {
+              setAssignedTable(active.tableNumber);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch user bookings:', err);
+        }
+      }
+    };
+
     fetchMenuItems();
-  }, []);
+    fetchUserBooking();
+  }, [user]);
 
   const addToCart = (item: any) => {
     const existingItem = cart.find((cartItem) => cartItem.id === item.id);
@@ -176,7 +198,6 @@ const OrderPage: React.FC = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   userId: user.id,
-                  tableNumber: 1,
                   totalAmount: totalAmountFloat,
                   paymentId: response.razorpay_payment_id,
                   paymentStatus: 'paid',
@@ -235,9 +256,25 @@ const OrderPage: React.FC = () => {
 
   return (
     <div className="order-container">
-      <button className="back-btn" onClick={() => navigate('/')}>
-        ← Back
-      </button>
+      <div className="order-header">
+        <button className="back-btn" onClick={() => navigate(-1)}>
+          ← Go Back
+        </button>
+        <h1>🍽️ SmartDine</h1>
+      </div>
+
+      {/* Improved Takeaway Message Displayed at the Top */}
+      <div className="table-status-banner">
+        {assignedTable ? (
+          <p>
+            🍽️ You are ordering for Table {assignedTable} (Dine-In)
+          </p>
+        ) : (
+          <p>
+            🛍️ Your order will be prepared as Parcel while your table is being assigned.
+          </p>
+        )}
+      </div>
 
       <div className="order-content">
         <div className="menu-section">
@@ -248,33 +285,81 @@ const OrderPage: React.FC = () => {
             <div className="error-message">{error}</div>
           ) : (
             <div className="categories-container">
-              {categories.map((category) => (
-                groupedMenu[category] && (
-                  <div key={category} className="category-group">
-                    <h3 className="category-title">{category}</h3>
-                    <div className="menu-grid">
-                      {groupedMenu[category].map((item) => (
-                        <div key={item.id} className="menu-card">
-                          <h4>{item.name}</h4>
-                          <p className="price">
-                            {new Intl.NumberFormat('en-IN', {
-                              style: 'currency',
-                              currency: 'INR',
-                              maximumFractionDigits: 0
-                            }).format(item.price)}
-                          </p>
-                          <button
-                            className="add-btn"
-                            onClick={() => addToCart(item)}
-                          >
-                            Add to Cart
-                          </button>
-                        </div>
-                      ))}
+              {/* Search Bar */}
+              <div className="menu-search-container">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search menu..."
+                  className="menu-search-input"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Category Filter Buttons */}
+              <div className="category-filters">
+                <button
+                  className={`filter-btn ${activeCategory === 'All' ? 'active' : ''}`}
+                  onClick={() => setActiveCategory('All')}
+                >
+                  All
+                </button>
+                {categories.map((category) => (
+                  groupedMenu[category] && (
+                    <button
+                      key={category}
+                      className={`filter-btn ${activeCategory === category ? 'active' : ''}`}
+                      onClick={() => setActiveCategory(category)}
+                    >
+                      {category}
+                    </button>
+                  )
+                ))}
+              </div>
+
+              {/* Filtered Menu Cards */}
+              {categories
+                .filter(category => activeCategory === 'All' || activeCategory === category)
+                .map((category) => {
+                  // Filter items within the category by search query
+                  const filteredItems = (groupedMenu[category] || []).filter(item =>
+                    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
+
+                  if (filteredItems.length === 0) return null;
+
+                  return (
+                    <div key={category} className="category-group">
+                      {activeCategory === 'All' && <h3 className="category-title">{category}</h3>}
+                      <div className="menu-grid">
+                        {filteredItems.map((item) => (
+                          <div key={item.id} className="menu-card compact-card">
+                            <div className="card-content">
+                              <h4 className="item-title">
+                                {item.name}
+                              </h4>
+                              <p className="price">
+                                {new Intl.NumberFormat('en-IN', {
+                                  style: 'currency',
+                                  currency: 'INR',
+                                  maximumFractionDigits: 0
+                                }).format(item.price)}
+                              </p>
+
+                              <button
+                                className="add-btn"
+                                onClick={() => addToCart(item)}
+                              >
+                                Add to Cart
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )
-              ))}
+                  );
+                })}
             </div>
           )}
         </div>
@@ -357,3 +442,4 @@ const OrderPage: React.FC = () => {
 };
 
 export default OrderPage;
+

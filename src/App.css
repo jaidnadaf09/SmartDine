@@ -6,9 +6,12 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  background-color: var(--bg-color);
+  color: var(--text-main);
 }
 
 html,
@@ -27,3 +30,271 @@ select {
   font-family: inherit;
 }
 
+/* Base Theme Variables */
+:root {
+  --bg-color: #ffffff;
+  --text-main: #333333;
+  --text-muted: #666666;
+  --card-bg: #f9f6f3;
+  --card-border: #e8d4c0;
+  --highlight-color: #6f4e37;
+  --header-bg: linear-gradient(135deg, #6f4e37 0%, #8b5a3c 100%);
+}
+
+/* Dark Theme Overrides */
+body.dark {
+  --bg-color: #121212;
+  --text-main: #f5f5f5;
+  --text-muted: #aaaaaa;
+  --card-bg: #1e1e1e;
+  --card-border: #333333;
+  --highlight-color: #d4af37;
+  --header-bg: #1e1e1e;
+}
+
+body.dark {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+
+
+/* Override Landing Page backgrounds in Dark Mode */
+body.dark .landing-page {
+  background: #121212;
+}
+
+body.dark .header {
+  background: #1e1e1e;
+  border-bottom: 1px solid #333;
+}
+
+body.dark .hero-content h2,
+body.dark .hero-content p,
+body.dark .menu-section h2,
+body.dark .showcase-text h2,
+body.dark .showcase-text p,
+body.dark .features h2,
+body.dark .feature h3,
+body.dark .feature p,
+body.dark .landing-menu-name,
+body.dark .landing-menu-price,
+body.dark .menu-subtitle {
+  color: var(--text-main);
+}
+
+body.dark .menu-section,
+body.dark .showcase,
+body.dark .features,
+body.dark .landing-menu-row {
+  background: var(--card-bg);
+  border-color: var(--card-border);
+}
+
+body.dark .landing-menu-row:hover {
+  background-color: #2a2a2a;
+}
+
+body.dark .landing-menu-dots {
+  border-color: #444;
+}
+
+/* Override Order Page backgrounds in Dark Mode */
+body.dark .order-container {
+  background: #121212;
+}
+
+body.dark .menu-section,
+body.dark .cart-section,
+body.dark .menu-card,
+body.dark .table-status-banner {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
+}
+
+body.dark .menu-section h2,
+body.dark .cart-section h2,
+body.dark .category-title,
+body.dark .menu-card h4,
+body.dark .table-status-banner,
+body.dark .empty-cart,
+body.dark .item-info h4,
+body.dark .summary-row {
+  color: var(--text-main);
+}
+
+body.dark .menu-search-container,
+body.dark .menu-search-input {
+  background: var(--bg-color);
+  color: var(--text-main);
+  border-color: var(--card-border);
+}
+
+body.dark .filter-btn {
+  background: var(--bg-color);
+  color: var(--text-main);
+  border-color: var(--card-border);
+}
+
+body.dark .filter-btn:hover,
+body.dark .filter-btn.active {
+  background: var(--highlight-color);
+  color: #121212;
+}
+
+body.dark .cart-item {
+  background: var(--bg-color);
+  border-color: var(--card-border);
+}
+
+body.dark .qty-btn,
+body.dark .qty-input {
+  background: var(--bg-color);
+  color: var(--text-main);
+}
+
+body.dark .item-total,
+body.dark .summary-row.total {
+  color: var(--highlight-color);
+}
+
+body.dark .order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+/* Override Book Table in Dark Mode */
+body.dark .book-table-container {
+  background: var(--bg-color);
+}
+
+body.dark .book-table-box {
+  background: var(--card-bg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--card-border);
+}
+
+body.dark .form-group label,
+body.dark .book-table-box h1,
+body.dark .book-table-box h2 {
+  color: var(--text-main);
+}
+
+body.dark .form-group input,
+body.dark .form-group select {
+  background: var(--bg-color);
+  color: var(--text-main);
+  border-color: var(--card-border);
+}
+
+/* My Orders / Customer Portal Override in Dark Mode */
+body.dark .portal-container {
+  background: var(--bg-color);
+  color: var(--text-main);
+}
+
+body.dark .portal-content {
+  background: var(--bg-color);
+  color: var(--text-main);
+}
+
+body.dark .portal-header,
+body.dark .portal-section h2,
+body.dark .user-info span {
+  color: var(--text-main);
+}
+
+body.dark .booking-item,
+body.dark .order-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-main);
+}
+
+body.dark .booking-item p,
+body.dark .order-item p,
+body.dark .order-item li {
+  color: var(--text-muted);
+}
+
+/* Base card styling for Portal sections and items */
+.portal-section {
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.booking-item,
+.order-item {
+  padding: 1rem;
+  border-radius: 10px;
+  background: var(--bg-color);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  margin-bottom: 1rem;
+  transition: all 0.3s ease;
+}
+
+.booking-item:hover,
+.order-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.order-item ul li {
+  background: var(--card-bg);
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  margin-bottom: 0.4rem;
+}
+
+body.dark .booking-item,
+body.dark .order-item {
+  background: #1e1e1e;
+  /* Requested dark background for cards */
+}
+
+body.dark .order-item ul li {
+  background: #2a2a2a;
+}
+
+/* Global Back Button styling */
+.back-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  background: rgba(111, 78, 55, 0.1);
+  color: var(--highlight-color);
+  border: 1px solid var(--card-border);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-btn:hover {
+  transform: translateX(-3px);
+  background: rgba(111, 78, 55, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark .back-btn {
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--text-main);
+  border-color: #444;
+}
+
+body.dark .back-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  color: var(--text-main);
+}
