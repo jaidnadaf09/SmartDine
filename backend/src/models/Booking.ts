@@ -9,7 +9,8 @@ export interface BookingAttributes {
     date: Date;
     time: string;
     guests: number;
-    tableNumber?: number | null;
+    tableNumber?: number;
+    tableId?: number | null;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     specialRequests?: string;
     userId?: number;
@@ -26,7 +27,8 @@ export class Booking extends Model<BookingAttributes> implements BookingAttribut
     public date!: Date;
     public time!: string;
     public guests!: number;
-    public tableNumber!: number | null;
+    public tableNumber!: number;
+    public tableId!: number | null;
     public status!: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     public specialRequests!: string;
     public userId!: number;
@@ -70,6 +72,14 @@ Booking.init(
         tableNumber: {
             type: DataTypes.INTEGER,
             allowNull: true,
+        },
+        tableId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            references: {
+                model: 'tables',
+                key: 'id'
+            }
         },
         status: {
             type: DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),

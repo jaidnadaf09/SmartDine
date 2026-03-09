@@ -6,8 +6,9 @@ import {
     deleteUser,
     getBookings,
     updateBookingStatus,
-    assignTable,
+    updateBookingTable,
     getTables,
+    getAvailableTables,
     addTable,
     updateTable,
     deleteTable,
@@ -30,9 +31,10 @@ router.route('/users/:id').delete(deleteUser);
 
 router.route('/bookings').get(getBookings);
 router.route('/bookings/:id/status').put(updateBookingStatus);
-router.route('/bookings/:id/assign-table').put(assignTable);
+router.route('/bookings/:id/table').put(updateBookingTable);
 
 router.route('/tables').get(getTables).post(addTable);
+router.route('/tables/available').get(getAvailableTables);
 router.route('/tables/:id').put(updateTable).delete(deleteTable);
 
 router.route('/orders').get(getOrders);

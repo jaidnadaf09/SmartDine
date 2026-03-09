@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import Table from '../models/Table';
-import Booking from '../models/Booking';
 
 // @desc    Get all tables
 // @route   GET /api/tables
@@ -42,38 +41,6 @@ export const updateTable = async (req: Request, res: Response) => {
         } else {
             res.status(404).json({ message: 'Table not found' });
         }
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
-    }
-};
-
-// @desc    Unassign a table
-// @route   PATCH /api/tables/:id/unassign
-// @access  Private/Staff or Admin
-export const unassignTable = async (req: Request, res: Response) => {
-    try {
-        const table = await Table.findByPk(req.params.id);
-
-        if (!table) {
-            return res.status(404).json({ message: 'Table not found' });
-        }
-
-        // Remove references from any confirmed bookings holding this table 
-        // We look for 'confirmed' so we don't accidentally pull completed ones if strict history isn't needed
-        // but it's safer to just clear any active bookings.
-        const activeBookings = await Booking.findAll({
-            where: { tableNumber: table.tableNumber, status: 'confirmed' }
-        });
-
-        for (const booking of activeBookings) {
-            booking.tableNumber = null as any;
-            await booking.save();
-        }
-
-        table.status = 'available';
-        const updatedTable = await table.save();
-        res.json({ message: 'Table unassigned successfully', table: updatedTable });
-
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }

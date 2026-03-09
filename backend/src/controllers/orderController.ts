@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import Order from '../models/Order';
 import User from '../models/User';
-import Table from '../models/Table';
 import { AuthRequest } from '../middleware/authMiddleware';
 
 // @desc    Get all orders
@@ -10,10 +9,6 @@ import { AuthRequest } from '../middleware/authMiddleware';
 export const getOrders = async (req: AuthRequest, res: Response) => {
     try {
         const orders = await Order.findAll({
-            include: [
-                { model: User, as: 'customer', attributes: ['name', 'email'] },
-                { model: Table, as: 'table' }
-            ],
             order: [['createdAt', 'DESC']]
         });
         res.json(orders);
@@ -79,37 +74,11 @@ export const getUserOrders = async (req: Request, res: Response) => {
     try {
         const orders = await Order.findAll({
             where: { userId: req.params.userId },
-            include: [
-                { model: Table, as: 'table' }
-            ],
             order: [['createdAt', 'DESC']]
         });
         res.json(orders);
     } catch (error) {
         console.error('Error fetching user orders:', error);
-        res.status(500).json({ message: 'Server Error' });
-    }
-};
-
-// @desc    Get my orders
-// @route   GET /api/orders/my
-// @access  Private
-export const getMyOrders = async (req: AuthRequest, res: Response) => {
-    try {
-        if (!req.user) {
-            return res.status(401).json({ message: 'Not authorized' });
-        }
-
-        const orders = await Order.findAll({
-            where: { userId: req.user.id },
-            include: [
-                { model: Table, as: 'table' }
-            ],
-            order: [['createdAt', 'DESC']]
-        });
-        res.json(orders);
-    } catch (error) {
-        console.error('Error fetching my orders:', error);
         res.status(500).json({ message: 'Server Error' });
     }
 };

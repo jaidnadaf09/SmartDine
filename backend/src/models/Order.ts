@@ -7,7 +7,7 @@ export interface OrderAttributes {
     bookingId?: number | null;
     items?: any; // JSON column
     totalAmount: number;
-    status?: 'pending' | 'preparing' | 'ready' | 'completed';
+    status?: 'pending' | 'preparing' | 'completed';
     paymentId?: string | null;
     paymentStatus?: 'pending' | 'paid' | 'failed';
     tableNumber?: number; // Kept for backwards compatibility or direct order reference
@@ -19,7 +19,7 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
     public bookingId!: number | null;
     public items!: any;
     public totalAmount!: number;
-    public status!: 'pending' | 'preparing' | 'ready' | 'completed';
+    public status!: 'pending' | 'preparing' | 'completed';
     public paymentId!: string | null;
     public paymentStatus!: 'pending' | 'paid' | 'failed';
     public tableNumber!: number;
@@ -53,7 +53,7 @@ Order.init(
             defaultValue: 0,
         },
         status: {
-            type: DataTypes.ENUM('pending', 'preparing', 'ready', 'completed'),
+            type: DataTypes.ENUM('pending', 'preparing', 'completed'),
             defaultValue: 'pending',
         },
         paymentId: {
