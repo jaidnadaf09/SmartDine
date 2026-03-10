@@ -1033,8 +1033,8 @@
 }
 
 .pill-pending {
-  background: #fff3cd;
-  color: #856404;
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .pill-confirmed {
@@ -1048,8 +1048,23 @@
 }
 
 .pill-preparing {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.pill-completed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.pill-dine-in {
   background: #cce5ff;
   color: #004085;
+}
+
+.pill-takeaway {
+  background: #e2d9f3;
+  color: #553c9a;
 }
 
 .pill-ready {
@@ -1803,8 +1818,8 @@ tr:hover {
   }
 
   .pill-pending {
-    background: #f6c23e;
-    color: #856404;
+    background: #fee2e2;
+    color: #b91c1c;
   }
 
   .pill-confirmed {
@@ -1818,8 +1833,13 @@ tr:hover {
   }
 
   .pill-completed {
-    background: #d1ecf1;
-    color: #0c5460;
+    background: #d1fae5;
+    color: #047857;
+  }
+
+  .pill-preparing {
+    background: #fef3c7;
+    color: #b45309;
   }
 
   .pill-paid {

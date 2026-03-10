@@ -1,9 +1,41 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import razorpay from "../config/razorpay";
 import Booking from "../models/Booking";
+import User from "../models/User";
+import { AuthRequest } from "../middleware/authMiddleware";
 import crypto from "crypto";
 
-export const createOrder = async (req: Request, res: Response) => {
+// Helper: validate booking date is within today → today+30 days
+// AND booking date+time is not in the past
+const validateBookingDateTime = (dateStr: string, timeStr?: string): string | null => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 30);
+    maxDate.setHours(23, 59, 59, 999);
+
+    const bookingDate = new Date(dateStr);
+
+    if (bookingDate < today) {
+        return 'Booking date cannot be in the past.';
+    }
+    if (bookingDate > maxDate) {
+        return 'Bookings allowed only within 30 days from today.';
+    }
+
+    // If time is provided, validate combined date+time is not in the past
+    if (timeStr) {
+        const bookingDateTime = new Date(`${dateStr}T${timeStr}`);
+        if (bookingDateTime < new Date()) {
+            return 'Cannot book a table for a past time.';
+        }
+    }
+
+    return null;
+};
+
+export const createOrder = async (req: AuthRequest, res: Response) => {
     try {
         const amount = Number(req.body.amount);
         console.log('Backend: Creating Razorpay order for amount:', amount);
@@ -21,7 +53,6 @@ export const createOrder = async (req: Request, res: Response) => {
 
         console.log('Backend: Sending options to Razorpay:', options);
 
-        // Log keys partially for verification (security safe)
         const keyId = process.env.RAZORPAY_KEY_ID || "";
         console.log(`Backend: Order Attempt using Key ID: ${keyId.substring(0, 8)}...`);
 
@@ -35,7 +66,6 @@ export const createOrder = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error("Backend: Error creating Razorpay order:", error);
-        // Provide more detail if available in error objects from SDK
         const errorDetail = error.response ? JSON.stringify(error.response) : error.message;
         res.status(500).json({
             success: false,
@@ -45,7 +75,7 @@ export const createOrder = async (req: Request, res: Response) => {
     }
 };
 
-export const verifyPayment = async (req: Request, res: Response) => {
+export const verifyPayment = async (req: AuthRequest, res: Response) => {
     try {
         const {
             razorpay_payment_id,
@@ -74,12 +104,29 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
         console.log('Backend: Signature verified.');
 
-        // If bookingData exists, proceed to create the booking
+        // If bookingData exists, create the booking using the authenticated user's data
         if (bookingData) {
+            // Fetch authenticated user from DB (ignore any name/email/phone from frontend)
+            const user = await User.findByPk(req.user!.id);
+            if (!user) {
+                return res.status(401).json({ message: 'User not found. Please log in again.' });
+            }
+
+            // Validate booking date + time (past-time check)
+            const dateTimeError = validateBookingDateTime(bookingData.date, bookingData.time);
+            if (dateTimeError) {
+                return res.status(400).json({ message: dateTimeError });
+            }
+
             console.log('Backend: Creating booking record (pending table assignment)...');
             const newBooking = await Booking.create({
                 ...bookingData,
-                date: new Date(bookingData.date), // Ensure Date object
+                // Override with real user data from DB — ignores any frontend-supplied values
+                customerName: user.name,
+                email: user.email,
+                phone: user.phone || 'Not provided',
+                userId: user.id,
+                date: new Date(bookingData.date),
                 tableNumber: null,
                 tableId: null,
                 paymentId: razorpay_payment_id,
@@ -95,7 +142,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
             });
         }
 
-        // If bookingData doesn't exist, this is just a standard order verification
+        // Standard order verification (no booking)
         return res.json({
             success: true,
             message: "Payment verified successfully"

@@ -33,7 +33,7 @@ app.use(
             "https://smartdine-l22i.onrender.com",
             process.env.FRONTEND_URL || ""
         ].filter(Boolean),
-        methods: ["GET", "POST", "PUT", "DELETE"],
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
         credentials: true,
     })
 );

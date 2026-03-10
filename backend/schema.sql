@@ -1,4 +1,4 @@
--- MySQL Dump for SmartDine Database
+-- postgreSQL Dump for SmartDine Database
 -- Run these commands to manually create the database and tables if Sequelize sync is not used.
 
 CREATE DATABASE IF NOT EXISTS smartdine;

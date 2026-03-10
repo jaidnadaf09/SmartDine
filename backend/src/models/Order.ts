@@ -10,7 +10,8 @@ export interface OrderAttributes {
     status?: 'pending' | 'preparing' | 'completed';
     paymentId?: string | null;
     paymentStatus?: 'pending' | 'paid' | 'failed';
-    tableNumber?: number; // Kept for backwards compatibility or direct order reference
+    tableNumber?: number | null;
+    orderType?: 'DINE_IN' | 'TAKEAWAY';
 }
 
 export class Order extends Model<OrderAttributes> implements OrderAttributes {
@@ -22,7 +23,8 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
     public status!: 'pending' | 'preparing' | 'completed';
     public paymentId!: string | null;
     public paymentStatus!: 'pending' | 'paid' | 'failed';
-    public tableNumber!: number;
+    public tableNumber!: number | null;
+    public orderType!: 'DINE_IN' | 'TAKEAWAY';
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
@@ -67,6 +69,11 @@ Order.init(
         tableNumber: {
             type: DataTypes.INTEGER,
             allowNull: true,
+        },
+        orderType: {
+            type: DataTypes.ENUM('DINE_IN', 'TAKEAWAY'),
+            allowNull: false,
+            defaultValue: 'TAKEAWAY',
         },
     },
     {

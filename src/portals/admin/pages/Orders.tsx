@@ -53,7 +53,11 @@ const Orders: React.FC = () => {
                 body: JSON.stringify({ status })
             });
             if (res.ok) {
-                setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
+                if (status === 'completed') {
+                    setOrders(orders.filter(o => o.id !== id));
+                } else {
+                    setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
+                }
                 toast.success('Order status updated');
             } else {
                 toast.error('Failed to update status on server');
@@ -88,6 +92,7 @@ const Orders: React.FC = () => {
                         <thead>
                             <tr>
                                 <th>Order ID</th>
+                                <th>Order Type</th>
                                 <th>Items</th>
                                 <th>Table</th>
                                 <th>Amount</th>
@@ -101,13 +106,18 @@ const Orders: React.FC = () => {
                                 <tr key={order.id}>
                                     <td><strong>#{order.id}</strong></td>
                                     <td>
+                                        <span className={`status-pill pill-${order.orderType === 'TAKEAWAY' ? 'takeaway' : 'dine-in'}`}>
+                                            {order.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-In'}
+                                        </span>
+                                    </td>
+                                    <td>
                                         <div style={{ fontSize: '0.9rem' }}>
                                             {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
                                                 <div key={idx}>{item.quantity}x {item.itemName}</div>
                                             )) : 'No items data'}
                                         </div>
                                     </td>
-                                    <td>Table {order.tableNumber || order.Table?.tableNumber || 'N/A'}</td>
+                                    <td>{order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber || order.Table?.tableNumber || 'N/A'}`}</td>
                                     <td><span style={{ fontWeight: 800, color: '#6f4e37' }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
                                     <td><span className={`status-pill pill-${order.status}`}>{order.status}</span></td>
                                     <td>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>

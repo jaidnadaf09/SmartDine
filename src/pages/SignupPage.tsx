@@ -10,6 +10,7 @@ const SignupPage: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -28,8 +29,15 @@ const SignupPage: React.FC = () => {
     setLoading(true);
 
     // Validation
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.name || !formData.email || !formData.phone || !formData.password) {
       toast.error('All fields are required');
+      setLoading(false);
+      return;
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      toast.error('Phone number must be exactly 10 digits (numbers only)');
       setLoading(false);
       return;
     }
@@ -47,7 +55,7 @@ const SignupPage: React.FC = () => {
     }
 
     try {
-      await signup(formData.name, formData.email, formData.password);
+      await signup(formData.name, formData.email, formData.password, formData.phone);
       toast.success('Account created successfully!');
       navigate('/');
     } catch (err: unknown) {
@@ -90,6 +98,20 @@ const SignupPage: React.FC = () => {
               value={formData.email}
               onChange={handleChange}
               placeholder="you@example.com"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone">Phone Number</label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Enter your 10-digit phone number"
+              maxLength={10}
               required
             />
           </div>
