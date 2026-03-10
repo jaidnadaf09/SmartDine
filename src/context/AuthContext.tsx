@@ -7,13 +7,14 @@ interface User {
   email: string;
   role: UserRole;
   name: string;
+  phone?: string;
   token?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<User>;
-  signup: (name: string, email: string, password: string) => Promise<User>;
+  signup: (name: string, email: string, password: string, phone?: string) => Promise<User>;
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
@@ -67,6 +68,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: data.id,
         name: data.name,
         email: data.email,
+        phone: data.phone || undefined,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
       };
@@ -88,14 +90,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<User> => {
+  const signup = async (name: string, email: string, password: string, phone?: string): Promise<User> => {
     try {
       const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, role: 'customer' }),
+        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, phone: phone || null, role: 'customer' }),
       });
 
       const data = await response.json();
@@ -108,6 +110,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         id: data.id,
         name: data.name,
         email: data.email,
+        phone: data.phone || undefined,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
       };

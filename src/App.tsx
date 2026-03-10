@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from "react-hot-toast";
 import LandingPage from './pages/LandingPage';
 import SignupPage from './pages/SignupPage';
@@ -16,68 +17,72 @@ import ReturnRefundPolicy from './pages/ReturnRefundPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
+import ThemeToggleButton from './components/ThemeToggleButton';
 import './App.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: "#1f2937",
-            color: "#fff",
-            borderRadius: "8px",
-            fontSize: "14px"
-          }
-        }}
-      />
-      <Router>
-        <Routes>
-          {/* Main Pages */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/book-table"
-            element={
-              <ProtectedRoute>
-                <BookTablePage />
-              </ProtectedRoute>
+    <ThemeProvider>
+      <AuthProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: "#1f2937",
+              color: "#fff",
+              borderRadius: "8px",
+              fontSize: "14px"
             }
-          />
-          <Route
-            path="/order"
-            element={
-              <ProtectedRoute>
-                <OrderPage />
-              </ProtectedRoute>
-            }
-          />
+          }}
+        />
+        <Router>
+          <Routes>
+            {/* Main Pages */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/book-table"
+              element={
+                <ProtectedRoute>
+                  <BookTablePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order"
+              element={
+                <ProtectedRoute>
+                  <OrderPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Portal Pages */}
-          <Route path="/customer" element={<CustomerPortal />} />
-          <Route path="/waiter" element={<WaiterPortal />} />
-          <Route path="/chef" element={<ChefPortal />} />
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminPortal />
-              </ProtectedRoute>
-            }
-          />
+            {/* Portal Pages */}
+            <Route path="/customer" element={<CustomerPortal />} />
+            <Route path="/waiter" element={<WaiterPortal />} />
+            <Route path="/chef" element={<ChefPortal />} />
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminPortal />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Legal Pages */}
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/refund-policy" element={<ReturnRefundPolicy />} />
-          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-          <Route path="/about-us" element={<AboutUs />} />
-          <Route path="/contact-us" element={<ContactUs />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+            {/* Legal Pages */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/refund-policy" element={<ReturnRefundPolicy />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+          </Routes>
+          <ThemeToggleButton />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

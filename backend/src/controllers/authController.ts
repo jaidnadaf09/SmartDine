@@ -9,7 +9,7 @@ const generateToken = (id: number) => {
 };
 
 export const registerUser = async (req: Request, res: Response) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     try {
         const userExists = await User.findOne({ where: { email } });
@@ -25,6 +25,7 @@ export const registerUser = async (req: Request, res: Response) => {
             name,
             email,
             password: hashedPassword,
+            phone: phone || null,
             role: role || 'customer',
         });
 
@@ -33,6 +34,7 @@ export const registerUser = async (req: Request, res: Response) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
+                phone: user.phone || null,
                 role: user.role.toLowerCase(),
                 token: generateToken(user.id),
             });
@@ -71,6 +73,7 @@ export const loginUser = async (req: Request, res: Response) => {
             id: user.id,
             name: user.name,
             email: user.email,
+            phone: user.phone || null,
             role: user.role.toLowerCase(),
             token: generateToken(user.id),
         });

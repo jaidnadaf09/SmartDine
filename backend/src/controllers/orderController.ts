@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
 import Order from '../models/Order';
 import User from '../models/User';
+import Booking from '../models/Booking';
 import { AuthRequest } from '../middleware/authMiddleware';
+import { Op } from 'sequelize';
 
 // @desc    Get all orders
 // @route   GET /api/orders
@@ -9,6 +11,11 @@ import { AuthRequest } from '../middleware/authMiddleware';
 export const getOrders = async (req: AuthRequest, res: Response) => {
     try {
         const orders = await Order.findAll({
+            where: {
+                status: {
+                    [Op.ne]: 'completed'
+                }
+            },
             order: [['createdAt', 'DESC']]
         });
         res.json(orders);
@@ -23,21 +30,42 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
 // @access  Public (from customer frontend) or Private
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const { tableNumber, items, totalAmount, userId, bookingId, paymentId, paymentStatus } = req.body;
+        const { items, totalAmount, userId, paymentId, paymentStatus } = req.body;
 
         if (!items || Object.keys(items).length === 0) {
             return res.status(400).json({ message: 'No order items provided' });
         }
 
+        let assignedTableNumber = null;
+        let activeBookingId = null;
+
+        if (userId) {
+            const activeBooking = await Booking.findOne({
+                where: {
+                    userId,
+                    status: 'confirmed'
+                },
+                order: [['createdAt', 'DESC']]
+            });
+
+            if (activeBooking && activeBooking.tableNumber) {
+                assignedTableNumber = activeBooking.tableNumber;
+                activeBookingId = activeBooking.id;
+            }
+        }
+
+        const orderType = assignedTableNumber ? 'DINE_IN' : 'TAKEAWAY';
+
         const newOrder = await Order.create({
-            tableNumber: tableNumber || null,
+            tableNumber: assignedTableNumber,
             userId: userId || null,
-            bookingId: bookingId || null,
+            bookingId: activeBookingId || null,
             items: items, // JSON array of items mapped directly
             totalAmount: totalAmount || 0,
             status: 'pending',
             paymentId: paymentId || null,
-            paymentStatus: paymentStatus || 'pending'
+            paymentStatus: paymentStatus || 'pending',
+            orderType: orderType
         });
 
         res.status(201).json(newOrder);

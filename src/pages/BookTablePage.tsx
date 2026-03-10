@@ -25,10 +25,14 @@ const loadRazorpayScript = () => {
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Compute date boundaries
+  const todayStr = new Date().toISOString().split('T')[0];
+  const maxDateObj = new Date();
+  maxDateObj.setDate(maxDateObj.getDate() + 30);
+  const maxDateStr = maxDateObj.toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
     date: '',
     time: '',
     guests: '2',
@@ -37,6 +41,34 @@ const BookTablePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [bookingDetails, setBookingDetails] = useState<any>(null);
+
+  // Generate 30-min time slots between 09:00 and 22:30
+  // If selected date is today, only return slots strictly after current time
+  const getAvailableTimeSlots = (selectedDate: string): string[] => {
+    const slots: string[] = [];
+    for (let h = 9; h <= 22; h++) {
+      for (const m of [0, 30]) {
+        if (h === 22 && m === 30) continue; // cap at 22:30
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        slots.push(`${hh}:${mm}`);
+      }
+    }
+
+    if (selectedDate === todayStr) {
+      const now = new Date();
+      return slots.filter((slot) => {
+        const [hh, mm] = slot.split(':').map(Number);
+        const slotTime = new Date();
+        slotTime.setHours(hh, mm, 0, 0);
+        return slotTime > now; // strictly after current time
+      });
+    }
+    return slots;
+  };
+
+  const availableSlots = getAvailableTimeSlots(formData.date);
+
 
   const bookingInProgress = useRef(false);
 
@@ -61,10 +93,6 @@ const BookTablePage: React.FC = () => {
           'Authorization': `Bearer ${user?.token}`
         },
         body: JSON.stringify({
-          userId: user?.id || null,
-          customerName: formData.name,
-          email: formData.email,
-          phone: formData.phone,
           date: formData.date,
           time: formData.time,
           guests: parseInt(formData.guests, 10),
@@ -139,13 +167,16 @@ const BookTablePage: React.FC = () => {
         throw new Error(availData.message || 'No tables available for this slot.');
       }
 
-      // 2. Create Razorpay Order
+      // 2. Create Razorpay Order (authenticated)
       const paymentAmount = 10;
       console.log('Creating Razorpay Order for amount:', paymentAmount);
 
       const orderResponse = await fetch(`${API_URL}/payment/create-order`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
         body: JSON.stringify({ amount: paymentAmount }),
       });
 
@@ -157,11 +188,9 @@ const BookTablePage: React.FC = () => {
 
       const orderData = await orderResponse.json();
       console.log('Order created successfully on backend:', orderData.orderId);
-      console.log('Order Details:', orderData);
 
       // 3. Open Razorpay
       const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-      console.log('Frontend: Initializing Razorpay with Key:', razorpayKey ? `${razorpayKey.substring(0, 8)}...` : 'MISSING');
 
       const scriptLoaded = await loadRazorpayScript();
 
@@ -171,15 +200,6 @@ const BookTablePage: React.FC = () => {
         setLoading(false);
         return;
       }
-
-      if (!razorpayKey || razorpayKey === 'rzp_live_placeholder') {
-        import.meta.env.DEV
-          ? console.warn('Razorpay Key is not configured correctly. Using default/placeholder.')
-          : console.error('CRITICAL: VITE_RAZORPAY_KEY_ID is missing in production!');
-      }
-
-      console.log("Razorpay Key:", razorpayKey);
-      console.log("Order Data:", orderData);
 
       const options = {
         key: razorpayKey,
@@ -192,18 +212,19 @@ const BookTablePage: React.FC = () => {
           console.log('Payment success callback from Razorpay:', response.razorpay_payment_id);
           setLoading(true);
           try {
+            // Send only booking details – backend resolves customer info from token
             const verifyRes = await fetch(`${API_URL}/payment/verify`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${user?.token}`
+              },
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_signature: response.razorpay_signature,
                 bookingData: {
-                  userId: user.id || null,
-                  customerName: formData.name,
-                  email: formData.email,
-                  phone: formData.phone,
+                  userId: user.id,
                   date: formData.date,
                   time: formData.time,
                   guests: parseInt(formData.guests, 10),
@@ -243,9 +264,9 @@ const BookTablePage: React.FC = () => {
           }
         },
         prefill: {
-          name: formData.name,
-          email: formData.email,
-          contact: formData.phone,
+          name: user?.name || '',
+          email: user?.email || '',
+          contact: user?.phone || '',
         },
         theme: { color: "#d4af37" },
         modal: {
@@ -284,7 +305,6 @@ const BookTablePage: React.FC = () => {
 
         {error && <div className="error-message" style={{ background: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>{error}</div>}
 
-
         {submitted ? (
           <div className="success-message" style={{ textAlign: 'center', padding: '20px' }}>
             <h3 style={{ color: '#16a34a' }}>✓ Table Booked Successfully!</h3>
@@ -299,30 +319,67 @@ const BookTablePage: React.FC = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="booking-form">
-            <div className="form-group">
-              <label htmlFor="name">Name</label>
-              <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required />
-            </div>
 
-            <div className="form-group">
-              <label htmlFor="email">Email</label>
-              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="your@email.com" required />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="phone">Phone Number</label>
-              <input type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone number" required />
+            {/* Read-only Customer Info */}
+            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '14px 16px', marginBottom: '18px' }}>
+              <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                🔒 Booking as (from your account)
+              </p>
+              <div style={{ display: 'grid', gap: '6px' }}>
+                <p style={{ margin: 0, fontSize: '14px', color: '#374151' }}>
+                  <span style={{ color: '#6b7280' }}>Name: </span>
+                  <strong>{user?.name}</strong>
+                </p>
+                <p style={{ margin: 0, fontSize: '14px', color: '#374151' }}>
+                  <span style={{ color: '#6b7280' }}>Email: </span>
+                  <strong>{user?.email}</strong>
+                </p>
+                <p style={{ margin: 0, fontSize: '14px', color: '#374151' }}>
+                  <span style={{ color: '#6b7280' }}>Phone: </span>
+                  <strong>{user?.phone || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not provided — update your profile to add one</span>}</strong>
+                </p>
+              </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="date">Date</label>
-                <input type="date" id="date" name="date" value={formData.date} onChange={handleChange} required min={new Date().toISOString().split('T')[0]} />
+                <input
+                  type="date"
+                  id="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  required
+                  min={todayStr}
+                  max={maxDateStr}
+                />
+                <small style={{ color: '#6b7280', fontSize: '11px' }}>
+                  Bookings available up to {maxDateStr}
+                </small>
               </div>
 
               <div className="form-group">
                 <label htmlFor="time">Time</label>
-                <input type="time" id="time" name="time" value={formData.time} onChange={handleChange} required />
+                {availableSlots.length === 0 ? (
+                  <p style={{ color: '#dc2626', fontSize: '13px', marginTop: '6px' }}>
+                    ⚠️ No available slots for today. Please select a future date.
+                  </p>
+                ) : (
+                  <select
+                    id="time"
+                    name="time"
+                    value={formData.time}
+                    onChange={handleChange}
+                    required
+                    style={{ width: '100%' }}
+                  >
+                    <option value="">-- Select a time --</option>
+                    {availableSlots.map((slot) => (
+                      <option key={slot} value={slot}>{slot}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
 

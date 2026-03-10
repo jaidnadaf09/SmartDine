@@ -6,6 +6,7 @@ export interface UserAttributes {
     name: string;
     email: string;
     password?: string;
+    phone?: string;
     role: 'customer' | 'admin' | 'CHEF' | 'WAITER';
     shift?: 'Morning' | 'Evening';
     status?: 'active' | 'inactive';
@@ -16,6 +17,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     public name!: string;
     public email!: string;
     public password!: string;
+    public phone!: string;
     public role!: 'customer' | 'admin' | 'CHEF' | 'WAITER';
     public shift!: 'Morning' | 'Evening';
     public status!: 'active' | 'inactive';
@@ -39,6 +41,10 @@ User.init(
             type: DataTypes.STRING,
             allowNull: false,
             unique: true,
+        },
+        phone: {
+            type: DataTypes.STRING,
+            allowNull: true,
         },
         password: {
             type: DataTypes.STRING,
