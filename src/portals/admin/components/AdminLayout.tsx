@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import '../../../styles/Portals.css';
 
+import AvatarDropdown from '../../../components/shared/AvatarDropdown';
+
 interface AdminLayoutProps {
     children: React.ReactNode;
 }
@@ -10,7 +12,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { logout } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const handleLogout = () => {
@@ -24,6 +26,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/bookings', label: 'Bookings', icon: '📅' },
         { path: '/admin/tables', label: 'Tables', icon: '🪑' },
         { path: '/admin/orders', label: 'Orders', icon: '📋' },
+        { path: '/admin/orders/history', label: 'Order History', icon: '📜' },
         { path: '/admin/payments', label: 'Payments', icon: '💰' },
     ];
 
@@ -47,11 +50,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                             <span className="nav-label">{item.label}</span>
                         </Link>
                     ))}
+                </nav>
+                <div className="sidebar-footer">
                     <button className="nav-link logout-link" onClick={handleLogout}>
                         <span className="nav-icon">🚪</span>
                         <span className="nav-label">Logout</span>
                     </button>
-                </nav>
+                </div>
             </aside>
 
             <main className="admin-main">
@@ -60,8 +65,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         Admin / {navItems.find(n => n.path === location.pathname)?.label || 'Dashboard'}
                     </div>
                     <div className="admin-user">
-                        <span>{user?.name || 'Admin'}</span>
-                        <div className="user-avatar">AD</div>
+                        <AvatarDropdown />
                     </div>
                 </header>
 

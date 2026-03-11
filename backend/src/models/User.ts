@@ -7,7 +7,8 @@ export interface UserAttributes {
     email: string;
     password?: string;
     phone?: string;
-    role: 'customer' | 'admin' | 'CHEF' | 'WAITER';
+    profileImage?: string;
+    role: 'customer' | 'admin' | 'chef' | 'WAITER' | 'CHEF';
     shift?: 'Morning' | 'Evening';
     status?: 'active' | 'inactive';
 }
@@ -18,7 +19,8 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     public email!: string;
     public password!: string;
     public phone!: string;
-    public role!: 'customer' | 'admin' | 'CHEF' | 'WAITER';
+    public profileImage!: string;
+    public role!: 'customer' | 'admin' | 'chef' | 'WAITER' | 'CHEF';
     public shift!: 'Morning' | 'Evening';
     public status!: 'active' | 'inactive';
 
@@ -51,7 +53,7 @@ User.init(
             allowNull: true, // Optional for dummy data or staff without login
         },
         role: {
-            type: DataTypes.ENUM('customer', 'admin', 'CHEF', 'WAITER'),
+            type: DataTypes.ENUM('customer', 'admin', 'chef', 'CHEF', 'WAITER'),
             defaultValue: 'customer',
         },
         shift: {
@@ -61,6 +63,10 @@ User.init(
         status: {
             type: DataTypes.ENUM('active', 'inactive'),
             defaultValue: 'active',
+        },
+        profileImage: {
+            type: DataTypes.TEXT,
+            allowNull: true,
         },
     },
     {

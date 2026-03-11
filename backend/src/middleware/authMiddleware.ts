@@ -53,8 +53,20 @@ export const adminOnly = (req: AuthRequest, res: Response, next: NextFunction) =
     }
 };
 
+export const chefOnly = (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (req.user) {
+        if (req.user.role === 'chef' || req.user.role === 'CHEF' || req.user.role === 'admin') {
+            next();
+        } else {
+            res.status(403).json({ message: 'Not authorized as a chef' });
+        }
+    } else {
+        res.status(401).json({ message: 'Not authorized, user missing' });
+    }
+};
+
 export const staffOnly = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user && (req.user.role === 'admin' || req.user.role === 'CHEF' || req.user.role === 'WAITER')) {
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'chef' || req.user.role === 'CHEF' || req.user.role === 'WAITER')) {
         next();
     } else {
         res.status(403).json({ message: 'Not authorized as staff' });

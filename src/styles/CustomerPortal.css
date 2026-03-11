@@ -1,0 +1,359 @@
+/* ── CustomerPortal.css — Premium My Orders Design ── */
+
+/* Page Wrapper */
+.cp-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding: 28px 20px 60px;
+}
+
+.cp-content {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Welcome Header */
+.cp-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.cp-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.cp-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* Browse / CTA Button */
+.cp-browse-btn {
+  background: var(--header-bg);
+  color: var(--text-white);
+  border: none;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.cp-browse-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(111, 78, 55, 0.35);
+}
+
+/* Section */
+.cp-section {
+  margin-bottom: 36px;
+}
+
+.cp-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--card-border);
+}
+
+.cp-count {
+  margin-left: auto;
+  background: var(--card-border);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+/* Cards Grid */
+.cp-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .cp-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cp-cards-grid.single-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sections Grid for Side-by-Side layout */
+.cp-sections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .cp-sections-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .cp-content {
+    max-width: 960px;
+  }
+}
+
+/* Card */
+.cp-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+/* Card Header */
+.cp-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cp-card-id {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  font-family: monospace;
+}
+
+/* Status Badge */
+.cp-status-badge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: 0.03em;
+}
+
+/* Order Total */
+.cp-order-total {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+}
+
+/* Details Row */
+.cp-details-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.cp-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1 1 80px;
+  min-width: 80px;
+}
+
+.cp-detail-icon {
+  font-size: 1rem;
+  margin-top: 1px;
+}
+
+.cp-detail-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 1px;
+}
+
+.cp-detail-value {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.cp-pending-text {
+  color: #d97706;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Items List */
+.cp-items-list {
+  background: var(--card-bg-alt);
+  border-radius: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--card-border);
+}
+
+.cp-items-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.cp-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--card-border, #f0e8e0);
+  font-size: 0.85rem;
+}
+
+.cp-item-row:last-child {
+  border-bottom: none;
+}
+
+.cp-item-name {
+  flex: 1;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.cp-item-qty {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+}
+
+.cp-item-price {
+  color: var(--accent-primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+/* Cancel Button */
+.cp-cancel-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 8px;
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cp-cancel-btn:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+.cp-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Empty State */
+.cp-empty {
+  text-align: center;
+  padding: 40px 20px;
+  background: var(--card-bg, #ffffff);
+  border: 1px dashed var(--card-border, #e8d4c0);
+  border-radius: 14px;
+  color: var(--text-muted, #9b8b7a);
+}
+
+.cp-empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.cp-empty p {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+}
+
+/* Loading State */
+.cp-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: var(--text-muted, #9b8b7a);
+  font-weight: 600;
+}
+
+.cp-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--card-border, #e8d4c0);
+  border-top-color: #6f4e37;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.cp-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  color: #b91c1c;
+  text-align: center;
+}
+
+.cp-retry-btn {
+  background: #6f4e37;
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cp-retry-btn:hover {
+  background: #8b5a3c;
+}
+
+/* Unify Dark Mode overrides into global theme variables */
+body.dark .cp-spinner {
+  border-color: var(--card-border);
+  border-top-color: var(--accent-primary);
+}

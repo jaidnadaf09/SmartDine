@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import Order from '../models/Order';
-import User from '../models/User';
-import Booking from '../models/Booking';
+import { Order, User, Table, Booking } from '../models';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Op } from 'sequelize';
 
@@ -83,21 +81,62 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         const { status } = req.body;
         const order = await Order.findByPk(req.params.id);
 
-        if (order) {
-            order.status = status;
-            const updatedOrder = await order.save();
-            res.json(updatedOrder);
-        } else {
-            res.status(404).json({ message: 'Order not found' });
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
         }
+
+        order.status = status;
+        const updatedOrder = await order.save();
+
+        // Table Management: When order is completed, release table and booking
+        if (status === 'completed') {
+            console.log(`Order ${order.id} marked as COMPLETED. Releasing table...`);
+            // Complete the associated booking
+            if (order.bookingId) {
+                const booking = await Booking.findByPk(order.bookingId);
+                if (booking) {
+                    booking.status = 'completed';
+                    booking.tableId = null;
+                    await booking.save();
+                    console.log(`Booking ${booking.id} completed and table unassigned.`);
+                }
+            }
+
+            // Complete any active bookings for this table number
+            if (order.tableNumber) {
+                const activeBookings = await Booking.findAll({
+                    where: {
+                        tableNumber: order.tableNumber,
+                        status: { [Op.in]: ['pending', 'confirmed'] }
+                    }
+                });
+                for (const booking of activeBookings) {
+                    booking.status = 'completed';
+                    booking.tableId = null;
+                    await booking.save();
+                    console.log(`Associated active booking ${booking.id} for table ${order.tableNumber} completed.`);
+                }
+
+                // Also update the table status directly to ensure it shows as AVAILABLE
+                const table = await Table.findOne({ where: { tableNumber: order.tableNumber } });
+                if (table) {
+                    table.status = 'available';
+                    await table.save();
+                    console.log(`Table ${order.tableNumber} status set to AVAILABLE.`);
+                }
+            }
+        }
+
+        res.json(updatedOrder);
     } catch (error) {
+        console.error("Error updating order status:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
 
-// @desc    Get user orders
+// @desc    Get user orders (by URL param - mostly for admin or internal use)
 // @route   GET /api/orders/user/:userId
-// @access  Public (for now, based on frontend)
+// @access  Public (for now)
 export const getUserOrders = async (req: Request, res: Response) => {
     try {
         const orders = await Order.findAll({
@@ -108,5 +147,32 @@ export const getUserOrders = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error fetching user orders:', error);
         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get current user's orders
+// @route   GET /api/orders/my
+// @access  Private
+export const getMyOrders = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user || !req.user.id) {
+            console.warn("getMyOrders: No req.user or ID found in request");
+            return res.status(401).json({ message: 'Not authorized' });
+        }
+        
+        console.log(`Fetching orders for user ID: ${req.user.id} (${typeof req.user.id})`);
+        
+        const userId = typeof req.user.id === 'string' ? parseInt(req.user.id) : req.user.id;
+        
+        const orders = await Order.findAll({
+            where: { userId },
+            order: [['createdAt', 'DESC']]
+        });
+        
+        console.log(`Found ${orders.length} orders for user ${req.user.id}`);
+        res.json(orders);
+    } catch (error: any) {
+        console.error('Error fetching my orders:', error);
+        res.status(500).json({ message: error.message || 'Server Error' });
     }
 };

@@ -1,135 +1,168 @@
-/* Authentication Pages Styles */
+/* ── Redesigned Auth Styles — Restaurant Theme ── */
+
+/* ── Container ── */
 .auth-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5e6d3 0%, #e8d4c0 100%);
+  background: var(--bg-hero);
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2rem;
+  transition: background 0.3s ease;
 }
 
+/* ── Card Box ── */
 .auth-box {
-  background: white;
-  padding: 3rem;
-  border-radius: 15px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 32px;
+  border-radius: 18px;
+  box-shadow: var(--card-shadow);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
+/* ── Titles ── */
 .auth-box h1 {
   text-align: center;
-  color: #6f4e37;
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  color: var(--accent-primary);
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
 }
 
 .auth-box h2 {
   text-align: center;
-  color: #8b5a3c;
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-  font-weight: 600;
+  color: var(--text-main);
+  font-size: 1.35rem;
+  margin-top: -8px;
+  margin-bottom: 8px;
+  font-weight: 700;
 }
 
-.error-message {
-  background: #fee;
-  color: #c33;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  border-left: 4px solid #c33;
-}
-
+/* ── Form ── */
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 16px;
+  padding: 0; /* Removing extra padding to let card padding handle it */
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
+  gap: 8px;
 }
 
 .form-group label {
-  color: #6f4e37;
+  color: var(--text-muted);
   font-weight: 600;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group select {
-  padding: 0.75rem;
-  border: 2px solid #e8d4c0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
+  padding: 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: 0.2s ease;
   font-family: inherit;
+  background: var(--input-bg);
+  color: var(--text-main);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #d4af37;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+  border-color: #8B5E3C;
+  box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.15);
 }
 
-.role-select {
-  background: white;
-  cursor: pointer;
+.form-group input::placeholder {
+  color: #9A9A9A;
 }
 
+/* ── Buttons ── */
 .auth-btn {
-  background: linear-gradient(135deg, #6f4e37 0%, #8b5a3c 100%);
-  color: white;
+  background: var(--header-bg);
+  color: var(--text-white);
   border: none;
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: 12px;
+  border-radius: 10px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 0.5rem;
+  transition: 0.2s ease;
+  margin-top: 8px;
+  box-shadow: var(--card-shadow);
 }
 
 .auth-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(111, 78, 55, 0.3);
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }
 
+.auth-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-back-btn {
+  background: var(--card-bg-alt);
+  border: 1px solid var(--card-border);
+  color: var(--accent-primary);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.auth-back-btn:hover {
+  background: var(--card-border);
+  transform: translateX(-3px);
+}
+
+/* ── Auth Link ── */
 .auth-link {
   text-align: center;
-  color: #666;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 8px;
 }
 
 .auth-link a {
-  color: #6f4e37;
+  color: var(--accent-primary);
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: color 0.2s ease;
 }
 
 .auth-link a:hover {
-  color: #d4af37;
   text-decoration: underline;
+  color: #6F472F;
 }
 
+/* Unified under global variables */
 
-
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 480px) {
   .auth-box {
-    padding: 2rem;
+    padding: 24px;
+    margin: 1rem;
   }
 
   .auth-box h1 {
-    font-size: 1.5rem;
-  }
-
-  .auth-box h2 {
-    font-size: 1.2rem;
+    font-size: 24px;
   }
 }

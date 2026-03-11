@@ -2,32 +2,32 @@
 
 .legal-container {
   min-height: 100vh;
-  background-color: #f9f6f3; /* Matches app background */
+  background-color: var(--bg-secondary);
   padding: 2rem;
   font-family: inherit;
-  color: #333;
+  color: var(--text-main);
 }
 
 .legal-content {
   max-width: 800px;
   margin: 0 auto;
-  background: white;
+  background: var(--card-bg);
   padding: 3rem;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e8d4c0;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
 }
 
 .legal-content h1 {
-  color: #6f4e37; /* Primary brand color */
+  color: var(--accent-primary);
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  border-bottom: 2px solid #e8d4c0;
+  border-bottom: 2px solid var(--card-border);
   padding-bottom: 1rem;
 }
 
 .legal-content > p {
-  color: #666;
+  color: var(--text-muted);
   font-style: italic;
   margin-bottom: 2rem;
 }
@@ -37,7 +37,7 @@
 }
 
 .legal-content h2 {
-  color: #8b5a3c; /* Secondary brand color */
+  color: var(--accent-secondary);
   font-size: 1.5rem;
   margin-bottom: 1rem;
 }
@@ -45,7 +45,8 @@
 .legal-content p {
   line-height: 1.6;
   font-size: 1.05rem;
-  color: #444;
+  color: var(--text-main);
+  opacity: 0.9;
 }
 
 .contact-details p {

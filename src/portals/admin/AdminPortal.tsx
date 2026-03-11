@@ -7,6 +7,7 @@ import Users from './pages/Users';
 import Bookings from './pages/Bookings';
 import Tables from './pages/Tables';
 import Orders from './pages/Orders';
+import OrderHistory from './pages/OrderHistory';
 import Payments from './pages/Payments';
 
 const AdminPortal: React.FC = () => {
@@ -35,6 +36,7 @@ const AdminPortal: React.FC = () => {
         <Route path="/bookings" element={<Bookings />} />
         <Route path="/tables" element={<Tables />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/history" element={<OrderHistory />} />
         <Route path="/payments" element={<Payments />} />
       </Routes>
     </AdminLayout>

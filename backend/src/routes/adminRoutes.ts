@@ -13,6 +13,7 @@ import {
     updateTable,
     deleteTable,
     getOrders,
+    getOrdersHistory,
     updateOrderStatus,
     getPayments
 } from '../controllers/adminController';
@@ -38,6 +39,7 @@ router.route('/tables/available').get(getAvailableTables);
 router.route('/tables/:id').put(updateTable).delete(deleteTable);
 
 router.route('/orders').get(getOrders);
+router.route('/orders/history').get(getOrdersHistory);
 router.route('/orders/:id/status').put(updateOrderStatus);
 
 router.route('/payments').get(getPayments);

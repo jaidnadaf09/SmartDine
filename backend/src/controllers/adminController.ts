@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import User from '../models/User';
-import Order from '../models/Order';
-import Table from '../models/Table';
-import Booking from '../models/Booking';
+import { User, Order, Table, Booking } from '../models';
 
 // @desc    Get all registered users
 // @route   GET /api/admin/users
@@ -207,19 +204,45 @@ export const deleteTable = async (req: Request, res: Response) => {
     }
 };
 
-// @desc    Get all orders
+// @desc    Get all active orders
 // @route   GET /api/admin/orders
 // @access  Private/Admin
 export const getOrders = async (req: Request, res: Response) => {
-    console.log("Admin: Fetching all orders");
+    console.log("Admin: Fetching all active orders");
     try {
         const orders = await Order.findAll({
+            where: {
+                status: { [Op.ne]: 'completed' }
+            },
             include: [{
                 model: User,
                 as: 'customer',
                 attributes: ['name', 'email']
             }],
             order: [['createdAt', 'DESC']]
+        });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get order history (completed orders)
+// @route   GET /api/admin/orders/history
+// @access  Private/Admin
+export const getOrdersHistory = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching order history");
+    try {
+        const orders = await Order.findAll({
+            where: {
+                status: 'completed'
+            },
+            include: [{
+                model: User,
+                as: 'customer',
+                attributes: ['name', 'email']
+            }],
+            order: [['updatedAt', 'DESC']]
         });
         res.json(orders);
     } catch (error) {
@@ -239,6 +262,44 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
         }
         order.status = status;
         await order.save();
+
+        // 1. Table Management: When order is completed, release table and booking
+        if (status === 'completed') {
+            console.log(`Admin/Chef: Order ${order.id} marked as COMPLETED. Releasing table...`);
+            
+            // Re-fetch order to ensure we have the latest bookingId and tableNumber
+            const fullOrder = await Order.findByPk(req.params.id);
+            
+            if (fullOrder?.bookingId) {
+                const booking = await Booking.findByPk(fullOrder.bookingId);
+                if (booking) {
+                    booking.status = 'completed';
+                    booking.tableId = null;
+                    await booking.save();
+                }
+            }
+
+            if (fullOrder?.tableNumber) {
+                // Release the table in the tables model
+                const table = await Table.findOne({ where: { tableNumber: fullOrder.tableNumber } });
+                if (table) {
+                    table.status = 'available';
+                    await table.save();
+                }
+
+                // Also find any other active bookings for this table number and complete them
+                await Booking.update(
+                    { status: 'completed', tableId: null },
+                    { 
+                        where: { 
+                            tableNumber: fullOrder.tableNumber,
+                            status: { [Op.in]: ['pending', 'confirmed'] }
+                        } 
+                    }
+                );
+            }
+        }
+
         res.json(order);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
@@ -294,16 +355,46 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     try {
         const totalOrders = await Order.count();
         const ordersList = await Order.findAll();
-        const totalRevenue = ordersList.reduce((acc, order) => acc + Number(order.totalAmount), 0);
+        const totalRevenue = ordersList.reduce((acc, order) => acc + Number(order.totalAmount || 0), 0);
 
         const totalUsers = await User.count({ where: { role: 'customer' } });
         const totalBookings = await Booking.count();
+
+        // Fetch Recent History
+        const recentBookings = await Booking.findAll({
+            limit: 5,
+            order: [['createdAt', 'DESC']],
+            attributes: ['id', 'customerName', 'date', 'time', 'status']
+        });
+
+        const recentOrders = await Order.findAll({
+            limit: 5,
+            order: [['createdAt', 'DESC']],
+            include: [{
+                model: User,
+                as: 'customer',
+                attributes: ['name']
+            }],
+            attributes: ['id', 'totalAmount', 'status', 'createdAt']
+        });
+
+        const recentPayments = await Booking.findAll({
+            where: {
+                paymentStatus: { [Op.in]: ['paid', 'failed'] }
+            },
+            limit: 5,
+            order: [['updatedAt', 'DESC']],
+            attributes: ['id', 'customerName', 'amount', 'paymentStatus', 'updatedAt']
+        });
 
         res.json({
             totalUsers,
             totalBookings,
             totalOrders,
             totalRevenue,
+            recentBookings,
+            recentOrders,
+            recentPayments
         });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
