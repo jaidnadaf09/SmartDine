@@ -111,7 +111,7 @@ const LoginPage: React.FC = () => {
           <a onClick={() => navigate('/signup')}>Sign up here</a>
         </p>
 
-        <button className="back-btn" onClick={() => navigate(-1)}>
+        <button className="auth-back-btn" onClick={() => navigate(-1)}>
           ← Go Back
         </button>
       </div>

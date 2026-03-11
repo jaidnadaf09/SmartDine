@@ -8,6 +8,7 @@ interface User {
   role: UserRole;
   name: string;
   phone?: string;
+  profileImage?: string;
   token?: string;
 }
 
@@ -16,6 +17,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<User>;
   signup: (name: string, email: string, password: string, phone?: string) => Promise<User>;
   logout: () => void;
+  updateUser: (newData: Partial<User>) => void;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   isAuthenticated: boolean;
   loading: boolean;
 }
@@ -69,6 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         name: data.name,
         email: data.email,
         phone: data.phone || undefined,
+        profileImage: data.profileImage || undefined,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
       };
@@ -111,6 +115,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         name: data.name,
         email: data.email,
         phone: data.phone || undefined,
+        profileImage: data.profileImage || undefined,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
       };
@@ -134,8 +139,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('smartdine_user');
   };
 
+  const updateUser = (newData: Partial<User>) => {
+    if (!user) return;
+    const updatedUser = { ...user, ...newData };
+    setUser(updatedUser);
+    localStorage.setItem('smartdine_user', JSON.stringify(updatedUser));
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+    if (!user?.token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${API_URL}/auth/change-password`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to change password');
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, changePassword, isAuthenticated: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   );

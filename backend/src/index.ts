@@ -1,15 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import sequelize from "./config/db";
-
-// Import all models to ensure they are registered with Sequelize before sync
-import "./models/User";
-import "./models/Booking";
-import "./models/Table";
-import "./models/Order";
-import "./models/MenuItem";
-import "./models/InventoryItem";
+import { sequelize } from "./models";
 
 import authRoutes from "./routes/authRoutes";
 import orderRoutes from "./routes/orderRoutes";
@@ -19,6 +11,8 @@ import menuRoutes from "./routes/menuRoutes";
 import inventoryRoutes from "./routes/inventoryRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import paymentRoutes from "./routes/paymentRoutes";
+import chefRoutes from "./routes/chefRoutes";
+import { initScheduler } from "./utils/scheduler";
 
 // Load environment variables
 dotenv.config();
@@ -49,6 +43,7 @@ app.use("/api/menu", menuRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/chef", chefRoutes);
 
 // Test route
 app.get("/", (req, res) => {
@@ -76,11 +71,25 @@ const startServer = async () => {
         await sequelize.authenticate();
         console.log("Database connected successfully");
 
+        // Fix PostgreSQL ENUM: add 'ready' status if missing
+        // (Sequelize sync({ alter: true }) cannot add new values to existing ENUMs)
+        try {
+            await sequelize.query(
+                `ALTER TYPE "enum_orders_status" ADD VALUE IF NOT EXISTS 'ready';`
+            );
+            console.log("ENUM fix applied: 'ready' status ensured.");
+        } catch (enumError: any) {
+            // Ignore if the type doesn't exist yet (first run) or value already exists
+            console.log("ENUM fix note:", enumError?.message || "skipped");
+        }
+
         await sequelize.sync({ alter: true });
         console.log("Database tables synchronized");
 
         app.listen(PORT, () => {
             console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+            // Initialize automated tasks
+            initScheduler();
         });
 
     } catch (error) {

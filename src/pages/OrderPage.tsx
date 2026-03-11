@@ -157,12 +157,16 @@ const OrderPage: React.FC = () => {
       // 1. Create Razorpay order on our backend
       const orderRes = await fetch(`${API_URL}/payment/create-order`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`,
+        },
         body: JSON.stringify({ amount: totalAmountFloat }),
       });
 
       if (!orderRes.ok) {
-        throw new Error('Failed to create payment order');
+        const errData = await orderRes.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to create payment order');
       }
 
       const orderData = await orderRes.json();
@@ -181,7 +185,10 @@ const OrderPage: React.FC = () => {
             // 3. Verify Payment Signature
             const verifyRes = await fetch(`${API_URL}/payment/verify`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${user.token}`,
+              },
               body: JSON.stringify({
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id: response.razorpay_order_id,
@@ -233,6 +240,13 @@ const OrderPage: React.FC = () => {
         theme: {
           color: "#6f4e37",
         },
+        modal: {
+          ondismiss: () => {
+            // User closed the payment dialog — reset state
+            setLoading(false);
+            toast('Payment cancelled.', { icon: '🚫' });
+          }
+        }
       };
 
       const rzp = new (window as any).Razorpay(options);
@@ -256,73 +270,53 @@ const OrderPage: React.FC = () => {
 
   return (
     <div className="order-container">
-      <div className="order-header">
-        <button className="back-btn" onClick={() => navigate(-1)}>
-          ← Go Back
-        </button>
-        <h1>🍽️ SmartDine</h1>
-      </div>
+      <div className="order-layout">
+        {/* Left Sidebar: Categories */}
+        <aside className="categories-sidebar">
+          <h3>📂 Categories</h3>
+          <div className="sidebar-filters">
+            <button
+              className={`sidebar-filter-btn ${activeCategory === 'All' ? 'active' : ''}`}
+              onClick={() => setActiveCategory('All')}
+            >
+              All Items
+            </button>
+            {categories.map((category) => (
+              groupedMenu[category] && (
+                <button
+                  key={category}
+                  className={`sidebar-filter-btn ${activeCategory === category ? 'active' : ''}`}
+                  onClick={() => setActiveCategory(category)}
+                >
+                  {category}
+                </button>
+              )
+            ))}
+          </div>
+        </aside>
 
-      {/* Improved Takeaway Message Displayed at the Top */}
-      <div className="table-status-banner">
-        {assignedTable ? (
-          <p>
-            🍽️ You are ordering for Table {assignedTable} (Dine-In)
-          </p>
-        ) : (
-          <p>
-            🛍️ Your order will be prepared as Parcel while your table is being assigned.
-          </p>
-        )}
-      </div>
+        {/* Center: Menu Content */}
+        <div className="menu-content-area">
+          <div className="menu-search-container">
+            <span className="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Search menu..."
+              className="menu-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-      <div className="order-content">
-        <div className="menu-section">
-          <h2>🍽️ Menu</h2>
           {loading ? (
             <div className="loading-spinner">Loading menu...</div>
           ) : error ? (
             <div className="error-message">{error}</div>
           ) : (
-            <div className="categories-container">
-              {/* Search Bar */}
-              <div className="menu-search-container">
-                <span className="search-icon">🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search menu..."
-                  className="menu-search-input"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-
-              {/* Category Filter Buttons */}
-              <div className="category-filters">
-                <button
-                  className={`filter-btn ${activeCategory === 'All' ? 'active' : ''}`}
-                  onClick={() => setActiveCategory('All')}
-                >
-                  All
-                </button>
-                {categories.map((category) => (
-                  groupedMenu[category] && (
-                    <button
-                      key={category}
-                      className={`filter-btn ${activeCategory === category ? 'active' : ''}`}
-                      onClick={() => setActiveCategory(category)}
-                    >
-                      {category}
-                    </button>
-                  )
-                ))}
-              </div>
-
-              {/* Filtered Menu Cards */}
+            <div className="menu-display">
               {categories
                 .filter(category => activeCategory === 'All' || activeCategory === category)
                 .map((category) => {
-                  // Filter items within the category by search query
                   const filteredItems = (groupedMenu[category] || []).filter(item =>
                     item.name.toLowerCase().includes(searchQuery.toLowerCase())
                   );
@@ -330,32 +324,43 @@ const OrderPage: React.FC = () => {
                   if (filteredItems.length === 0) return null;
 
                   return (
-                    <div key={category} className="category-group">
-                      {activeCategory === 'All' && <h3 className="category-title">{category}</h3>}
-                      <div className="menu-grid">
-                        {filteredItems.map((item) => (
-                          <div key={item.id} className="menu-card compact-card">
-                            <div className="card-content">
-                              <h4 className="item-title">
-                                {item.name}
-                              </h4>
-                              <p className="price">
-                                {new Intl.NumberFormat('en-IN', {
-                                  style: 'currency',
-                                  currency: 'INR',
-                                  maximumFractionDigits: 0
-                                }).format(item.price)}
-                              </p>
-
-                              <button
-                                className="add-btn"
-                                onClick={() => addToCart(item)}
-                              >
-                                Add to Cart
-                              </button>
+                    <div key={category} className="category-block">
+                      <h3 className="block-title">{category}</h3>
+                      <div className="compact-menu-grid">
+                        {filteredItems.map((item) => {
+                          const cartItem = cart.find(c => c.id === item.id);
+                          return (
+                            <div key={item.id} className="compact-menu-card">
+                              <div className="item-main-info">
+                                <h4 className="item-name">{item.name}</h4>
+                                <p className="item-price">
+                                  {new Intl.NumberFormat('en-IN', {
+                                    style: 'currency',
+                                    currency: 'INR',
+                                    maximumFractionDigits: 0
+                                  }).format(item.price)}
+                                </p>
+                              </div>
+                              
+                              <div className="item-actions">
+                                {cartItem ? (
+                                  <div className="compact-qty-controls">
+                                    <button onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}>−</button>
+                                    <span>{cartItem.quantity}</span>
+                                    <button onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}>+</button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    className="compact-add-btn"
+                                    onClick={() => addToCart(item)}
+                                  >
+                                    Add
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -365,6 +370,13 @@ const OrderPage: React.FC = () => {
         </div>
 
         <div className="cart-section">
+          <div className="table-status-banner compact-banner">
+            {assignedTable ? (
+              <p>🍽️ Table {assignedTable} (Dine-In)</p>
+            ) : (
+              <p>🛍️ Parcel (Table Pending)</p>
+            )}
+          </div>
           <h2>Your Order</h2>
           {cart.length === 0 ? (
             <p className="empty-cart">Your cart is empty</p>

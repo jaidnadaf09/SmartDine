@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Calendar, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -26,14 +27,27 @@ const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Compute date boundaries
-  const todayStr = new Date().toISOString().split('T')[0];
+  // Compute date boundaries (Local Time)
+  const getLocalTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = getLocalTodayStr();
   const maxDateObj = new Date();
   maxDateObj.setDate(maxDateObj.getDate() + 30);
-  const maxDateStr = maxDateObj.toISOString().split('T')[0];
+  const maxDateStr = (() => {
+    const year = maxDateObj.getFullYear();
+    const month = String(maxDateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(maxDateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  })();
 
   const [formData, setFormData] = useState({
-    date: '',
+    date: todayStr, // Default to today
     time: '',
     guests: '2',
   });
@@ -42,37 +56,35 @@ const BookTablePage: React.FC = () => {
   const [error, setError] = useState('');
   const [bookingDetails, setBookingDetails] = useState<any>(null);
 
-  // Generate 30-min time slots between 09:00 and 22:30
-  // If selected date is today, only return slots strictly after current time
-  const getAvailableTimeSlots = (selectedDate: string): string[] => {
-    const slots: string[] = [];
-    for (let h = 9; h <= 22; h++) {
-      for (const m of [0, 30]) {
-        if (h === 22 && m === 30) continue; // cap at 22:30
-        const hh = String(h).padStart(2, '0');
-        const mm = String(m).padStart(2, '0');
-        slots.push(`${hh}:${mm}`);
-      }
-    }
+  // Calculate min time if date is today (rounded to next 5 mins)
+  const minTimeForToday = (() => {
+    if (formData.date !== todayStr) return undefined;
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / 5) * 5;
+    const tempDate = new Date();
+    tempDate.setMinutes(roundedMinutes, 0, 0);
+    return tempDate.getHours().toString().padStart(2, '0') + ':' + tempDate.getMinutes().toString().padStart(2, '0');
+  })();
 
-    if (selectedDate === todayStr) {
-      const now = new Date();
-      return slots.filter((slot) => {
-        const [hh, mm] = slot.split(':').map(Number);
-        const slotTime = new Date();
-        slotTime.setHours(hh, mm, 0, 0);
-        return slotTime > now; // strictly after current time
-      });
-    }
-    return slots;
-  };
-
-  const availableSlots = getAvailableTimeSlots(formData.date);
 
 
   const bookingInProgress = useRef(false);
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const timeInputRef = useRef<HTMLInputElement>(null);
+
+  const handleWrapperClick = (ref: React.RefObject<HTMLInputElement | null>) => {
+    if (ref.current) {
+      const el = ref.current as any;
+      if ('showPicker' in el) {
+        el.showPicker();
+      } else {
+        el.focus();
+      }
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -139,6 +151,18 @@ const BookTablePage: React.FC = () => {
         setError('You must be logged in to book a table.');
         toast.error('You must be logged in to book a table.');
         setLoading(false);
+        bookingInProgress.current = false;
+        return;
+      }
+
+      // Past Date/Time Validation
+      const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
+      const now = new Date();
+      if (selectedDateTime < now) {
+        setError('You cannot book a table in the past. Please select a future time.');
+        toast.error('Invalid time selection: past date/time.');
+        setLoading(false);
+        bookingInProgress.current = false;
         return;
       }
 
@@ -297,94 +321,85 @@ const BookTablePage: React.FC = () => {
 
   return (
     <div className="book-table-container">
-      <button className="back-btn" onClick={() => navigate(-1)}>← Go Back</button>
-
       <div className="book-table-box">
-        <h1>🍽️ SmartDine</h1>
-        <h2>Premium Table Booking</h2>
+        <div className="book-table-header">
+          <span className="logo-small">🍽️ SMARTDINE</span>
+          <h2>Reserve Your Table</h2>
+          <p>Premium Dining Experience</p>
+        </div>
 
-        {error && <div className="error-message" style={{ background: '#fee2e2', color: '#dc2626', padding: '10px', borderRadius: '5px', marginBottom: '15px', textAlign: 'center' }}>{error}</div>}
+        {error && <div className="error-msg-banner">{error}</div>}
 
         {submitted ? (
-          <div className="success-message" style={{ textAlign: 'center', padding: '20px' }}>
-            <h3 style={{ color: '#16a34a' }}>✓ Table Booked Successfully!</h3>
-            <div style={{ marginTop: '15px', background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <p><strong>Table Number:</strong> {bookingDetails?.tableNumber}</p>
+          <div className="success-message">
+            <h3 className="success-banner">✓ Booking Confirmed</h3>
+            <div className="success-card">
+              <p><strong>Table:</strong> {bookingDetails?.tableNumber || 'Pending Assignment'}</p>
               <p><strong>Date:</strong> {new Date(bookingDetails?.date).toLocaleDateString()}</p>
               <p><strong>Time:</strong> {bookingDetails?.time}</p>
-              {bookingDetails?.paymentId && <p><strong>Payment ID:</strong> {bookingDetails.paymentId}</p>}
+              {bookingDetails?.paymentId && <p className="booking-id-tag"><strong>Ref:</strong> {bookingDetails.paymentId}</p>}
             </div>
-            <p style={{ marginTop: '15px' }}>We'll see you soon at SMART DINE</p>
-            <button onClick={() => navigate('/')} className="submit-btn" style={{ marginTop: '20px' }}>Go Home</button>
+            <p style={{ color: 'var(--booking-text-muted)', fontWeight: 500 }}>We look forward to serving you.</p>
+            <button onClick={() => navigate('/')} className="submit-btn" style={{ width: '100%', marginTop: '20px' }}>Go Home</button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="booking-form">
 
             {/* Read-only Customer Info */}
-            <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '14px 16px', marginBottom: '18px' }}>
-              <p style={{ margin: '0 0 6px', fontSize: '12px', fontWeight: 600, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                🔒 Booking as (from your account)
-              </p>
-              <div style={{ display: 'grid', gap: '6px' }}>
-                <p style={{ margin: 0, fontSize: '14px', color: '#374151' }}>
-                  <span style={{ color: '#6b7280' }}>Name: </span>
-                  <strong>{user?.name}</strong>
-                </p>
-                <p style={{ margin: 0, fontSize: '14px', color: '#374151' }}>
-                  <span style={{ color: '#6b7280' }}>Email: </span>
-                  <strong>{user?.email}</strong>
-                </p>
-                <p style={{ margin: 0, fontSize: '14px', color: '#374151' }}>
-                  <span style={{ color: '#6b7280' }}>Phone: </span>
-                  <strong>{user?.phone || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>Not provided — update your profile to add one</span>}</strong>
-                </p>
+            <div className="account-info-card">
+              <div className="card-label">
+                <span>🔒</span> BOOKING AS (FROM YOUR ACCOUNT)
+              </div>
+              <div className="account-details">
+                <p><strong>Name:</strong> {user?.name}</p>
+                <p><strong>Email:</strong> {user?.email}</p>
+                <p><strong>Phone:</strong> {user?.phone || 'Not provided — update profile to add one'}</p>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="date">Date</label>
-                <input
-                  type="date"
-                  id="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  required
-                  min={todayStr}
-                  max={maxDateStr}
-                />
-                <small style={{ color: '#6b7280', fontSize: '11px' }}>
-                  Bookings available up to {maxDateStr}
+                <div className="input-wrapper" onClick={() => handleWrapperClick(dateInputRef)}>
+                  <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    ref={dateInputRef}
+                    value={formData.date}
+                    onChange={handleChange}
+                    required
+                    min={todayStr}
+                    max={maxDateStr}
+                  />
+                  <Calendar className="input-icon" size={18} />
+                </div>
+                <small>
+                  Available up to {maxDateStr}
                 </small>
               </div>
 
               <div className="form-group">
                 <label htmlFor="time">Time</label>
-                {availableSlots.length === 0 ? (
-                  <p style={{ color: '#dc2626', fontSize: '13px', marginTop: '6px' }}>
-                    ⚠️ No available slots for today. Please select a future date.
-                  </p>
-                ) : (
-                  <select
+                <div className="input-wrapper" onClick={() => handleWrapperClick(timeInputRef)}>
+                  <input
+                    type="time"
                     id="time"
                     name="time"
+                    ref={timeInputRef}
                     value={formData.time}
                     onChange={handleChange}
                     required
-                    style={{ width: '100%' }}
-                  >
-                    <option value="">-- Select a time --</option>
-                    {availableSlots.map((slot) => (
-                      <option key={slot} value={slot}>{slot}</option>
-                    ))}
-                  </select>
-                )}
+                    step="300"
+                    min={minTimeForToday}
+                  />
+                  <Clock className="input-icon" size={18} />
+                </div>
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="guests">Number of Guests</label>
+              <label htmlFor="guests">👥 Guests</label>
               <select id="guests" name="guests" value={formData.guests} onChange={handleChange}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                   <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
@@ -392,14 +407,14 @@ const BookTablePage: React.FC = () => {
               </select>
             </div>
 
-            <div className="button-group" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="button-group" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
               <button type="submit" className="submit-btn" disabled={loading}>
-                {loading ? 'Processing...' : 'Pay & Book Table'}
+                {loading ? 'Processing...' : 'Pay & Reserve Table'}
               </button>
 
               {isAdmin && (
-                <button type="button" onClick={handleAdminBook} className="admin-book-btn" disabled={loading} style={{ background: '#64748b', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                  Admin: Book (No Payment)
+                <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn" disabled={loading}>
+                  Admin: Instant Booking (No Payment)
                 </button>
               )}
             </div>
