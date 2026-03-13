@@ -38,6 +38,30 @@ const SignupPage: React.FC = () => {
       return;
     }
 
+    // Name validation
+    const nameRegex = /^[A-Za-z\s]{2,50}$/;
+    if (!nameRegex.test(formData.name.trim())) {
+      toast.error('Please enter a valid name (letters only, 2-50 chars)');
+      setLoading(false);
+      return;
+    }
+
+    // Smart Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      toast.error('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
+    // Block Suspicious Inputs
+    const lowerEmail = formData.email.toLowerCase();
+    if (lowerEmail.includes("test") || lowerEmail.includes("fake")) {
+      toast.error('Please enter a real email address');
+      setLoading(false);
+      return;
+    }
+
     const phoneRegex = /^[0-9]{10}$/;
     if (!phoneRegex.test(formData.phone)) {
       toast.error('Phone number must be exactly 10 digits (numbers only)');
@@ -82,6 +106,7 @@ const SignupPage: React.FC = () => {
           <div className="form-group">
             <label htmlFor="name">Full Name</label>
             <input
+              className="form-input"
               type="text"
               id="name"
               name="name"
@@ -95,6 +120,7 @@ const SignupPage: React.FC = () => {
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input
+              className="form-input"
               type="email"
               id="email"
               name="email"
@@ -108,6 +134,7 @@ const SignupPage: React.FC = () => {
           <div className="form-group">
             <label htmlFor="phone">Phone Number</label>
             <input
+              className="form-input"
               type="tel"
               id="phone"
               name="phone"
@@ -123,6 +150,7 @@ const SignupPage: React.FC = () => {
             <label htmlFor="password">Password</label>
             <div className="input-wrapper">
               <input
+                className="form-input"
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
@@ -145,6 +173,7 @@ const SignupPage: React.FC = () => {
             <label htmlFor="confirmPassword">Confirm Password</label>
             <div className="input-wrapper">
               <input
+                className="form-input"
                 type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"

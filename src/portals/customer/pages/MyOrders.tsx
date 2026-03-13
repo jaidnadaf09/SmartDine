@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { Calendar, Clock, Users, UtensilsCrossed, ShoppingBag, AlertCircle } from 'lucide-react';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
 
@@ -41,6 +42,19 @@ interface Order {
   createdAt: any;
 }
 
+/* ── Skeleton card shown while loading ── */
+const SkeletonCard: React.FC = () => (
+  <div className="skeleton-card">
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
+      <div className="skeleton skeleton-line short" />
+      <div className="skeleton" style={{ width: 70, height: 22, borderRadius: 999 }} />
+    </div>
+    <div className="skeleton skeleton-line long" />
+    <div className="skeleton skeleton-line medium" style={{ marginTop: 4 }} />
+    <div className="skeleton skeleton-btn" style={{ marginTop: 12, width: '100%' }} />
+  </div>
+);
+
 const MyOrders: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
@@ -59,25 +73,22 @@ const MyOrders: React.FC = () => {
       return;
     }
     try {
-      const headers = { 
+      const headers = {
         'Authorization': `Bearer ${user.token}`,
         'Content-Type': 'application/json'
       };
-      
-      console.log('Fetching user data for:', user.email);
-      
+
       const [bookingsRes, ordersRes] = await Promise.all([
         fetch(`${API_URL}/bookings/user/${user.id}`, { headers }),
         fetch(`${API_URL}/orders/my`, { headers }),
       ]);
-      
+
       if (!bookingsRes.ok) throw new Error(`Bookings: ${bookingsRes.status} ${bookingsRes.statusText}`);
       if (!ordersRes.ok) throw new Error(`Orders: ${ordersRes.status} ${ordersRes.statusText}`);
-      
+
       const bookingsData = await bookingsRes.json() || [];
       const rawOrders = await ordersRes.json();
-      
-      // Process orders defensively
+
       let processedOrders: Order[] = [];
       if (Array.isArray(rawOrders)) {
         processedOrders = rawOrders.map((o: any) => {
@@ -85,22 +96,15 @@ const MyOrders: React.FC = () => {
           try {
             if (typeof items === 'string') items = JSON.parse(items);
           } catch (e) {
-            console.error('Failed to parse items for order', o.id, e);
             items = [];
           }
-          return {
-            ...o,
-            items: Array.isArray(items) ? items : []
-          };
+          return { ...o, items: Array.isArray(items) ? items : [] };
         });
       }
 
-      console.log(`Loaded ${bookingsData.length} bookings and ${processedOrders.length} orders`);
-      
       setBookings(bookingsData);
       setOrders(processedOrders);
     } catch (err: any) {
-      console.error('CustomerPortal Data Fetch Error:', err);
       setError(`Failed to fetch your data: ${err.message}`);
     } finally {
       setLoading(false);
@@ -109,7 +113,7 @@ const MyOrders: React.FC = () => {
 
   useEffect(() => {
     fetchUserData();
-    const interval = setInterval(fetchUserData, 15000); // Auto-refresh every 15s
+    const interval = setInterval(fetchUserData, 15000);
     return () => clearInterval(interval);
   }, [fetchUserData]);
 
@@ -123,17 +127,15 @@ const MyOrders: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to cancel booking');
-      
+
       setBookings((prev) => prev.map((b) => b.id === bookingToCancel.id ? { ...b, status: 'cancelled' } : b));
 
       if (data.walletBalance !== undefined && user) {
         updateUser({ walletBalance: data.walletBalance });
-        // Find booking to know refund amount if available in response, or just generic message
-        toast.success(data.message || 'Booking cancelled and amount refunded to Wallet.');
+        toast.success(data.message || '✔ Booking cancelled. Amount refunded to Wallet.');
       } else {
-        toast.success('Booking cancelled successfully.');
+        toast.success('✔ Booking cancelled successfully.');
       }
-
     } catch (err: any) {
       toast.error(err.message || 'Could not cancel booking.');
     } finally {
@@ -152,17 +154,16 @@ const MyOrders: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to cancel order');
-      toast.success('Order cancelled successfully. Refund credited to your wallet.');
-      
+      toast.success('✔ Order cancelled. Refund credited to your wallet.');
+
       setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: 'cancelled' } : o));
-      
-      // Update global user wallet state directly
+
       if (data.walletBalance !== undefined && user) {
         updateUser({ walletBalance: data.walletBalance });
       } else {
-        fetchUserData(); // fallback
+        fetchUserData();
       }
-      
+
       setOrderToCancel(null);
     } catch (err: any) {
       toast.error(err.message || 'Could not cancel order.');
@@ -176,26 +177,35 @@ const MyOrders: React.FC = () => {
     return (status === 'pending' || status === 'confirmed') && booking.tableId === null;
   };
 
-  const getBookingStatusClass = (status: string) => {
-    const s = status?.toLowerCase();
-    return `status-badge status-${s}`;
-  };
+  const getStatusClass = (status: string) => `status-badge status-${status?.toLowerCase()}`;
 
-  const getOrderStatusClass = (status: string) => {
-    const s = status?.toLowerCase();
-    return `status-badge status-${s}`;
-  };
-
+  /* ── Loading: show skeleton cards ── */
   if (loading) return (
-    <div className="cp-loading">
-      <div className="cp-spinner" />
-      <p>Loading your orders…</p>
+    <div className="cp-page">
+      <div className="cp-content">
+        <div className="cp-welcome">
+          <div>
+            <div className="skeleton skeleton-title" style={{ width: 160 }} />
+            <div className="skeleton skeleton-line medium" style={{ marginTop: 6 }} />
+          </div>
+          <div className="skeleton skeleton-btn" style={{ width: 140, height: 40 }} />
+        </div>
+        <div className="cp-sections-grid">
+          {[0, 1].map(col => (
+            <section key={col} className="cp-section">
+              <div className="skeleton skeleton-title" style={{ marginBottom: 16 }} />
+              {[0, 1, 2].map(i => <SkeletonCard key={i} />)}
+            </section>
+          ))}
+        </div>
+      </div>
     </div>
   );
 
   if (error) return (
     <div className="cp-error">
-      <p>⚠️ {error}</p>
+      <AlertCircle size={40} />
+      <p>{error}</p>
       <button onClick={fetchUserData} className="cp-retry-btn">Retry</button>
     </div>
   );
@@ -212,109 +222,116 @@ const MyOrders: React.FC = () => {
       <div className="cp-content">
 
         {/* ── WELCOME HEADER ── */}
-        <div className="cp-welcome">
+        <div className="cp-welcome fade-up">
           <div>
             <h1 className="cp-title">My Orders</h1>
-            <p className="cp-subtitle">Welcome back, <strong>{user.name}</strong>! Here's everything in one place.</p>
+            <p className="cp-subtitle">
+              Welcome back, <strong>{user.name}</strong>! Here's everything in one place.
+            </p>
           </div>
           <button className="cp-browse-btn" onClick={() => navigate('/order')}>
-            🍽️ Browse Menu
+            <UtensilsCrossed size={16} />
+            Browse Menu
           </button>
         </div>
 
-        {/* ── SECTIONS GRID ── */}
+        {/* ── SECTIONS ── */}
         <div className="cp-sections-grid">
-          {/* ── MY BOOKINGS ── */}
+
+          {/* ── TABLE BOOKINGS ── */}
           <section className="cp-section">
             <h2 className="cp-section-title">
-              <span>🗓️</span> Table Bookings
+              <Calendar size={18} style={{ color: 'var(--brand-primary)' }} />
+              Table Bookings
               <span className="cp-count">{bookings.length}</span>
             </h2>
 
             {bookings.length === 0 ? (
               <div className="cp-empty">
-                <div className="cp-empty-icon">🍽️</div>
+                <div className="cp-empty-icon">🗓️</div>
                 <p>No bookings yet</p>
-                <button className="cp-browse-btn" onClick={() => navigate('/book-table')}>Book a Table</button>
+                <button className="cp-browse-btn" onClick={() => navigate('/book-table')}>
+                  <Calendar size={15} /> Book a Table
+                </button>
               </div>
             ) : (
               <div className="cp-cards-grid single-col">
-                {bookings.map((booking) => {
-                  return (
-                    <div key={booking.id} className="cp-card">
-                      {/* Card Header */}
-                      <div className="cp-card-header">
-                        <span className="cp-card-id">#{String(booking.id).slice(-6).toUpperCase()}</span>
-                        <span className={getBookingStatusClass(booking.status)}>
-                          {booking.status}
-                        </span>
-                      </div>
-
-                      {/* Details Row 1 */}
-                      <div className="cp-details-row">
-                        <div className="cp-detail-item">
-                          <span className="cp-detail-icon">📅</span>
-                          <div>
-                            <div className="cp-detail-label">Date</div>
-                            <div className="cp-detail-value">{booking.date ? new Date(booking.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
-                          </div>
-                        </div>
-                        <div className="cp-detail-item">
-                          <span className="cp-detail-icon">⏰</span>
-                          <div>
-                            <div className="cp-detail-label">Time</div>
-                            <div className="cp-detail-value">{booking.time}</div>
-                          </div>
-                        </div>
-                        <div className="cp-detail-item">
-                          <span className="cp-detail-icon">👥</span>
-                          <div>
-                            <div className="cp-detail-label">Guests</div>
-                            <div className="cp-detail-value">{booking.guests}</div>
-                          </div>
-                        </div>
-                        <div className="cp-detail-item">
-                          <span className="cp-detail-icon">🍽️</span>
-                          <div>
-                            <div className="cp-detail-label">Table</div>
-                            <div className="cp-detail-value">
-                              {booking.tableNumber ? `Table ${booking.tableNumber}` : (
-                                <span className="cp-pending-text">Pending</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Cancel Button */}
-                      {isCancellable(booking) && (
-                        <button
-                          className="cp-cancel-btn"
-                          onClick={() => setBookingToCancel(booking)}
-                          disabled={cancellingId === booking.id}
-                        >
-                          {cancellingId === booking.id ? '⏳ Cancelling…' : '✕ Cancel Booking'}
-                        </button>
-                      )}
+                {bookings.map((booking) => (
+                  <div key={booking.id} className="cp-card">
+                    <div className="cp-card-header">
+                      <span className="cp-card-id">#{String(booking.id).slice(-6).toUpperCase()}</span>
+                      <span className={getStatusClass(booking.status)}>{booking.status}</span>
                     </div>
-                  );
-                })}
+
+                    <div className="cp-details-row">
+                      <div className="cp-detail-item">
+                        <Calendar className="cp-detail-icon" size={16} />
+                        <div>
+                          <div className="cp-detail-label">Date</div>
+                          <div className="cp-detail-value">
+                            {booking.date
+                              ? new Date(booking.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : 'N/A'}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="cp-detail-item">
+                        <Clock className="cp-detail-icon" size={16} />
+                        <div>
+                          <div className="cp-detail-label">Time</div>
+                          <div className="cp-detail-value">{booking.time}</div>
+                        </div>
+                      </div>
+                      <div className="cp-detail-item">
+                        <Users className="cp-detail-icon" size={16} />
+                        <div>
+                          <div className="cp-detail-label">Guests</div>
+                          <div className="cp-detail-value">{booking.guests}</div>
+                        </div>
+                      </div>
+                      <div className="cp-detail-item">
+                        <UtensilsCrossed className="cp-detail-icon" size={16} />
+                        <div>
+                          <div className="cp-detail-label">Table</div>
+                          <div className="cp-detail-value">
+                            {booking.tableNumber
+                              ? `Table ${booking.tableNumber}`
+                              : <span className="cp-pending-text">Pending</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {isCancellable(booking) && (
+                      <button
+                        className="cp-cancel-btn"
+                        onClick={() => setBookingToCancel(booking)}
+                        disabled={cancellingId === booking.id}
+                      >
+                        {cancellingId === booking.id ? '⏳ Cancelling…' : '✕ Cancel Booking'}
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>
 
-          {/* ── MY FOOD ORDERS ── */}
+          {/* ── FOOD ORDERS ── */}
           <section className="cp-section">
             <h2 className="cp-section-title">
-              <span>🛍️</span> Food Orders
+              <ShoppingBag size={18} style={{ color: 'var(--brand-primary)' }} />
+              Food Orders
               <span className="cp-count">{orders.length}</span>
             </h2>
 
             {orders.length === 0 ? (
               <div className="cp-empty">
                 <div className="cp-empty-icon">🛒</div>
-                <p>You have not placed any orders yet.</p>
-                <button className="cp-browse-btn" onClick={() => navigate('/order')}>Browse Menu</button>
+                <p>You haven't placed any orders yet.</p>
+                <button className="cp-browse-btn" onClick={() => navigate('/order')}>
+                  <UtensilsCrossed size={15} /> Browse Menu
+                </button>
               </div>
             ) : (
               <div className="cp-cards-grid single-col">
@@ -323,56 +340,66 @@ const MyOrders: React.FC = () => {
                     <div className="cp-card-header">
                       <span className="cp-card-id">#{String(order.id).slice(-6).toUpperCase()}</span>
                       {order.status && (
-                        <span className={getOrderStatusClass(order.status)}>
-                          {order.status}
-                        </span>
+                        <span className={getStatusClass(order.status)}>{order.status}</span>
                       )}
                     </div>
-                    <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--highlight-color)', marginBottom: '8px' }}>
+
+                    <div className="cp-order-total">
                       {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
                         Number(order.totalAmount || order.total || 0)
                       )}
                     </div>
 
-                    <div className="cp-details-row" style={{ marginBottom: '12px' }}>
+                    <div className="cp-details-row" style={{ marginBottom: 12 }}>
                       <div className="cp-detail-item">
-                        <span className="cp-detail-icon">📅</span>
+                        <Calendar className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Date</div>
-                          <div className="cp-detail-value">{order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</div>
+                          <div className="cp-detail-value">
+                            {order.createdAt
+                              ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                              : 'N/A'}
+                          </div>
                         </div>
                       </div>
                       <div className="cp-detail-item">
-                        <span className="cp-detail-icon">⏰</span>
+                        <Clock className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Time</div>
-                          <div className="cp-detail-value">{order.createdAt ? new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</div>
+                          <div className="cp-detail-value">
+                            {order.createdAt
+                              ? new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+                              : 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Items */}
                     <div className="cp-items-list">
-                      <div className="cp-items-label">🍱 Items Ordered</div>
-                      {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
-                        <div key={idx} className="cp-item-row">
-                          <span className="cp-item-name">{item.itemName || item.name}</span>
-                          <span className="cp-item-qty">× {item.quantity}</span>
-                          {item.price && (
-                            <span className="cp-item-price">
-                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
-                            </span>
-                          )}
-                        </div>
-                      )) : <p className="cp-pending-text">No item details available</p>}
+                      <div className="cp-items-label">
+                        <UtensilsCrossed size={13} /> Items Ordered
+                      </div>
+                      {order.items && Array.isArray(order.items)
+                        ? order.items.map((item: any, idx: number) => (
+                          <div key={idx} className="cp-item-row">
+                            <span className="cp-item-name">{item.itemName || item.name}</span>
+                            <span className="cp-item-qty">× {item.quantity}</span>
+                            {item.price && (
+                              <span className="cp-item-price">
+                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
+                              </span>
+                            )}
+                          </div>
+                        ))
+                        : <p className="cp-pending-text" style={{ fontSize: '0.85rem', padding: '4px 0' }}>No item details available</p>
+                      }
                     </div>
 
-                    {/* Cancel Order Button */}
                     {order.status?.toLowerCase() === 'pending' && (
                       <button
                         className="cp-cancel-btn"
                         onClick={() => setOrderToCancel(order)}
-                        style={{ marginTop: '15px' }}
+                        style={{ marginTop: 14 }}
                       >
                         ✕ Cancel Order
                       </button>
@@ -383,42 +410,27 @@ const MyOrders: React.FC = () => {
             )}
           </section>
         </div>
-        
+
         {/* ── CANCEL ORDER MODAL ── */}
         {orderToCancel && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 9999, backdropFilter: 'blur(4px)'
-          }}>
-            <div style={{
-              background: 'var(--card-bg)', padding: '24px', borderRadius: '16px',
-              width: '90%', maxWidth: '400px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-              color: 'var(--text-color)'
-            }}>
-              <h3 style={{ margin: '0 0 10px 0', fontSize: '1.25rem', color: 'var(--highlight-color)' }}>Cancel Order</h3>
-              <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem', lineHeight: '1.5', opacity: 0.9 }}>
+          <div className="cp-modal-overlay">
+            <div className="cp-modal">
+              <h3 className="cp-modal-title">Cancel Order</h3>
+              <p className="cp-modal-body">
                 If you cancel this order, the full amount will be credited to your SmartDine Wallet.
               </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
+              <div className="cp-modal-actions">
+                <button
+                  className="cp-modal-keep-btn"
                   onClick={() => setOrderToCancel(null)}
                   disabled={cancellingOrderId !== null}
-                  style={{
-                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
-                    border: '1px solid var(--border-color)', background: 'transparent',
-                    color: 'var(--text-color)', fontWeight: 600
-                  }}
                 >
                   Keep Order
                 </button>
-                <button 
+                <button
+                  className="cp-modal-cancel-btn"
                   onClick={handleCancelOrder}
                   disabled={cancellingOrderId !== null}
-                  style={{
-                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
-                    background: '#e74c3c', color: 'white', border: 'none', fontWeight: 600
-                  }}
                 >
                   {cancellingOrderId === orderToCancel.id ? '⏳ Cancelling…' : 'Cancel Order'}
                 </button>
@@ -429,41 +441,25 @@ const MyOrders: React.FC = () => {
 
         {/* ── CANCEL BOOKING MODAL ── */}
         {bookingToCancel && (
-          <div style={{
-            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-            background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 9999, backdropFilter: 'blur(4px)'
-          }}>
-            <div style={{
-              background: 'var(--card-bg)', padding: '24px', borderRadius: '16px',
-              width: '90%', maxWidth: '400px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-              color: 'var(--text-color)'
-            }}>
-              <h3 style={{ margin: '0 0 10px 0', fontSize: '1.25rem', color: 'var(--highlight-color)' }}>Cancel Booking</h3>
-              <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem', lineHeight: '1.5', opacity: 0.9 }}>
+          <div className="cp-modal-overlay">
+            <div className="cp-modal">
+              <h3 className="cp-modal-title">Cancel Booking</h3>
+              <p className="cp-modal-body">
                 Are you sure you want to cancel this booking?
-                <br /><br />
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>You can cancel only within 5 minutes of booking. The fee will be credited to your SmartDine Wallet.</span>
+                <small>You can cancel only within 5 minutes of booking. The fee will be credited to your SmartDine Wallet.</small>
               </p>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
+              <div className="cp-modal-actions">
+                <button
+                  className="cp-modal-keep-btn"
                   onClick={() => setBookingToCancel(null)}
                   disabled={cancellingId !== null}
-                  style={{
-                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
-                    border: '1px solid var(--border-color)', background: 'transparent',
-                    color: 'var(--text-color)', fontWeight: 600
-                  }}
                 >
                   Keep Booking
                 </button>
-                <button 
+                <button
+                  className="cp-modal-cancel-btn"
                   onClick={handleCancelBooking}
                   disabled={cancellingId !== null}
-                  style={{
-                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
-                    background: '#e74c3c', color: 'white', border: 'none', fontWeight: 600
-                  }}
                 >
                   {cancellingId === bookingToCancel.id ? '⏳ Cancelling…' : 'Cancel Booking'}
                 </button>

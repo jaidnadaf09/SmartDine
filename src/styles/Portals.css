@@ -22,8 +22,8 @@
 /* Profile Page Styles */
 .profile-card {
   background: var(--card-bg);
-  border-radius: 16px;
-  padding: 40px;
+  border-radius: 18px;
+  padding: 36px;
   box-shadow: var(--card-shadow);
   max-width: 600px;
   margin: 20px auto;
@@ -32,32 +32,43 @@
 }
 
 .profile-card h2 {
-  color: var(--accent-primary);
-  margin-bottom: 30px;
-  text-align: center;
-  border-bottom: 2px solid var(--accent-secondary);
-  padding-bottom: 10px;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-primary);
+  margin-bottom: 28px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid var(--card-border);
+  padding-bottom: 12px;
 }
 
 .profile-detail-item {
   display: grid;
-  gap: 5px;
-  margin-bottom: 20px;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 12px 16px;
+  background: var(--card-bg-alt);
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
 }
 
 .profile-detail-label {
-  color: var(--accent-primary);
+  color: var(--brand-primary);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.07em;
+  font-family: 'Inter', sans-serif;
 }
 
 .profile-detail-value {
-  font-size: 1.1rem;
-  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  color: var(--text-primary);
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .profile-img-upload-container {
@@ -125,28 +136,30 @@
 }
 
 .save-btn {
-  background: var(--accent-color);
-  color: var(--text-white);
+  background: linear-gradient(135deg, #6F4E37 0%, #4B2E2B 100%);
+  color: white;
   border: none;
-  padding: 0.75rem 1.4rem;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.95rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.925rem;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease, transform 0.15s ease;
+  box-shadow: 0 6px 18px rgba(111, 78, 55, 0.28);
+  font-family: 'Inter', sans-serif;
 }
 
 .save-btn:hover:not(:disabled) {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #7c573f 0%, #563431 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(111, 78, 55, 0.38);
 }
 
 .save-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
   box-shadow: none;
+  transform: none;
 }
 
 /* Edit Profile / Customer portal forms — override Auth.css glass styles */
