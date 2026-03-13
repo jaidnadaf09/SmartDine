@@ -3,9 +3,13 @@ import {
     getStaffMembers,
     getDashboardStats,
     getUsers,
+    updateUserRole,
     deleteUser,
     getBookings,
+    getBookingsHistory,
+    completeBooking,
     updateBookingStatus,
+    cancelBooking,
     updateBookingTable,
     getTables,
     getAvailableTables,
@@ -24,14 +28,23 @@ const router = express.Router();
 // Middleware to protect all admin routes
 router.use(protect, adminOnly);
 
+router.use((req, res, next) => {
+    console.log(`[ADMIN ROUTER] Processing: ${req.method} ${req.path}`);
+    next();
+});
+
 router.route('/staff').get(getStaffMembers);
 router.route('/stats').get(getDashboardStats);
 
 router.route('/users').get(getUsers);
 router.route('/users/:id').delete(deleteUser);
+router.route('/users/:id/role').put(updateUserRole);
 
 router.route('/bookings').get(getBookings);
+router.route('/bookings/history').get(getBookingsHistory);
 router.route('/bookings/:id/status').put(updateBookingStatus);
+router.route('/bookings/:id/cancel').put(cancelBooking);
+router.route('/bookings/:id/complete').patch(completeBooking);
 router.route('/bookings/:id/table').put(updateBookingTable);
 
 router.route('/tables').get(getTables).post(addTable);

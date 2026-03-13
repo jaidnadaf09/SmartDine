@@ -119,31 +119,33 @@ const Tables: React.FC = () => {
             <h2 className="dashboard-title">Dining Tables</h2>
 
             <div className="admin-guidance-section" style={{ marginTop: '0', marginBottom: '3rem' }}>
-                <div className="guidance-card table-management-card">
+                <div className="floor-plan-card">
                     <div className="guidance-header">
                         <span className="icon">🪑</span>
                         <h3>Floor Plan Configuration</h3>
                     </div>
-                    <div className="add-table-form">
+                    <div className="add-table-form form-container">
                         <div className="input-group">
-                            <label>Table #</label>
+                            <label style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px', display: 'block' }}>TABLE #</label>
                             <input
                                 type="number"
                                 placeholder="e.g. 10"
                                 value={newTable.tableNumber}
                                 onChange={e => setNewTable({ ...newTable, tableNumber: e.target.value })}
+                                className="admin-input"
                             />
                         </div>
                         <div className="input-group">
-                            <label>Capacity</label>
+                            <label style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px', display: 'block' }}>CAPACITY</label>
                             <input
                                 type="number"
                                 placeholder="Seats"
                                 value={newTable.capacity}
                                 onChange={e => setNewTable({ ...newTable, capacity: Number(e.target.value) })}
+                                className="admin-input"
                             />
                         </div>
-                        <button className="add-btn" onClick={addTable}>Add New Table</button>
+                        <button className="add-table-btn" onClick={addTable}>Add New Table</button>
                     </div>
                 </div>
             </div>
@@ -186,8 +188,8 @@ const Tables: React.FC = () => {
                                                     const val = Number(e.target.value);
                                                     if (val !== table.capacity) updateCapacity(table.id, val);
                                                 }}
-                                                className="capacity-input"
-                                                style={{ width: '60px', padding: '0.3rem', borderRadius: '5px', border: '1px solid #e8d4c0' }}
+                                                className="capacity-input admin-input"
+                                                style={{ width: '60px', padding: '0.3rem', borderRadius: '5px' }}
                                             />
                                             <span>Seats</span>
                                         </div>

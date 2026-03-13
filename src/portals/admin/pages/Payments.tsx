@@ -76,7 +76,7 @@ const Payments: React.FC = () => {
                                     <td>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payment.amount)}</td>
                                     <td><code>{payment.paymentId || 'N/A'}</code></td>
                                     <td>
-                                        <span className={`status-pill pill-${payment.paymentStatus === 'paid' ? 'confirmed' : 'cancelled'}`}>
+                                        <span className={`status-badge status-${payment.paymentStatus === 'paid' ? 'completed' : 'cancelled'}`}>
                                             {payment.paymentStatus}
                                         </span>
                                     </td>

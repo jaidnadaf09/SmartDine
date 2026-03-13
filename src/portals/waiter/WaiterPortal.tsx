@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import WaiterLayout from './components/WaiterLayout';
 import '../../styles/Portals.css';
 
 interface Table {
@@ -43,57 +44,45 @@ const WaiterPortal: React.FC = () => {
   }
 
   return (
-    <div className="portal-container">
-      <header className="portal-header">
-        <h1>🍽️ Waiter Portal</h1>
-        <div className="user-info">
-          <span>Welcome, {user.name}!</span>
-          <button className="logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </header>
-
-      <div className="portal-content">
-        <div className="section">
-          <h2>Table Status</h2>
-          <div className="tables-grid">
-            {tables.map((table) => (
-              <div
-                key={table.id}
-                className={`table-card status-${table.status}`}
-              >
-                <div className="table-number">Table {table.tableNumber}</div>
-                <div className="table-capacity">👥 {table.capacity}</div>
-                <div className="table-status">{table.status}</div>
-                {table.orders > 0 && (
-                  <div className="table-orders">📋 {table.orders}</div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="section">
-          <h2>Pending Orders</h2>
-          <div className="orders-list">
-            {pendingOrders.map((order) => (
-              <div key={order.id} className={`order-card order-${order.status}`}>
-                <div className="order-header">
-                  <h3>Table {order.tableNumber}</h3>
-                  <span className="order-status">{order.status}</span>
-                </div>
-                <div className="order-items">
-                  {order.items.map((item, idx) => (
-                    <p key={idx}>• {item}</p>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+    <WaiterLayout>
+      <div className="section">
+        <h2>Table Status</h2>
+        <div className="tables-grid">
+          {tables.map((table) => (
+            <div
+              key={table.id}
+              className={`table-card status-${table.status}`}
+            >
+              <div className="table-number">Table {table.tableNumber}</div>
+              <div className="table-capacity">👥 {table.capacity}</div>
+              <div className="table-status">{table.status}</div>
+              {table.orders > 0 && (
+                <div className="table-orders">📋 {table.orders}</div>
+              )}
+            </div>
+          ))}
         </div>
       </div>
-    </div>
+
+      <div className="section">
+        <h2>Pending Orders</h2>
+        <div className="orders-list">
+          {pendingOrders.map((order) => (
+            <div key={order.id} className={`order-card order-${order.status}`}>
+              <div className="order-header">
+                <h3>Table {order.tableNumber}</h3>
+                <span className="order-status">{order.status}</span>
+              </div>
+              <div className="order-items">
+                {order.items.map((item, idx) => (
+                  <p key={idx}>• {item}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </WaiterLayout>
   );
 };
 

@@ -50,10 +50,7 @@ const Dashboard: React.FC = () => {
 
     const getStatusBadgeClass = (status: string) => {
         const s = status?.toLowerCase();
-        if (s === 'pending' || s === 'failed') return 'badge-pending';
-        if (s === 'preparing' || s === 'confirmed') return 'badge-preparing';
-        if (s === 'ready' || s === 'completed' || s === 'paid') return 'badge-completed';
-        return '';
+        return `status-badge status-${s}`;
     };
 
     if (loading) return (
@@ -83,7 +80,7 @@ const Dashboard: React.FC = () => {
                 /* Stats Grid */
                 <div className="chef-stats-grid">
                     {statCards.map((card, i) => (
-                        <div key={i} className="chef-stat-card" style={{ borderTop: `4px solid ${card.accent}` }}>
+                        <div key={i} className="chef-stat-card dashboard-card" style={{ borderTop: `4px solid ${card.accent}` }}>
                             <div className="chef-stat-icon" style={{ background: card.bg, color: card.accent }}>
                                 {card.icon}
                             </div>
@@ -104,7 +101,7 @@ const Dashboard: React.FC = () => {
                 
                 <div className="chef-cards-grid">
                     {/* Recent Bookings */}
-                    <div className="chef-card">
+                    <div className="chef-card dashboard-card">
                         <div className="chef-card-header">
                             <span className="chef-card-id" style={{ color: '#6f4e37' }}>📅 NEW BOOKINGS</span>
                             <button className="btn-secondary-chef" style={{ fontSize: '0.7rem', padding: '4px 8px', color: '#6f4e37', borderColor: '#6f4e37' }} onClick={() => navigate('/admin/bookings')}>
@@ -130,7 +127,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Recent Orders */}
-                    <div className="chef-card">
+                    <div className="chef-card dashboard-card">
                         <div className="chef-card-header">
                             <span className="chef-card-id" style={{ color: '#6f4e37' }}>🛍️ RECENT ORDERS</span>
                             <button className="btn-secondary-chef" style={{ fontSize: '0.7rem', padding: '4px 8px', color: '#6f4e37', borderColor: '#6f4e37' }} onClick={() => navigate('/admin/orders')}>
@@ -158,7 +155,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Recent Payments */}
-                    <div className="chef-card">
+                    <div className="chef-card dashboard-card">
                         <div className="chef-card-header">
                             <span className="chef-card-id" style={{ color: '#6f4e37' }}>💰 LATEST PAYMENTS</span>
                             <button className="btn-secondary-chef" style={{ fontSize: '0.7rem', padding: '4px 8px', color: '#6f4e37', borderColor: '#6f4e37' }} onClick={() => navigate('/admin/payments')}>

@@ -16,7 +16,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     useEffect(() => {
-        document.body.className = theme;
+        // Keep a body class for backwards compatibility with existing styles
+        document.body.classList.remove('light', 'dark');
+        document.body.classList.add(theme);
+
+        // New: drive theming via data attribute for CSS variables
+        document.body.setAttribute('data-theme', theme);
+
         localStorage.setItem('theme', theme);
     }, [theme]);
 

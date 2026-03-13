@@ -43,12 +43,15 @@ interface Order {
 
 const MyOrders: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancellingId, setCancellingId] = useState<string | number | null>(null);
+  const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
+  const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
+  const [cancellingOrderId, setCancellingOrderId] = useState<string | number | null>(null);
 
   const fetchUserData = useCallback(async () => {
     if (!user || !user.token) {
@@ -110,46 +113,77 @@ const MyOrders: React.FC = () => {
     return () => clearInterval(interval);
   }, [fetchUserData]);
 
-  const handleCancelBooking = async (bookingId: string | number) => {
-    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-    setCancellingId(bookingId);
+  const handleCancelBooking = async () => {
+    if (!bookingToCancel) return;
+    setCancellingId(bookingToCancel.id);
     try {
-      const res = await fetch(`${API_URL}/bookings/${bookingId}/cancel`, {
+      const res = await fetch(`${API_URL}/bookings/${bookingToCancel.id}/cancel`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${user?.token}`, 'Content-Type': 'application/json' },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to cancel booking');
-      toast.success('Booking cancelled successfully.');
-      setBookings((prev) => prev.map((b) => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+      
+      setBookings((prev) => prev.map((b) => b.id === bookingToCancel.id ? { ...b, status: 'cancelled' } : b));
+
+      if (data.walletBalance !== undefined && user) {
+        updateUser({ walletBalance: data.walletBalance });
+        // Find booking to know refund amount if available in response, or just generic message
+        toast.success(data.message || 'Booking cancelled and amount refunded to Wallet.');
+      } else {
+        toast.success('Booking cancelled successfully.');
+      }
+
     } catch (err: any) {
       toast.error(err.message || 'Could not cancel booking.');
     } finally {
       setCancellingId(null);
+      setBookingToCancel(null);
     }
   };
 
-  const isCancellable = (booking: Booking) =>
-    booking.status?.toLowerCase() === 'pending' && booking.tableId === null;
-
-  const bookingStatusBadge = (status: string) => {
-    const map: Record<string, { bg: string; color: string }> = {
-      confirmed: { bg: '#dcfce7', color: '#15803d' },
-      cancelled:  { bg: '#fee2e2', color: '#b91c1c' },
-      completed:  { bg: '#dbeafe', color: '#1d4ed8' },
-      pending:    { bg: '#fef9c3', color: '#a16207' },
-    };
-    return map[status?.toLowerCase()] || { bg: '#f3f4f6', color: '#374151' };
+  const handleCancelOrder = async () => {
+    if (!orderToCancel) return;
+    setCancellingOrderId(orderToCancel.id);
+    try {
+      const res = await fetch(`${API_URL}/orders/${orderToCancel.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${user?.token}`, 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to cancel order');
+      toast.success('Order cancelled successfully. Refund credited to your wallet.');
+      
+      setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: 'cancelled' } : o));
+      
+      // Update global user wallet state directly
+      if (data.walletBalance !== undefined && user) {
+        updateUser({ walletBalance: data.walletBalance });
+      } else {
+        fetchUserData(); // fallback
+      }
+      
+      setOrderToCancel(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Could not cancel order.');
+    } finally {
+      setCancellingOrderId(null);
+    }
   };
 
-  const orderStatusBadge = (status: string) => {
-    const map: Record<string, { bg: string; color: string; label: string }> = {
-      pending:    { bg: '#fef3c7', color: '#b45309', label: '⏳ Pending' },
-      preparing:  { bg: '#dbeafe', color: '#1d4ed8', label: '🍳 Preparing' },
-      ready:      { bg: '#d1fae5', color: '#065f46', label: '✅ Ready' },
-      completed:  { bg: '#dcfce7', color: '#15803d', label: '🧾 Completed' },
-    };
-    return map[status?.toLowerCase()] || { bg: '#f3f4f6', color: '#374151', label: status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown' };
+  const isCancellable = (booking: Booking) => {
+    const status = booking.status?.toLowerCase();
+    return (status === 'pending' || status === 'confirmed') && booking.tableId === null;
+  };
+
+  const getBookingStatusClass = (status: string) => {
+    const s = status?.toLowerCase();
+    return `status-badge status-${s}`;
+  };
+
+  const getOrderStatusClass = (status: string) => {
+    const s = status?.toLowerCase();
+    return `status-badge status-${s}`;
   };
 
   if (loading) return (
@@ -206,16 +240,12 @@ const MyOrders: React.FC = () => {
             ) : (
               <div className="cp-cards-grid single-col">
                 {bookings.map((booking) => {
-                  const badge = bookingStatusBadge(booking.status);
                   return (
                     <div key={booking.id} className="cp-card">
                       {/* Card Header */}
                       <div className="cp-card-header">
                         <span className="cp-card-id">#{String(booking.id).slice(-6).toUpperCase()}</span>
-                        <span
-                          className="cp-status-badge"
-                          style={{ background: badge.bg, color: badge.color }}
-                        >
+                        <span className={getBookingStatusClass(booking.status)}>
                           {booking.status}
                         </span>
                       </div>
@@ -260,7 +290,7 @@ const MyOrders: React.FC = () => {
                       {isCancellable(booking) && (
                         <button
                           className="cp-cancel-btn"
-                          onClick={() => handleCancelBooking(booking.id)}
+                          onClick={() => setBookingToCancel(booking)}
                           disabled={cancellingId === booking.id}
                         >
                           {cancellingId === booking.id ? '⏳ Cancelling…' : '✕ Cancel Booking'}
@@ -292,14 +322,11 @@ const MyOrders: React.FC = () => {
                   <div key={order.id} className="cp-card">
                     <div className="cp-card-header">
                       <span className="cp-card-id">#{String(order.id).slice(-6).toUpperCase()}</span>
-                      {order.status && (() => {
-                        const badge = orderStatusBadge(order.status);
-                        return (
-                          <span className="cp-status-badge" style={{ background: badge.bg, color: badge.color }}>
-                            {badge.label}
-                          </span>
-                        );
-                      })()}
+                      {order.status && (
+                        <span className={getOrderStatusClass(order.status)}>
+                          {order.status}
+                        </span>
+                      )}
                     </div>
                     <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--highlight-color)', marginBottom: '8px' }}>
                       {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
@@ -339,12 +366,111 @@ const MyOrders: React.FC = () => {
                         </div>
                       )) : <p className="cp-pending-text">No item details available</p>}
                     </div>
+
+                    {/* Cancel Order Button */}
+                    {order.status?.toLowerCase() === 'pending' && (
+                      <button
+                        className="cp-cancel-btn"
+                        onClick={() => setOrderToCancel(order)}
+                        style={{ marginTop: '15px' }}
+                      >
+                        ✕ Cancel Order
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
             )}
           </section>
         </div>
+        
+        {/* ── CANCEL ORDER MODAL ── */}
+        {orderToCancel && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, backdropFilter: 'blur(4px)'
+          }}>
+            <div style={{
+              background: 'var(--card-bg)', padding: '24px', borderRadius: '16px',
+              width: '90%', maxWidth: '400px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+              color: 'var(--text-color)'
+            }}>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '1.25rem', color: 'var(--highlight-color)' }}>Cancel Order</h3>
+              <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem', lineHeight: '1.5', opacity: 0.9 }}>
+                If you cancel this order, the full amount will be credited to your SmartDine Wallet.
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => setOrderToCancel(null)}
+                  disabled={cancellingOrderId !== null}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
+                    border: '1px solid var(--border-color)', background: 'transparent',
+                    color: 'var(--text-color)', fontWeight: 600
+                  }}
+                >
+                  Keep Order
+                </button>
+                <button 
+                  onClick={handleCancelOrder}
+                  disabled={cancellingOrderId !== null}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
+                    background: '#e74c3c', color: 'white', border: 'none', fontWeight: 600
+                  }}
+                >
+                  {cancellingOrderId === orderToCancel.id ? '⏳ Cancelling…' : 'Cancel Order'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── CANCEL BOOKING MODAL ── */}
+        {bookingToCancel && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            background: 'rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 9999, backdropFilter: 'blur(4px)'
+          }}>
+            <div style={{
+              background: 'var(--card-bg)', padding: '24px', borderRadius: '16px',
+              width: '90%', maxWidth: '400px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+              color: 'var(--text-color)'
+            }}>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '1.25rem', color: 'var(--highlight-color)' }}>Cancel Booking</h3>
+              <p style={{ margin: '0 0 20px 0', fontSize: '0.95rem', lineHeight: '1.5', opacity: 0.9 }}>
+                Are you sure you want to cancel this booking?
+                <br /><br />
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>You can cancel only within 5 minutes of booking. The fee will be credited to your SmartDine Wallet.</span>
+              </p>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={() => setBookingToCancel(null)}
+                  disabled={cancellingId !== null}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
+                    border: '1px solid var(--border-color)', background: 'transparent',
+                    color: 'var(--text-color)', fontWeight: 600
+                  }}
+                >
+                  Keep Booking
+                </button>
+                <button 
+                  onClick={handleCancelBooking}
+                  disabled={cancellingId !== null}
+                  style={{
+                    flex: 1, padding: '10px', borderRadius: '8px', cursor: 'pointer',
+                    background: '#e74c3c', color: 'white', border: 'none', fontWeight: 600
+                  }}
+                >
+                  {cancellingId === bookingToCancel.id ? '⏳ Cancelling…' : 'Cancel Booking'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

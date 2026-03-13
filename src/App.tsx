@@ -15,6 +15,7 @@ import AdminPortal from './portals/admin/AdminPortal';
 import ProfilePage from './portals/customer/pages/ProfilePage';
 import EditProfilePage from './portals/customer/pages/EditProfilePage';
 import ChangePasswordPage from './portals/customer/pages/ChangePasswordPage';
+import WalletHistory from './portals/customer/pages/WalletHistory';
 import ProtectedRoute from './components/ProtectedRoute';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ReturnRefundPolicy from './pages/ReturnRefundPolicy';
@@ -31,6 +32,9 @@ function App() {
       <AuthProvider>
         <Toaster
           position="top-right"
+          containerStyle={{
+            top: 80,
+          }}
           toastOptions={{
             duration: 3000,
             style: {
@@ -87,6 +91,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ChangePasswordPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wallet"
+                element={
+                  <ProtectedRoute>
+                    <WalletHistory />
                   </ProtectedRoute>
                 }
               />

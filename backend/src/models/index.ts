@@ -5,6 +5,7 @@ import Booking from './Booking';
 import MenuItem from './MenuItem';
 import InventoryItem from './InventoryItem';
 import Order from './Order';
+import WalletTransaction from './WalletTransaction';
 // import OrderItem from './OrderItem';
 
 // Define Associations
@@ -21,6 +22,10 @@ Table.hasMany(Booking, { foreignKey: 'tableId' });
 Order.belongsTo(User, { foreignKey: 'userId', as: 'customer' });
 User.hasMany(Order, { foreignKey: 'userId' });
 
+// WalletTransaction -> User
+WalletTransaction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(WalletTransaction, { foreignKey: 'userId', as: 'walletTransactions' });
+
 export {
     sequelize,
     User,
@@ -29,4 +34,5 @@ export {
     MenuItem,
     InventoryItem,
     Order,
+    WalletTransaction,
 };

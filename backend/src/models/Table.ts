@@ -7,6 +7,7 @@ export interface TableAttributes {
     capacity: number;
     status: 'available' | 'occupied' | 'reserved';
     orders: number;
+    customerId?: number | null;
 }
 
 export class Table extends Model<TableAttributes> implements TableAttributes {
@@ -15,6 +16,7 @@ export class Table extends Model<TableAttributes> implements TableAttributes {
     public capacity!: number;
     public status!: 'available' | 'occupied' | 'reserved';
     public orders!: number;
+    public customerId!: number | null;
 }
 
 Table.init(
@@ -40,6 +42,10 @@ Table.init(
         orders: {
             type: DataTypes.INTEGER,
             defaultValue: 0,
+        },
+        customerId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
         },
     },
     {

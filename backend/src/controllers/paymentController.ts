@@ -2,6 +2,8 @@ import { Response } from "express";
 import razorpay from "../config/razorpay";
 import Booking from "../models/Booking";
 import User from "../models/User";
+import Order from "../models/Order";
+import WalletTransaction from "../models/WalletTransaction";
 import { AuthRequest } from "../middleware/authMiddleware";
 import crypto from "crypto";
 
@@ -155,5 +157,121 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
             message: "Payment verification failed",
             error: error.message
         });
+    }
+};
+
+export const processWalletPayment = async (req: AuthRequest, res: Response) => {
+    try {
+        const { amount, bookingData, orderData } = req.body;
+        const totalAmount = Number(amount);
+
+        if (!totalAmount || isNaN(totalAmount) || totalAmount <= 0) {
+            return res.status(400).json({ message: "Invalid payment amount." });
+        }
+
+        const user = await User.findByPk(req.user!.id);
+        if (!user) {
+            return res.status(401).json({ message: "User not found." });
+        }
+
+        const currentBalance = Number(user.walletBalance || 0);
+        if (currentBalance < totalAmount) {
+            return res.status(400).json({ 
+                message: "Insufficient wallet balance.",
+                walletBalance: currentBalance 
+            });
+        }
+
+        let newBooking = null;
+        let newOrder = null;
+        const transactionRef = `wallet_txn_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+        if (bookingData) {
+            // Validate booking past-time check
+            const dateTimeError = validateBookingDateTime(bookingData.date, bookingData.time);
+            if (dateTimeError) {
+                return res.status(400).json({ message: dateTimeError });
+            }
+
+            // Create Booking
+            newBooking = await Booking.create({
+                ...bookingData,
+                customerName: user.name,
+                email: user.email,
+                phone: user.phone || 'Not provided',
+                userId: user.id,
+                date: new Date(bookingData.date),
+                tableNumber: null,
+                tableId: null,
+                amount: totalAmount,
+                paymentId: transactionRef,
+                paymentStatus: "paid",
+                status: "confirmed"
+            });
+            console.log('Backend: Booking created via Wallet:', newBooking.id);
+        }
+
+        if (orderData) {
+             let assignedTableNumber = null;
+             let activeBookingId = null;
+
+             const activeBooking = await Booking.findOne({
+                 where: {
+                     userId: user.id,
+                     status: 'confirmed'
+                 },
+                 order: [['createdAt', 'DESC']]
+             });
+
+             if (activeBooking && activeBooking.tableNumber) {
+                 assignedTableNumber = activeBooking.tableNumber;
+                 activeBookingId = activeBooking.id;
+             }
+             const orderType = assignedTableNumber ? 'DINE_IN' : 'TAKEAWAY';
+
+             newOrder = await Order.create({
+                 tableNumber: assignedTableNumber,
+                 userId: user.id,
+                 bookingId: activeBookingId,
+                 items: orderData.items, 
+                 totalAmount: totalAmount,
+                 status: 'pending',
+                 paymentId: transactionRef,
+                 paymentStatus: 'paid',
+                 orderType: orderType
+             });
+             console.log('Backend: Order created via Wallet:', newOrder.id);
+        }
+
+        // Deduct from wallet securely
+        await user.decrement('walletBalance', { by: totalAmount });
+        await user.reload();
+        
+        let desc = "Wallet Payment";
+        if (newBooking) desc = `Payment for Booking #${newBooking.id}`;
+        if (newOrder) desc = `Payment for Order #${newOrder.id}`;
+
+        await WalletTransaction.create({
+            userId: user.id,
+            amount: totalAmount,
+            type: 'debit',
+            description: desc
+        });
+
+        return res.json({
+            success: true,
+            message: "Wallet payment processed successfully",
+            walletBalance: Number(user.walletBalance),
+            booking: newBooking,
+            order: newOrder
+        });
+
+    } catch (error: any) {
+         console.error("Backend: Error processing wallet payment:", error);
+         res.status(500).json({
+             success: false,
+             message: "Failed to process wallet payment",
+             error: error.message
+         });
     }
 };

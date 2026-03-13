@@ -15,9 +15,25 @@ CREATE TABLE IF NOT EXISTS `users` (
   `role` ENUM('customer', 'admin', 'CHEF', 'WAITER') DEFAULT 'customer',
   `shift` ENUM('Morning', 'Evening') NULL,
   `status` ENUM('active', 'inactive') DEFAULT 'active',
+  `walletBalance` DECIMAL(10, 2) DEFAULT 0.00,
   `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
+);
+
+-- -----------------------------------------------------
+-- Table `wallet_transactions`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `wallet_transactions` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `userId` INT NOT NULL,
+  `amount` DECIMAL(10, 2) NOT NULL,
+  `type` ENUM('credit', 'debit') NOT NULL,
+  `description` VARCHAR(255) NULL,
+  `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- -----------------------------------------------------
@@ -91,7 +107,7 @@ CREATE TABLE IF NOT EXISTS `bookings` (
 CREATE TABLE IF NOT EXISTS `orders` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `tableNumber` INT NOT NULL,
-  `status` ENUM('pending', 'preparing', 'ready', 'delivered') DEFAULT 'pending',
+  `status` ENUM('pending', 'preparing', 'ready', 'delivered', 'completed', 'cancelled') DEFAULT 'pending',
   `totalAmount` DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
   `timeStarted` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `createdAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -25,7 +25,8 @@ const loadRazorpayScript = () => {
 
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'wallet'>('online');
 
   // Compute date boundaries (Local Time)
   const getLocalTodayStr = () => {
@@ -191,8 +192,60 @@ const BookTablePage: React.FC = () => {
         throw new Error(availData.message || 'No tables available for this slot.');
       }
 
-      // 2. Create Razorpay Order (authenticated)
       const paymentAmount = 10;
+      
+      // -- BRAND NEW: WALLET PAYMENT BRANCH --
+      if (paymentMethod === 'wallet') {
+        if (Number(user.walletBalance || 0) < paymentAmount) {
+          setError(`Insufficient wallet balance. Required: ₹${paymentAmount}. Current: ₹${Number(user.walletBalance || 0)}.`);
+          toast.error('Insufficient wallet balance.');
+          setLoading(false);
+          bookingInProgress.current = false;
+          return;
+        }
+
+        const walletRes = await fetch(`${API_URL}/payment/wallet-pay`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user?.token}`
+          },
+          body: JSON.stringify({
+            amount: paymentAmount,
+            bookingData: {
+              userId: user.id,
+              date: formData.date,
+              time: formData.time,
+              guests: parseInt(formData.guests, 10),
+            }
+          })
+        });
+
+        const walletData = await walletRes.json();
+        if (!walletRes.ok) {
+           throw new Error(walletData.message || 'Wallet payment failed.');
+        }
+
+        if (walletData.walletBalance !== undefined && user) {
+           updateUser({ walletBalance: walletData.walletBalance });
+        }
+
+        console.log('Wallet Payment verified and booking created:', walletData.booking);
+        setBookingDetails(walletData.booking);
+        setSubmitted(true);
+        
+        if (walletData.booking?.tableNumber) {
+          toast.success(`Booking Confirmed! Assigned Table: ${walletData.booking.tableNumber}`);
+        } else {
+          toast.success('Booking Confirmed! (Table pending assignment)');
+        }
+        
+        setLoading(false);
+        bookingInProgress.current = false;
+        return;
+      }
+
+      // -- ORIGINAL RAZORPAY PAYMENT BRANCH --
       console.log('Creating Razorpay Order for amount:', paymentAmount);
 
       const orderResponse = await fetch(`${API_URL}/payment/create-order`, {
@@ -407,9 +460,38 @@ const BookTablePage: React.FC = () => {
               </select>
             </div>
 
+            <div className="form-group" style={{ marginBottom: '15px' }}>
+              <label>Payment Method</label>
+              <div className="payment-methods">
+                <div 
+                  className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
+                  onClick={() => setPaymentMethod('online')}
+                >
+                  <div className="payment-card-icon">💳</div>
+                  <div className="payment-card-info">
+                    <span className="payment-card-title">Online Payment</span>
+                    <span className="payment-card-subtitle">Pay via Razorpay</span>
+                  </div>
+                </div>
+
+                <div 
+                  className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
+                  onClick={() => setPaymentMethod('wallet')}
+                >
+                  <div className="payment-card-icon">👛</div>
+                  <div className="payment-card-info">
+                    <span className="payment-card-title">SmartDine Wallet</span>
+                    <span className="payment-card-subtitle">
+                      {user ? `Balance: ₹${Number(user.walletBalance || 0)}` : 'Login to view'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="button-group" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
               <button type="submit" className="submit-btn" disabled={loading}>
-                {loading ? 'Processing...' : 'Pay & Reserve Table'}
+                {loading ? 'Processing...' : `Pay ₹10 & Reserve Table`}
               </button>
 
               {isAdmin && (

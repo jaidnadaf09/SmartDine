@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Order, User, Table, Booking } from '../models';
+import { Order, User, Table, Booking, WalletTransaction, sequelize } from '../models';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Op } from 'sequelize';
 
@@ -121,8 +121,9 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 const table = await Table.findOne({ where: { tableNumber: order.tableNumber } });
                 if (table) {
                     table.status = 'available';
+                    table.customerId = null; // Fulfilling Feature 7 consistency
                     await table.save();
-                    console.log(`Table ${order.tableNumber} status set to AVAILABLE.`);
+                    console.log(`Table ${order.tableNumber} status set to AVAILABLE and unassigned.`);
                 }
             }
         }
@@ -174,5 +175,74 @@ export const getMyOrders = async (req: AuthRequest, res: Response) => {
     } catch (error: any) {
         console.error('Error fetching my orders:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
+    }
+};
+
+// @desc    Cancel order and refund to wallet
+// @route   POST /api/orders/:id/cancel
+// @access  Private
+export const cancelOrder = async (req: AuthRequest, res: Response) => {
+    try {
+        const orderId = req.params.id;
+        const userId = req.user!.id;
+
+        const order = await Order.findOne({ where: { id: orderId, userId } });
+
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found' });
+        }
+
+        if (order.status !== 'pending') {
+            return res.status(400).json({ message: 'Only pending orders can be cancelled' });
+        }
+
+        // Update order status
+        order.status = 'cancelled';
+        await order.save();
+
+        const refundAmount = Number(order.totalAmount || 0);
+        let currentBalance = 0;
+
+        // Refund to wallet securely using SQL increment
+        const user = await User.findByPk(userId);
+        if (user) {
+            await user.increment('walletBalance', { by: refundAmount });
+            
+            // Re-fetch to get the updated balance
+            await user.reload();
+            currentBalance = Number(user.walletBalance || 0);
+
+            // Build descriptive text
+            const orderTypeStr = order.orderType === 'DINE_IN' ? 'Dine-In' : 'Takeaway';
+            
+            let itemDescstr = '';
+            if (order.items && Array.isArray(order.items)) {
+                // Parse items if stringified JSON
+                let itemsList = order.items;
+                try {
+                    if (typeof itemsList === 'string') itemsList = JSON.parse(itemsList);
+                } catch(e){}
+
+                if (Array.isArray(itemsList)) {
+                    itemDescstr = itemsList.map((i: any) => `${i.quantity}x ${i.itemName || i.name}`).join(', ');
+                }
+            }
+
+            const descriptionText = `Refund for Order #${order.id} (${orderTypeStr})` + 
+                                  (itemDescstr ? ` - Items: ${itemDescstr}` : '');
+
+            // Record transaction
+            await WalletTransaction.create({
+                userId: user.id,
+                amount: refundAmount,
+                type: 'credit',
+                description: descriptionText
+            });
+        }
+
+        res.json({ message: 'Order cancelled successfully', walletBalance: currentBalance, order });
+    } catch (error: any) {
+        console.error("Error cancelling order:", error);
+        res.status(500).json({ message: 'Server Error' });
     }
 };

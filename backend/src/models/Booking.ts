@@ -17,6 +17,9 @@ export interface BookingAttributes {
     amount?: number;
     paymentId?: string;
     paymentStatus?: 'pending' | 'paid' | 'failed';
+    cancelReason?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export class Booking extends Model<BookingAttributes> implements BookingAttributes {
@@ -35,6 +38,9 @@ export class Booking extends Model<BookingAttributes> implements BookingAttribut
     public amount!: number;
     public paymentId!: string;
     public paymentStatus!: 'pending' | 'paid' | 'failed';
+    public cancelReason!: string;
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
 }
 
 Booking.init(
@@ -104,6 +110,10 @@ Booking.init(
         paymentStatus: {
             type: DataTypes.ENUM('pending', 'paid', 'failed'),
             defaultValue: 'pending',
+        },
+        cancelReason: {
+            type: DataTypes.STRING,
+            allowNull: true,
         },
     },
     {

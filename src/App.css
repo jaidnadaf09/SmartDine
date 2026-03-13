@@ -11,7 +11,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s ease, color 0.3s ease;
   background-color: var(--bg-primary);
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
 html,
@@ -80,6 +80,65 @@ body.dark {
   --input-border: #3d342f;
   --accent-primary: #dcb07a; /* Warmer gold for dark mode */
   --accent-secondary: #c5a059;
+}
+
+/* New theme tokens driven by body[data-theme] for consistent palette */
+
+body[data-theme='light'] {
+  /* Light Mode Colors */
+  --bg-primary: #F7F5F2;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+
+  --text-primary: #2C2C2C;
+  --text-secondary: #5A5A5A;
+
+  --border-color: #E5E2DD;
+
+  --accent-color: #8B5E3C;
+  --accent-hover: #6F472F;
+
+  /* Map legacy variables */
+  --card-bg: var(--bg-card);
+  --card-bg-alt: #FBF8F3;
+  --card-border: var(--border-color);
+  --card-shadow: 0 4px 20px rgba(139, 94, 60, 0.06);
+  --card-shadow-hover: 0 10px 30px rgba(139, 94, 60, 0.12);
+
+  --text-main: var(--text-primary);
+  --text-muted: var(--text-secondary);
+
+  --header-bg: linear-gradient(135deg, #8B5E3C 0%, #6F472F 100%);
+  --input-bg: var(--bg-secondary);
+  --input-border: var(--border-color);
+}
+
+body[data-theme='dark'] {
+  /* Dark Mode Colors (no pure black) */
+  --bg-primary: #1E1E1E;
+  --bg-secondary: #262626;
+  --bg-card: #2F2F2F;
+
+  --text-primary: #F5F5F5;
+  --text-secondary: #C8C8C8;
+
+  --border-color: #3F3F3F;
+
+  --accent-color: #C89B6D;
+  --accent-hover: #B1855B;
+
+  --card-bg: var(--bg-card);
+  --card-bg-alt: #373737;
+  --card-border: var(--border-color);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --card-shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.65);
+
+  --text-main: var(--text-primary);
+  --text-muted: var(--text-secondary);
+
+  --header-bg: linear-gradient(135deg, #2B241F 0%, #1F1915 100%);
+  --input-bg: var(--bg-secondary);
+  --input-border: var(--border-color);
 }
 
 /* Dark mode overrides are now primarily managed via variables. 
@@ -203,6 +262,18 @@ body.dark .back-btn:hover {
 .logo-icon {
   margin-right: 8px;
   font-size: 1.6rem;
+}
+
+.role-tag-badge {
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 10px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .nav-buttons {

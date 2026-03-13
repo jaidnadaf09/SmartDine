@@ -80,7 +80,7 @@ const OrderHistory: React.FC = () => {
                                     <td><strong>#{order.id}</strong></td>
                                     <td>{order.customer?.name || 'Guest User'}</td>
                                     <td>
-                                        <span className={`status-pill pill-${order.orderType === 'TAKEAWAY' ? 'takeaway' : 'dine-in'}`}>
+                                        <span className={`status-badge status-${order.orderType === 'TAKEAWAY' ? 'ready' : 'preparing'}`}>
                                             {order.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-In'}
                                         </span>
                                     </td>
@@ -98,7 +98,7 @@ const OrderHistory: React.FC = () => {
                                             {new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </td>
-                                    <td><span className="status-pill pill-completed">Completed</span></td>
+                                    <td><span className="status-badge status-completed">Completed</span></td>
                                 </tr>
                             ))}
                         </tbody>

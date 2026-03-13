@@ -160,7 +160,7 @@
 .cp-order-total {
   font-size: 1rem;
   font-weight: 800;
-  color: var(--accent-primary);
+  color: var(--accent-color);
 }
 
 /* Details Row */
@@ -248,7 +248,7 @@
 }
 
 .cp-item-price {
-  color: var(--accent-primary);
+  color: var(--accent-color);
   font-weight: 700;
   font-size: 0.8rem;
 }
@@ -356,4 +356,71 @@
 body.dark .cp-spinner {
   border-color: var(--card-border);
   border-top-color: var(--accent-primary);
+}
+
+/* ── Profile Page Layout Enhancements ── */
+.profile-container-flex {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.profile-card,
+.wallet-card {
+  flex: 1;
+  min-width: 320px;
+  max-width: 480px;
+}
+
+@media (max-width: 768px) {
+  .profile-container-flex {
+    flex-direction: column;
+    align-items: center;
+  }
+  .profile-card,
+  .wallet-card {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Wallet History Button Enhancements */
+.wallet-history-btn {
+  background: var(--accent-color, #8B5E3C);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.wallet-history-btn:hover {
+  background: var(--accent-hover, #6f4e37);
+  transform: translateY(-1px);
+}
+
+/* Light Theme Strong Contrast */
+[data-theme="light"] .wallet-history-btn {
+  background: #8B5E3C;
+  color: white;
+}
+
+[data-theme="light"] .wallet-history-btn:hover {
+  background: #6f4e37;
+}
+
+/* Dark Theme Strong Contrast */
+[data-theme="dark"] .wallet-history-btn {
+  background: #A9784A;
+  color: white;
+}
+
+[data-theme="dark"] .wallet-history-btn:hover {
+  background: #C48B57;
 }

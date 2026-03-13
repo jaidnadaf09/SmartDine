@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Order, Table, Booking } from '../models';
+import { Order, Table, Booking, User } from '../models';
 
 
 // @desc    Get chef dashboard stats
@@ -44,12 +44,16 @@ export const getKitchenOrders = async (req: Request, res: Response) => {
                     [Op.in]: ['pending', 'preparing', 'ready']
                 }
             },
-            order: [['createdAt', 'ASC']] // Oldest first for priority
+            include: [{
+                model: User,
+                as: 'customer',
+                attributes: ['name']
+            }],
+            order: [['createdAt', 'ASC']]
         });
         res.json(orders);
     } catch (error: any) {
-        console.error("Error fetching kitchen orders:", error?.message || error);
-        console.error("Full error:", JSON.stringify(error, null, 2));
+        console.error("Error fetching kitchen orders:", error);
         res.status(500).json({ message: 'Server Error', detail: error?.message });
     }
 };
@@ -80,14 +84,16 @@ export const updateChefOrderStatus = async (req: Request, res: Response) => {
                 const booking = await Booking.findByPk(order.bookingId);
                 if (booking) {
                     booking.status = 'completed';
-                    booking.tableId = null; // Unassign table so getTables shows it as AVAILABLE
+                    booking.tableId = null; 
+                    booking.tableNumber = null as any; 
                     await booking.save();
-                    console.log(`Booking ${booking.id} marked as completed and table unassigned.`);
+                    console.log(`Booking ${order.bookingId} marked as completed and unassigned from Table.`);
                 }
             }
 
-            // 2. Also find any booking linked to this table number and complete it
+            // 2. Clear table and set as available
             if (order.tableNumber) {
+                // Find and complete all active bookings for this table
                 const activeBookings = await Booking.findAll({
                     where: {
                         tableNumber: order.tableNumber,
@@ -98,15 +104,15 @@ export const updateChefOrderStatus = async (req: Request, res: Response) => {
                     booking.status = 'completed';
                     booking.tableId = null;
                     await booking.save();
-                    console.log(`Booking ${booking.id} (table ${order.tableNumber}) completed and unassigned.`);
                 }
 
-                // 3. Set the table's own status to 'available'
+                // Update Table status and clear customer
                 const table = await Table.findOne({ where: { tableNumber: order.tableNumber } });
                 if (table) {
                     table.status = 'available';
+                    table.customerId = null; // As requested in Feature 7
                     await table.save();
-                    console.log(`Table ${order.tableNumber} set to available.`);
+                    console.log(`Table ${order.tableNumber} set to available and unassigned.`);
                 }
             }
         }
@@ -132,6 +138,11 @@ export const getChefOrderHistory = async (req: Request, res: Response) => {
                 status: 'completed',
                 updatedAt: { [Op.gte]: today }
             },
+            include: [{
+                model: User,
+                as: 'customer',
+                attributes: ['name']
+            }],
             order: [['updatedAt', 'DESC']]
         });
         res.json(orders);

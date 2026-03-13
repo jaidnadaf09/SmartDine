@@ -31,7 +31,8 @@ const loadRazorpayScript = () => {
 
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get the current user
+  const { user, updateUser } = useAuth(); // Get the current user
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'wallet'>('online');
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -154,6 +155,50 @@ const OrderPage: React.FC = () => {
 
       const totalAmountFloat = parseFloat((total * 1.1).toFixed(2));
 
+      // -- WALLET PAYMENT BRANCH --
+      if (paymentMethod === 'wallet') {
+        if (Number(user.walletBalance || 0) < totalAmountFloat) {
+          setError(`Insufficient wallet balance. Required: ₹${totalAmountFloat}. Current: ₹${Number(user.walletBalance || 0)}.`);
+          toast.error('Insufficient wallet balance.');
+          setLoading(false);
+          return;
+        }
+
+        const walletRes = await fetch(`${API_URL}/payment/wallet-pay`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user.token}`
+          },
+          body: JSON.stringify({
+            amount: totalAmountFloat,
+            orderData: {
+              items: cart.map(item => ({
+                itemName: item.name,
+                quantity: item.quantity,
+              }))
+            }
+          })
+        });
+
+        const walletData = await walletRes.json();
+        
+        if (!walletRes.ok) {
+          throw new Error(walletData.message || 'Wallet payment failed');
+        }
+
+        if (walletData.walletBalance !== undefined) {
+           updateUser({ walletBalance: walletData.walletBalance });
+        }
+
+        toast.success(`Payment successful! Order placed. Total: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmountFloat)}`);
+        setCart([]);
+        navigate('/');
+        setLoading(false);
+        return;
+      }
+
+      // -- RAZORPAY PAYMENT BRANCH --
       // 1. Create Razorpay order on our backend
       const orderRes = await fetch(`${API_URL}/payment/create-order`, {
         method: "POST",
@@ -441,8 +486,42 @@ const OrderPage: React.FC = () => {
 
                 {error && <div className="error-message">{error}</div>}
 
-                <button className="checkout-btn" onClick={handleCheckout} disabled={loading}>
-                  {loading ? 'Processing...' : 'Checkout'}
+                <div className="payment-method-selector" style={{ marginTop: '15px', padding: '10px 0', borderTop: '1px solid var(--border-color, #eee)' }}>
+                  <h4 style={{ marginBottom: '10px', fontSize: '1rem', color: 'var(--text-color)' }}>Payment Method</h4>
+                  <div className="payment-methods">
+                    <div 
+                      className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
+                      onClick={() => setPaymentMethod('online')}
+                    >
+                      <div className="payment-card-icon">💳</div>
+                      <div className="payment-card-info">
+                        <span className="payment-card-title">Online Payment</span>
+                        <span className="payment-card-subtitle">Pay via Razorpay</span>
+                      </div>
+                    </div>
+
+                    <div 
+                      className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
+                      onClick={() => setPaymentMethod('wallet')}
+                    >
+                      <div className="payment-card-icon">👛</div>
+                      <div className="payment-card-info">
+                        <span className="payment-card-title">SmartDine Wallet</span>
+                        <span className="payment-card-subtitle">
+                          {user ? `Balance: ₹${Number(user.walletBalance || 0)}` : 'Login to view'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                   className="checkout-btn" 
+                   onClick={handleCheckout} 
+                   disabled={loading}
+                   style={{ marginTop: '15px' }}
+                >
+                  {loading ? 'Processing...' : 'Checkout & Pay'}
                 </button>
               </div>
             </>
