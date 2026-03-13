@@ -12,6 +12,7 @@ import inventoryRoutes from "./routes/inventoryRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import paymentRoutes from "./routes/paymentRoutes";
 import chefRoutes from "./routes/chefRoutes";
+import walletRoutes from "./routes/walletRoutes";
 import { initScheduler } from "./utils/scheduler";
 
 // Load environment variables
@@ -34,6 +35,12 @@ app.use(
 
 app.use(express.json());
 
+// Request logger
+app.use((req, res, next) => {
+    console.log(`[REQUEST] ${req.method} ${req.originalUrl}`);
+    next();
+});
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/orders", orderRoutes);
@@ -44,6 +51,7 @@ app.use("/api/inventory", inventoryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/chef", chefRoutes);
+app.use("/api/wallet", walletRoutes);
 
 // Test route
 app.get("/", (req, res) => {
@@ -77,7 +85,10 @@ const startServer = async () => {
             await sequelize.query(
                 `ALTER TYPE "enum_orders_status" ADD VALUE IF NOT EXISTS 'ready';`
             );
-            console.log("ENUM fix applied: 'ready' status ensured.");
+            await sequelize.query(
+                `ALTER TYPE "enum_orders_status" ADD VALUE IF NOT EXISTS 'cancelled';`
+            );
+            console.log("ENUM fix applied: 'ready' and 'cancelled' status ensured.");
         } catch (enumError: any) {
             // Ignore if the type doesn't exist yet (first run) or value already exists
             console.log("ENUM fix note:", enumError?.message || "skipped");

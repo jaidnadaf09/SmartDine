@@ -10,6 +10,7 @@ interface User {
   phone?: string;
   profileImage?: string;
   token?: string;
+  walletBalance?: number;
 }
 
 interface AuthContextType {
@@ -75,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         profileImage: data.profileImage || undefined,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
+        walletBalance: data.walletBalance || 0,
       };
 
       console.log('AuthContext DEBUG: Normalized User Object:', loggedInUser);
@@ -118,6 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         profileImage: data.profileImage || undefined,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
+        walletBalance: data.walletBalance || 0,
       };
 
       localStorage.removeItem('smartdine_user');

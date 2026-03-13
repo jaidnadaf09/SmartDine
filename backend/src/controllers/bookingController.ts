@@ -3,6 +3,7 @@ import Booking from '../models/Booking';
 import User from '../models/User';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { findAvailableTable } from '../utils/bookingUtils';
+import WalletTransaction from '../models/WalletTransaction';
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
@@ -39,7 +40,7 @@ const validateBookingDateTime = (dateStr: string, timeStr?: string): string | nu
 // @access  Private/Staff
 export const getBookings = async (req: AuthRequest, res: Response) => {
     try {
-        const bookings = await Booking.findAll();
+        const bookings = await Booking.findAll({ order: [['id', 'DESC']] });
         res.json(bookings);
     } catch (error: any) {
         console.error('Error fetching bookings:', error);
@@ -149,8 +150,20 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ message: 'You can only cancel your own bookings.' });
         }
 
-        // Only allow cancellation if status is pending AND no table has been assigned
-        if (booking.status !== 'pending' || booking.tableId !== null) {
+        // 5-minute cancellation window check
+        const bookingTime = new Date(booking.createdAt || booking.date).getTime();
+        const now = new Date().getTime();
+        const diffMinutes = (now - bookingTime) / (1000 * 60);
+
+        if (diffMinutes > 5) {
+            return res.status(400).json({ 
+                message: 'Booking can only be cancelled within 5 minutes after booking.' 
+            });
+        }
+
+        // Only allow cancellation if status is pending/confirmed AND no table has been assigned
+        const validStatuses = ['pending', 'confirmed'];
+        if (!validStatuses.includes(booking.status) || booking.tableId !== null) {
             return res.status(400).json({
                 message: 'Booking cannot be cancelled after table assignment or when preparation has started.'
             });
@@ -159,7 +172,32 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
         booking.status = 'cancelled';
         await booking.save();
 
-        res.json({ message: 'Booking cancelled successfully.', booking });
+        let updatedBalance = undefined;
+
+        // Refund booking amount to wallet if paid/amount exists
+        const refundAmount = Number(booking.amount || 10); // default to 10 if not saved (assuming Rs 10 booking fee)
+        const user = await User.findByPk(req.user!.id);
+        
+        if (user && booking.paymentStatus === 'paid') {
+            await user.increment('walletBalance', { by: refundAmount });
+            await user.reload();
+            updatedBalance = Number(user.walletBalance || 0);
+
+            const bookingDateStr = new Date(booking.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            
+            await WalletTransaction.create({
+                userId: user.id,
+                amount: refundAmount,
+                type: 'credit',
+                description: `Refund for Booking #${booking.id} - Guests: ${booking.guests}, Date: ${bookingDateStr}`
+            });
+        }
+
+        res.json({ 
+            message: 'Booking cancelled successfully.', 
+            booking,
+            walletBalance: updatedBalance
+        });
     } catch (error: any) {
         console.error('Error cancelling booking:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
@@ -171,7 +209,10 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
 // @access  Public (for now, based on frontend implementation)
 export const getUserBookings = async (req: AuthRequest, res: Response) => {
     try {
-        const bookings = await Booking.findAll({ where: { userId: req.params.userId } });
+        const bookings = await Booking.findAll({ 
+            where: { userId: req.params.userId },
+            order: [['id', 'DESC']]
+        });
         res.json(bookings);
     } catch (error: any) {
         console.error('Error fetching user bookings:', error);

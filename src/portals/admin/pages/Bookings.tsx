@@ -10,6 +10,9 @@ const Bookings: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+    const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('Customer cancelled');
+    const [customReason, setCustomReason] = useState('');
 
     const fetchData = async () => {
         setLoading(true);
@@ -57,7 +60,12 @@ const Bookings: React.FC = () => {
                 body: JSON.stringify({ status })
             });
             if (res.ok) {
-                setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
+                // If status is cancelled or completed, we remove it from active list
+                if (status === 'cancelled' || status === 'completed') {
+                    setBookings(prev => prev.filter(b => b.id !== id));
+                } else {
+                    setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
+                }
                 toast.success('Status updated');
             } else {
                 toast.error('Failed to update status');
@@ -68,10 +76,35 @@ const Bookings: React.FC = () => {
         }
     };
 
+    const handleCancelBooking = async () => {
+        if (!selectedBookingId) return;
+        const finalReason = cancelReason === 'Other' ? customReason : cancelReason;
+        
+        try {
+            const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
+            const res = await fetch(`${API_URL}/admin/bookings/${selectedBookingId}/cancel`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ reason: finalReason })
+            });
+            if (res.ok) {
+                setBookings(prev => prev.filter(b => b.id !== selectedBookingId));
+                toast.success('Booking cancelled successfully');
+                setIsCancelModalOpen(false);
+                fetchData(); // Refresh tables
+            } else {
+                toast.error('Failed to cancel booking');
+            }
+        } catch (err) {
+            console.error('Failed to cancel booking:', err);
+            toast.error('Error cancelling booking');
+        }
+    };
+
     const updateTableAPI = async (id: number, tableId: number | null) => {
         try {
             const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
-            const res = await fetch(`${API_URL}/bookings/${id}/table`, {
+            const res = await fetch(`${API_URL}/admin/bookings/${id}/table`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ tableId })
@@ -102,10 +135,38 @@ const Bookings: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    const handleOpenCancelModal = (bookingId: number) => {
+        setSelectedBookingId(bookingId);
+        setCancelReason('Customer cancelled');
+        setCustomReason('');
+        setIsCancelModalOpen(true);
+    };
+
     const handleAssignFromModal = async (tableId: number) => {
         if (!selectedBookingId) return;
         setIsModalOpen(false);
         await updateTableAPI(selectedBookingId, tableId);
+    };
+
+    const handleCompleteBooking = async (id: number) => {
+        try {
+            const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
+            const res = await fetch(`${API_URL}/admin/bookings/${id}/complete`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                setBookings(prev => prev.filter(b => b.id !== id));
+                toast.success('Booking completed and table released');
+                fetchData(); // Refresh tables for counts
+            } else {
+                const data = await res.json();
+                toast.error(data.message || 'Failed to complete booking');
+            }
+        } catch (err) {
+            console.error('Failed to complete booking:', err);
+            toast.error('Error completing booking');
+        }
     };
 
     return (
@@ -113,12 +174,12 @@ const Bookings: React.FC = () => {
             <h2 className="dashboard-title">Reservations</h2>
 
             <div className="admin-guidance-section" style={{ marginTop: '0', marginBottom: '3rem' }}>
-                <div className="guidance-card" style={{ padding: '2rem' }}>
+                <div className="guidance-card dashboard-card" style={{ padding: '2rem' }}>
                     <div className="guidance-header" style={{ marginBottom: '1rem' }}>
                         <span className="icon">📅</span>
                         <h3 style={{ fontSize: '1.4rem' }}>Table Management</h3>
                     </div>
-                    <p style={{ color: '#5a3f2d', opacity: 0.8 }}>
+                    <p style={{ color: 'var(--text-secondary)', opacity: 0.8 }}>
                         Approve incoming requests, allocate the best tables, and keep the floor moving.
                     </p>
                 </div>
@@ -157,24 +218,24 @@ const Bookings: React.FC = () => {
                                     <td><strong>{booking.customerName}</strong></td>
                                     <td>{new Date(booking.date).toLocaleDateString()} at {booking.time}</td>
                                     <td>{booking.guests} Guests</td>
-                                    <td><span className={`status-pill pill-${booking.status}`}>{booking.status}</span></td>
-                                    <td><span className={`status-pill pill-${booking.paymentStatus === 'paid' ? 'confirmed' : 'cancelled'}`}>{booking.paymentStatus}</span></td>
+                                    <td><span className={`status-badge status-${booking.status}`}>{booking.status}</span></td>
+                                    <td><span className={`status-badge status-${booking.paymentStatus === 'paid' ? 'completed' : 'cancelled'}`}>{booking.paymentStatus}</span></td>
                                     <td style={{ minWidth: '220px' }}>
                                         {(booking.tableId || booking.tableNumber) ? (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#5a3f2d' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
                                                     Assigned Table: Table {booking.tableId || booking.tableNumber}
                                                 </div>
-                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                <div className="actions-cell">
                                                     <button
-                                                        className="btn-confirm"
+                                                        className="assign-table-btn admin-button"
                                                         onClick={() => handleOpenModal(booking.id)}
                                                         style={{ padding: '4px 8px', fontSize: '0.8rem', flex: 1 }}
                                                     >
                                                         Change Table
                                                     </button>
                                                     <button
-                                                        className="btn-cancel"
+                                                        className="cancel-booking-btn admin-button"
                                                         onClick={() => updateTableAPI(booking.id, null)}
                                                         style={{ padding: '4px 8px', fontSize: '0.8rem', minWidth: '70px' }}
                                                     >
@@ -184,13 +245,13 @@ const Bookings: React.FC = () => {
                                             </div>
                                         ) : (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#888' }}>
+                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>
                                                     Assigned Table: Not Assigned
                                                 </div>
                                                 <button
-                                                    className="btn-confirm"
+                                                    className="assign-table-btn admin-button"
                                                     onClick={() => handleOpenModal(booking.id)}
-                                                    style={{ padding: '6px 12px', fontSize: '0.9rem', width: '100%' }}
+                                                    style={{ width: '100%' }}
                                                 >
                                                     Assign Table
                                                 </button>
@@ -198,12 +259,13 @@ const Bookings: React.FC = () => {
                                         )}
                                     </td>
                                     <td>
-                                        {booking.status === 'pending' && (
-                                            <div className="action-btns">
-                                                <button className="btn-confirm" onClick={() => updateStatus(booking.id, 'confirmed')}>Approve</button>
-                                                <button className="btn-cancel" onClick={() => updateStatus(booking.id, 'cancelled')}>Decline</button>
-                                            </div>
-                                        )}
+                                        <div className="actions-cell">
+                                            {booking.status === 'pending' && (
+                                                <button className="assign-table-btn admin-button" onClick={() => updateStatus(booking.id, 'confirmed')}>Approve</button>
+                                            )}
+                                            <button className="complete-booking-btn admin-button" onClick={() => handleCompleteBooking(booking.id)}>Complete</button>
+                                            <button className="cancel-booking-btn admin-button" onClick={() => handleOpenCancelModal(booking.id)}>Cancel</button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
@@ -212,47 +274,100 @@ const Bookings: React.FC = () => {
                 </div>
             )}
             {isModalOpen && (
-                <div className="modal-overlay" style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', zIndex: 1000
-                }}>
-                    <div className="modal-content" style={{
-                        background: '#fff', padding: '2rem', borderRadius: '12px',
-                        width: '400px', maxWidth: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                    }}>
-                        <h3 style={{ marginTop: 0, color: '#5a3f2d', borderBottom: '1px solid #eee', paddingBottom: '1rem', marginBottom: '1rem' }}>
-                            Select a Table
-                        </h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', marginBottom: '1.5rem' }}>
+                <div className="modal-overlay">
+                    <div className="cancel-modal">
+                        <h3 className="modal-title">Select a Table</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', marginBottom: '1.5rem', paddingRight: '5px' }}>
                             {tables.filter(t => t.status === 'available').length === 0 ? (
-                                <p style={{ color: '#888', textAlign: 'center' }}>No available tables.</p>
+                                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No available tables.</p>
                             ) : (
                                 tables.filter(t => t.status === 'available').map(t => (
                                     <button
                                         key={t.id}
                                         onClick={() => handleAssignFromModal(t.id)}
                                         style={{
-                                            padding: '12px', background: '#f9f6f0', border: '1px solid #e8d4c0',
-                                            borderRadius: '8px', cursor: 'pointer', textAlign: 'left',
-                                            fontWeight: 600, color: '#5a3f2d', display: 'flex', justifyContent: 'space-between'
+                                            padding: '12px 16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                                            borderRadius: '12px', cursor: 'pointer', textAlign: 'left',
+                                            fontWeight: 600, color: 'var(--text-main)', display: 'flex', justifyContent: 'space-between',
+                                            transition: 'all 0.2s ease'
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = '#e8d4c0'}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = '#f9f6f0'}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = 'var(--bg-card)';
+                                            e.currentTarget.style.borderColor = 'var(--accent-color)';
+                                            e.currentTarget.style.transform = 'translateX(4px)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = 'var(--bg-secondary)';
+                                            e.currentTarget.style.borderColor = 'var(--border-color)';
+                                            e.currentTarget.style.transform = 'translateX(0)';
+                                        }}
                                     >
                                         <span>Table {t.tableNumber}</span>
-                                        <span style={{ fontSize: '0.85em', color: '#888' }}>Seats: {t.capacity}</span>
+                                        <span style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>Seats: {t.capacity}</span>
                                     </button>
                                 ))
                             )}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <div className="modal-actions">
                             <button
-                                className="btn-cancel"
+                                className="close-btn"
                                 onClick={() => setIsModalOpen(false)}
-                                style={{ padding: '8px 16px' }}
                             >
                                 Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isCancelModalOpen && (
+                <div className="modal-overlay">
+                    <div className="cancel-modal">
+                        <h3 className="modal-title">Cancel Booking</h3>
+                        
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                Reason for Cancellation
+                            </label>
+                            <select 
+                                value={cancelReason}
+                                onChange={(e) => setCancelReason(e.target.value)}
+                                className="cancel-reason"
+                            >
+                                <option value="Customer cancelled">Customer cancelled</option>
+                                <option value="No show">No show</option>
+                                <option value="Restaurant issue">Restaurant issue</option>
+                                <option value="Other">Other</option>
+                            </select>
+
+                            {cancelReason === 'Other' && (
+                                <div style={{ marginTop: '1rem' }}>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                                        Custom Reason
+                                    </label>
+                                    <input 
+                                        type="text"
+                                        value={customReason}
+                                        onChange={(e) => setCustomReason(e.target.value)}
+                                        placeholder="Type reason here..."
+                                        className="cancel-reason"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="modal-actions">
+                            <button
+                                className="close-btn"
+                                onClick={() => setIsCancelModalOpen(false)}
+                            >
+                                Close
+                            </button>
+                            <button
+                                className="confirm-cancel-btn"
+                                onClick={handleCancelBooking}
+                            >
+                                Confirm Cancellation
                             </button>
                         </div>
                     </div>

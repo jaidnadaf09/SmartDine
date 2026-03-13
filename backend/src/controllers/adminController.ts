@@ -6,13 +6,32 @@ import { User, Order, Table, Booking } from '../models';
 // @route   GET /api/admin/users
 // @access  Private/Admin
 export const getUsers = async (req: Request, res: Response) => {
-    console.log("Admin: Fetching all users");
+    console.log("Admin: Fetching all users across all roles");
     try {
         const users = await User.findAll({
-            where: { role: 'customer' },
-            attributes: { exclude: ['password'] }
+            attributes: ['id', 'name', 'email', 'role', 'createdAt']
         });
         res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Update user role
+// @route   PUT /api/admin/users/:id/role
+// @access  Private/Admin
+export const updateUserRole = async (req: Request, res: Response) => {
+    try {
+        const { role } = req.body;
+        const user = await User.findByPk(req.params.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        user.role = role;
+        await user.save();
+        
+        res.json({ message: 'User role updated successfully', user: { id: user.id, name: user.name, role: user.role } });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }
@@ -27,6 +46,12 @@ export const deleteUser = async (req: Request, res: Response) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
+
+        // Prevent self-deletion
+        if ((req as any).user && (req as any).user.id === user.id) {
+            return res.status(400).json({ message: 'You cannot delete your own admin account' });
+        }
+
         await user.destroy();
         res.json({ message: 'User removed' });
     } catch (error) {
@@ -38,9 +63,30 @@ export const deleteUser = async (req: Request, res: Response) => {
 // @route   GET /api/admin/bookings
 // @access  Private/Admin
 export const getBookings = async (req: Request, res: Response) => {
-    console.log("Admin: Fetching all bookings");
+    console.log("Admin: Fetching active bookings");
     try {
         const bookings = await Booking.findAll({
+            where: {
+                status: 'confirmed'
+            },
+            order: [['createdAt', 'DESC']]
+        });
+        res.json(bookings);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get booking history
+// @route   GET /api/admin/bookings/history
+// @access  Private/Admin
+export const getBookingsHistory = async (req: Request, res: Response) => {
+    console.log("Admin: Fetching booking history");
+    try {
+        const bookings = await Booking.findAll({
+            where: {
+                status: { [Op.in]: ['completed', 'cancelled'] }
+            },
             order: [['createdAt', 'DESC']]
         });
         res.json(bookings);
@@ -63,6 +109,76 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         await booking.save();
         res.json(booking);
     } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Cancel a booking with reason
+// @route   PUT /api/admin/bookings/:id/cancel
+// @access  Private/Admin
+export const cancelBooking = async (req: Request, res: Response) => {
+    try {
+        const { reason } = req.body;
+        const booking = await Booking.findByPk(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        // Release table if assigned
+        if (booking.tableId) {
+            const table = await Table.findByPk(booking.tableId);
+            if (table) {
+                table.status = "available";
+                // table.customerId = null; // Assuming based on initial prompt logic
+                await table.save();
+            }
+        }
+
+        booking.status = "cancelled";
+        booking.cancelReason = reason || "No reason provided";
+        booking.tableId = null;
+        booking.tableNumber = null as any;
+
+        await booking.save();
+
+        res.json({ message: "Booking cancelled successfully", booking });
+    } catch (error) {
+        console.error("Error cancelling booking:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Complete a booking and release table
+// @route   PATCH /api/admin/bookings/:id/complete
+// @access  Private/Admin
+export const completeBooking = async (req: Request, res: Response) => {
+    console.log(`Admin: Completing booking ${req.params.id}`);
+    try {
+        const booking = await Booking.findByPk(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        // Release table if assigned
+        if (booking.tableId) {
+            const table = await Table.findByPk(booking.tableId);
+            if (table) {
+                table.status = "available";
+                await table.save();
+            }
+        }
+
+        booking.status = "completed";
+        booking.tableId = null;
+        booking.tableNumber = null as any;
+
+        await booking.save();
+
+        res.json({ message: "Booking completed and table released successfully", booking });
+    } catch (error) {
+        console.error("Error completing booking:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -212,7 +328,7 @@ export const getOrders = async (req: Request, res: Response) => {
     try {
         const orders = await Order.findAll({
             where: {
-                status: { [Op.ne]: 'completed' }
+                status: { [Op.in]: ['pending', 'preparing', 'ready'] }
             },
             include: [{
                 model: User,
@@ -235,14 +351,14 @@ export const getOrdersHistory = async (req: Request, res: Response) => {
     try {
         const orders = await Order.findAll({
             where: {
-                status: 'completed'
+                status: { [Op.in]: ['completed', 'cancelled'] }
             },
             include: [{
                 model: User,
                 as: 'customer',
                 attributes: ['name', 'email']
             }],
-            order: [['updatedAt', 'DESC']]
+            order: [['createdAt', 'DESC']]
         });
         res.json(orders);
     } catch (error) {
@@ -275,6 +391,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 if (booking) {
                     booking.status = 'completed';
                     booking.tableId = null;
+                    booking.tableNumber = null as any;
                     await booking.save();
                 }
             }
@@ -289,7 +406,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
                 // Also find any other active bookings for this table number and complete them
                 await Booking.update(
-                    { status: 'completed', tableId: null },
+                    { status: 'completed', tableId: null, tableNumber: null as any },
                     { 
                         where: { 
                             tableNumber: fullOrder.tableNumber,
@@ -357,7 +474,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const ordersList = await Order.findAll();
         const totalRevenue = ordersList.reduce((acc, order) => acc + Number(order.totalAmount || 0), 0);
 
-        const totalUsers = await User.count({ where: { role: 'customer' } });
+        const totalUsers = await User.count();
         const totalBookings = await Booking.count();
 
         // Fetch Recent History

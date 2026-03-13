@@ -11,6 +11,7 @@ export interface UserAttributes {
     role: 'customer' | 'admin' | 'chef' | 'WAITER' | 'CHEF';
     shift?: 'Morning' | 'Evening';
     status?: 'active' | 'inactive';
+    walletBalance?: number;
 }
 
 export class User extends Model<UserAttributes> implements UserAttributes {
@@ -23,6 +24,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     public role!: 'customer' | 'admin' | 'chef' | 'WAITER' | 'CHEF';
     public shift!: 'Morning' | 'Evening';
     public status!: 'active' | 'inactive';
+    public walletBalance!: number;
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
@@ -63,6 +65,10 @@ User.init(
         status: {
             type: DataTypes.ENUM('active', 'inactive'),
             defaultValue: 'active',
+        },
+        walletBalance: {
+            type: DataTypes.DECIMAL(10, 2),
+            defaultValue: 0.00,
         },
         profileImage: {
             type: DataTypes.TEXT,

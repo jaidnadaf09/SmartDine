@@ -1,9 +1,11 @@
-/* ── Redesigned Auth Styles — Restaurant Theme ── */
+/* ΓöÇΓöÇ Redesigned Auth Styles ΓÇö Restaurant Theme ΓöÇΓöÇ */
 
-/* ── Container ── */
+/* ΓöÇΓöÇ Container ΓöÇΓöÇ */
 .auth-container {
   min-height: 100vh;
-  background: var(--bg-hero);
+  background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('../assets/Restaurant_business_plan_main.jpg');
+  background-size: cover;
+  background-position: center;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -11,22 +13,111 @@
   transition: background 0.3s ease;
 }
 
-/* ── Card Box ── */
-.auth-box {
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  padding: 32px;
-  border-radius: 18px;
-  box-shadow: var(--card-shadow);
+/* ΓöÇΓöÇ Card Box ΓöÇΓöÇ */
+/* ── Authentication Card (Premium Glass) ── */
+.auth-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.25),
+    0 0 20px rgba(255, 255, 255, 0.05); /* Soft Glow */
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  overflow: hidden;
+}
+
+.auth-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.12),
+    rgba(255, 255, 255, 0.02)
+  );
+  pointer-events: none;
+}
+
+.auth-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.35),
+    0 0 25px rgba(255, 255, 255, 0.08);
+}
+
+/* Dark Mode Adaptation */
+body[data-theme="dark"] .auth-card {
+  background: rgba(20, 20, 20, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 20px 45px rgba(0, 0, 0, 0.5),
+    0 0 15px rgba(255, 255, 255, 0.03);
+}
+
+body[data-theme="dark"] .auth-card::before {
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0)
+  );
+}
+
+/* ── Password Toggle Fix ── */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 14px;
+  background: transparent !important; /* No square background */
+  border: none !important;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.password-toggle:hover {
+  color: white;
+  transform: scale(1.1);
+}
+
+.password-toggle svg {
+  display: block;
+}
+
+/* ── Light Mode Visibility Fixes ── */
+body[data-theme="light"] .auth-card label,
+body[data-theme="light"] .auth-card h2 {
+  color: #222222;
+  font-weight: 500;
+}
+
+body[data-theme="light"] .auth-card h1 {
+  color: #3b2a1f; /* SmartDine logo text color */
+  font-weight: 600;
 }
 
 /* ── Titles ── */
-.auth-box h1 {
+.auth-card h1 {
   text-align: center;
   color: var(--accent-primary);
   font-size: 28px;
@@ -34,16 +125,17 @@
   margin: 0;
 }
 
-.auth-box h2 {
+.auth-card h2 {
   text-align: center;
-  color: var(--text-main);
+  color: white; /* Ensure visibility on dark/blurred bg */
   font-size: 1.35rem;
   margin-top: -8px;
   margin-bottom: 8px;
   font-weight: 700;
+  opacity: 0.9;
 }
 
-/* ── Form ── */
+/* ΓöÇΓöÇ Form ΓöÇΓöÇ */
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -58,47 +150,74 @@
 }
 
 .form-group label {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.85); /* Modern glass look labels */
   font-weight: 600;
   font-size: 0.9rem;
 }
 
 .form-group input,
 .form-group select {
-  padding: 12px;
-  border: 1px solid var(--input-border);
-  border-radius: 10px;
-  font-size: 0.95rem;
-  transition: 0.2s ease;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25); /* Default white for glass */
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
   font-family: inherit;
-  background: var(--input-bg);
-  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  width: 100%;
+}
+
+body[data-theme="light"] .form-group input,
+body[data-theme="light"] .form-group select {
+  border: 1.5px solid rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  color: #222222;
+}
+
+.form-group input:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+body[data-theme="light"] .form-group input:hover {
+  border-color: rgba(0, 0, 0, 0.5);
+}
+
+body[data-theme="dark"] .form-group input,
+body[data-theme="dark"] .form-group select {
+  border: 1.5px solid rgba(255, 255, 255, 0.25); /* Match requested implementation */
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #8B5E3C;
-  box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.15);
+  border-color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(139, 94, 60, 0.35); /* Focus Glow */
 }
 
 .form-group input::placeholder {
-  color: #9A9A9A;
+  color: rgba(255, 255, 255, 0.5);
 }
 
-/* ── Buttons ── */
+body[data-theme="light"] .form-group input::placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* ΓöÇΓöÇ Buttons ΓöÇΓöÇ */
 .auth-btn {
-  background: var(--header-bg);
-  color: var(--text-white);
+  background: var(--accent-color);
+  color: white;
   border: none;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 14px;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: 0.2s ease;
-  margin-top: 8px;
-  box-shadow: var(--card-shadow);
+  transition: all 0.2s ease;
+  margin-top: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .auth-btn:hover {
@@ -112,19 +231,20 @@
 }
 
 .auth-back-btn {
-  background: var(--card-bg-alt);
-  border: 1px solid var(--card-border);
-  color: var(--accent-primary);
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  border-radius: 12px;
   padding: 12px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  backdrop-filter: blur(4px);
 }
 
 .auth-back-btn:hover {
@@ -132,12 +252,12 @@
   transform: translateX(-3px);
 }
 
-/* ── Auth Link ── */
+/* ΓöÇΓöÇ Auth Link ΓöÇΓöÇ */
 .auth-link {
   text-align: center;
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  margin-top: 4px;
 }
 
 .auth-link a {
@@ -155,14 +275,14 @@
 
 /* Unified under global variables */
 
-/* ── Responsive ── */
+/* ΓöÇΓöÇ Responsive ΓöÇΓöÇ */
 @media (max-width: 480px) {
-  .auth-box {
+  .auth-card {
     padding: 24px;
     margin: 1rem;
   }
 
-  .auth-box h1 {
+  .auth-card h1 {
     font-size: 24px;
   }
 }

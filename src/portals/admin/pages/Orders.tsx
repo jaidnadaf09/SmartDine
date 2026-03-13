@@ -108,7 +108,7 @@ const Orders: React.FC = () => {
                                 <tr key={order.id}>
                                     <td><strong>#{order.id}</strong></td>
                                     <td>
-                                        <span className={`status-pill pill-${order.orderType === 'TAKEAWAY' ? 'takeaway' : 'dine-in'}`}>
+                                        <span className={`status-badge status-${order.orderType === 'TAKEAWAY' ? 'ready' : 'preparing'}`}>
                                             {order.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-In'}
                                         </span>
                                     </td>
@@ -121,7 +121,7 @@ const Orders: React.FC = () => {
                                     </td>
                                     <td>{order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber || order.Table?.tableNumber || 'N/A'}`}</td>
                                     <td><span className="management-amount">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
-                                    <td><span className={`status-pill pill-${order.status}`}>{order.status}</span></td>
+                                    <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
                                     <td>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                     <td>
                                         <select

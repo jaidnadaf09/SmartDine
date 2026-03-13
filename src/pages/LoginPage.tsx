@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
@@ -12,6 +13,7 @@ const LoginPage: React.FC = () => {
     password: '',
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -36,23 +38,14 @@ const LoginPage: React.FC = () => {
       toast.success('Login Successful');
 
       // Redirect based on role
-      console.log('--- Login Successful ---');
-      console.log('User ID:', loggedInUser.id);
-      console.log('User Name:', loggedInUser.name);
-      console.log('Raw Role from API:', loggedInUser.role);
-
       const role = (loggedInUser.role || '').toLowerCase();
-      console.log('Normalized Role:', role);
-
       if (role === 'admin') {
-        console.log('Redirecting to Admin Dashboard...');
         navigate('/admin/dashboard');
       } else if (role === 'chef') {
         navigate('/chef');
       } else if (role === 'waiter') {
         navigate('/waiter');
       } else {
-        console.log('Redirecting to Home (Customer)...');
         navigate('/');
       }
     } catch (err: unknown) {
@@ -68,15 +61,13 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-box">
+      <div className="auth-card">
         <h1>🍽️ SmartDine</h1>
-        <h2>Login</h2>
+        <h2>Welcome Back</h2>
 
         <form onSubmit={handleSubmit} className="auth-form">
-          {/* Removed "Select Portal" section */}
-
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">Email Address</label>
             <input
               type="email"
               id="email"
@@ -90,25 +81,34 @@ const LoginPage: React.FC = () => {
 
           <div className="form-group">
             <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Your password"
-              required
-            />
+            <div className="input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Your secret password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="password-toggle"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Authenticating...' : 'Sign In'}
           </button>
         </form>
 
         <p className="auth-link">
-          Don't have an account?{' '}
-          <a onClick={() => navigate('/signup')}>Sign up here</a>
+          New to SmartDine?{' '}
+          <a onClick={() => navigate('/signup')}>Create an account</a>
         </p>
 
         <button className="auth-back-btn" onClick={() => navigate(-1)}>

@@ -8,7 +8,9 @@ import Bookings from './pages/Bookings';
 import Tables from './pages/Tables';
 import Orders from './pages/Orders';
 import OrderHistory from './pages/OrderHistory';
+import AdminBookingHistory from './pages/AdminBookingHistory';
 import Payments from './pages/Payments';
+import ActivityOverview from './pages/ActivityOverview';
 
 const AdminPortal: React.FC = () => {
   const navigate = useNavigate();
@@ -34,10 +36,12 @@ const AdminPortal: React.FC = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
         <Route path="/bookings" element={<Bookings />} />
+        <Route path="/booking-history" element={<AdminBookingHistory />} />
         <Route path="/tables" element={<Tables />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/history" element={<OrderHistory />} />
         <Route path="/payments" element={<Payments />} />
+        <Route path="/activity-history" element={<ActivityOverview />} />
       </Routes>
     </AdminLayout>
   );

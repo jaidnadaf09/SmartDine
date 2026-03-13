@@ -26,7 +26,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/bookings', label: 'Bookings', icon: '📅' },
         { path: '/admin/tables', label: 'Tables', icon: '🪑' },
         { path: '/admin/orders', label: 'Orders', icon: '📋' },
-        { path: '/admin/orders/history', label: 'Order History', icon: '📜' },
+        { path: '/admin/activity-history', label: 'Activity History', icon: '📜' },
         { path: '/admin/payments', label: 'Payments', icon: '💰' },
     ];
 
@@ -60,12 +60,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </aside>
 
             <main className="admin-main">
-                <header className="admin-topbar">
-                    <div className="breadcrumb">
-                        Admin / {navItems.find(n => n.path === location.pathname)?.label || 'Dashboard'}
-                    </div>
-                    <div className="admin-user">
-                        <AvatarDropdown />
+                <header className="header" style={{ position: 'relative', top: 'auto', padding: '0 2rem' }}>
+                    <div className="header-content">
+                        <div className="breadcrumb">
+                            Admin / {navItems.find(n => n.path === location.pathname)?.label || 'Dashboard'}
+                        </div>
+                        <div className="navbar-right">
+                            <AvatarDropdown showName={true} />
+                        </div>
                     </div>
                 </header>
 

@@ -4,41 +4,54 @@ import { useAuth } from '../../context/AuthContext';
 import AvatarDropdown from './AvatarDropdown';
 import '../../App.css';
 
-const Navbar: React.FC = () => {
+interface NavLink {
+  name: string;
+  path: string;
+}
+
+interface NavbarProps {
+  customLinks?: NavLink[];
+  roleTag?: string;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isChef  = user?.role?.toLowerCase() === 'chef';
 
-  const navLinks = [
+  const defaultLinks = [
     { name: 'Home', path: '/' },
     { name: 'Book Table', path: '/book-table' },
     { name: 'Order', path: '/order' },
   ];
 
-  if (isAuthenticated) {
-    navLinks.push({ name: 'My Order', path: '/customer/myorders' });
+  if (isAuthenticated && !customLinks) {
+    defaultLinks.push({ name: 'My Order', path: '/customer/myorders' });
   }
 
-  if (isAdmin) {
-    navLinks.push({ name: 'Admin Dashboard', path: '/admin/dashboard' });
+  if (isAdmin && !customLinks) {
+    defaultLinks.push({ name: 'Admin Dashboard', path: '/admin/dashboard' });
   }
 
-  if (isChef) {
-    navLinks.push({ name: 'Chef Portal', path: '/chef' });
+  if (isChef && !customLinks) {
+    defaultLinks.push({ name: 'Chef Portal', path: '/chef' });
   }
+
+  const finalLinks = customLinks || defaultLinks;
 
   return (
     <header className="header">
       <div className="header-content">
         <Link to="/" className="logo-link">
           <span className="logo-icon">🍽️</span> SmartDine
+          {roleTag && <span className="role-tag-badge">{roleTag}</span>}
         </Link>
 
         <div className="navbar-right">
           <nav className="nav-buttons">
-            {navLinks.map((link) => (
+            {finalLinks.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}

@@ -86,7 +86,7 @@ const OrderHistory: React.FC = () => {
                             {/* Card Header */}
                             <div className="chef-card-header">
                                 <span className="chef-card-id">ORDER #{order.id}</span>
-                                <span className="chef-status-badge badge-completed">
+                                <span className="status-badge status-completed">
                                     Completed
                                 </span>
                             </div>

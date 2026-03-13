@@ -38,6 +38,7 @@ export const registerUser = async (req: Request, res: Response) => {
                 phone: user.phone || null,
                 profileImage: user.profileImage || null,
                 role: user.role.toLowerCase(),
+                walletBalance: Number(user.walletBalance || 0),
                 token: generateToken(user.id),
             });
         } else {
@@ -78,6 +79,7 @@ export const loginUser = async (req: Request, res: Response) => {
             phone: user.phone || null,
             profileImage: user.profileImage || null,
             role: user.role.toLowerCase(),
+            walletBalance: Number(user.walletBalance || user.dataValues?.walletBalance || 0),
             token: generateToken(user.id),
         });
 
@@ -122,6 +124,7 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             phone: user.phone,
             profileImage: user.profileImage,
             role: user.role.toLowerCase(),
+            walletBalance: Number(user.walletBalance || 0),
             createdAt: user.createdAt,
             token: generateToken(user.id),
         });
@@ -160,6 +163,28 @@ export const changePassword = async (req: AuthRequest, res: Response) => {
         res.json({ message: 'Password updated successfully' });
     } catch (error: any) {
         console.error("Change password error:", error);
+        res.status(500).json({ message: error.message || "Server Error" });
+    }
+};
+
+export const getMe = async (req: AuthRequest, res: Response) => {
+    try {
+        const user: any = await User.findByPk(req.user!.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone || null,
+            profileImage: user.profileImage || null,
+            role: user.role.toLowerCase(),
+            walletBalance: Number(user.walletBalance || user.dataValues?.walletBalance || 0),
+            createdAt: user.createdAt,
+        });
+    } catch (error: any) {
+        console.error("Get me error:", error);
         res.status(500).json({ message: error.message || "Server Error" });
     }
 };

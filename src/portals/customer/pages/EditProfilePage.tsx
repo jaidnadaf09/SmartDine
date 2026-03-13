@@ -81,42 +81,20 @@ const EditProfilePage: React.FC = () => {
     return (
         <div className="portal-container">
             <div className="portal-content">
-                <div className="profile-card" style={{ 
-                    background: 'white', 
-                    borderRadius: '16px', 
-                    padding: '40px', 
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.05)',
-                    maxWidth: '600px',
-                    margin: '20px auto'
-                }}>
-                    <h2 style={{ color: '#6f4e37', marginBottom: '30px', textAlign: 'center' }}>
-                        Edit Profile
-                    </h2>
+                <div className="profile-card">
+                    <h2>Edit Profile</h2>
 
                     <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
                         {/* Profile Image Upload */}
-                        <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+                        <div className="profile-img-upload-container">
                             <div 
+                                className="profile-img-preview"
                                 onClick={() => document.getElementById('imageUpload')?.click()}
-                                style={{ 
-                                    width: '100px', 
-                                    height: '100px', 
-                                    borderRadius: '50%', 
-                                    margin: '0 auto 10px',
-                                    background: 'var(--card-bg-alt)',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    overflow: 'hidden',
-                                    border: '2px dashed var(--card-border)',
-                                    position: 'relative'
-                                }}
                             >
                                 {formData.profileImage ? (
-                                    <img src={formData.profileImage} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={formData.profileImage} alt="Preview" />
                                 ) : (
-                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Click to Upload</span>
+                                    <span className="profile-img-placeholder">Click to Upload</span>
                                 )}
                             </div>
                             
@@ -124,16 +102,7 @@ const EditProfilePage: React.FC = () => {
                                 <button 
                                     type="button"
                                     onClick={() => setFormData({ ...formData, profileImage: '' })}
-                                    style={{
-                                        background: 'transparent',
-                                        border: 'none',
-                                        color: '#ef4444',
-                                        fontSize: '0.8rem',
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        marginBottom: '10px',
-                                        textDecoration: 'underline'
-                                    }}
+                                    className="profile-remove-photo"
                                 >
                                     Remove Photo
                                 </button>
@@ -146,11 +115,11 @@ const EditProfilePage: React.FC = () => {
                                 onChange={handleImageChange}
                                 style={{ display: 'none' }}
                             />
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>JPG, PNG or GIF. Max 2MB.</p>
+                            <p className="profile-img-hint">JPG, PNG or GIF. Max 2MB.</p>
                         </div>
 
                         <div className="form-group">
-                            <label style={{ color: '#8b5a3c', fontWeight: 600, fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>
+                            <label className="profile-detail-label">
                                 FULL NAME
                             </label>
                             <input 
@@ -164,19 +133,19 @@ const EditProfilePage: React.FC = () => {
                         </div>
 
                         <div className="form-group">
-                            <label style={{ color: '#8b5a3c', fontWeight: 600, fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>
+                            <label className="profile-detail-label">
                                 EMAIL ADDRESS (Read-only)
                             </label>
                             <input 
                                 type="email" 
                                 value={user.email}
                                 disabled
-                                style={{ background: '#f9fafb', color: '#9ca3af', cursor: 'not-allowed' }}
+                                style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
                             />
                         </div>
 
                         <div className="form-group">
-                            <label style={{ color: '#8b5a3c', fontWeight: 600, fontSize: '0.85rem', display: 'block', marginBottom: '8px' }}>
+                            <label className="profile-detail-label">
                                 PHONE NUMBER
                             </label>
                             <input 
@@ -188,7 +157,7 @@ const EditProfilePage: React.FC = () => {
                             />
                         </div>
 
-                        <div style={{ marginTop: '20px', display: 'flex', gap: '15px' }}>
+                        <div className="profile-actions">
                             <button 
                                 type="submit"
                                 disabled={loading}
@@ -201,7 +170,7 @@ const EditProfilePage: React.FC = () => {
                                 type="button"
                                 onClick={() => navigate('/')}
                                 className="back-btn"
-                                style={{ flex: 1, border: '1px solid #e8d4c0' }}
+                                style={{ flex: 1 }}
                             >
                                 Cancel
                             </button>
