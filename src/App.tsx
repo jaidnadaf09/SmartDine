@@ -23,6 +23,7 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import AboutUs from './pages/AboutUs';
 import ContactUs from './pages/ContactUs';
 import ThemeToggleButton from './components/ThemeToggleButton';
+import ScrollToTop from './components/ScrollToTop';
 import CustomerLayout from './components/layouts/CustomerLayout';
 import './App.css';
 
@@ -46,6 +47,7 @@ function App() {
           }}
         />
         <Router>
+          <ScrollToTop />
           <Routes>
             {/* Customer Facing Routes with Persistent Navbar */}
             <Route element={<CustomerLayout />}>

@@ -14,7 +14,7 @@ interface Table {
 
 const WaiterPortal: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [tables] = useState<Table[]>([
     { id: 1, tableNumber: 1, capacity: 2, status: 'occupied', orders: 1 },
     { id: 2, tableNumber: 2, capacity: 4, status: 'available', orders: 0 },
@@ -28,11 +28,6 @@ const WaiterPortal: React.FC = () => {
     { id: 1, tableNumber: 1, items: ['Paneer Tikka', 'Butter Naan'], status: 'ready' },
     { id: 2, tableNumber: 5, items: ['Veg Biryani', 'Raita'], status: 'preparing' },
   ]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
 
   if (!user) {
     return (

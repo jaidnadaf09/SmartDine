@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
@@ -33,9 +33,24 @@ const LoginPage: React.FC = () => {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error('Please enter a valid email address');
+      setLoading(false);
+      return;
+    }
+
+    // Password validation
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      setLoading(false);
+      return;
+    }
+
     try {
       const loggedInUser = await login(formData.email, formData.password);
-      toast.success('Login Successful');
+      toast.success('Welcome back! Login successful');
 
       // Redirect based on role
       const role = (loggedInUser.role || '').toLowerCase();
@@ -69,6 +84,7 @@ const LoginPage: React.FC = () => {
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input
+              className="form-input"
               type="email"
               id="email"
               name="email"
@@ -83,6 +99,7 @@ const LoginPage: React.FC = () => {
             <label htmlFor="password">Password</label>
             <div className="input-wrapper">
               <input
+                className="form-input"
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
@@ -102,7 +119,14 @@ const LoginPage: React.FC = () => {
           </div>
 
           <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? (
+              <>
+                <Loader2 className="spinner" size={18} />
+                Signing in...
+              </>
+            ) : (
+              'Login'
+            )}
           </button>
         </form>
 

@@ -1,67 +1,81 @@
-/* ── CustomerPortal.css — Premium My Orders Design ── */
+/* ═══════════════════════════════════════════════════
+   SmartDine — Customer Portal Styles (My Orders + Profile)
+   Premium Restaurant UI
+═══════════════════════════════════════════════════ */
 
-/* Page Wrapper */
+/* ── Page Wrapper ── */
 .cp-page {
   min-height: 100vh;
   background: var(--bg-primary);
-  padding: 28px 20px 60px;
+  padding: 28px 20px 64px;
+  animation: fadeUpIn 0.35s ease-out;
 }
 
 .cp-content {
-  max-width: 1400px;
+  max-width: 1380px;
   margin: 0 auto;
 }
 
-/* Welcome Header */
+/* ── Welcome Header ── */
 .cp-welcome {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 32px;
 }
 
 .cp-title {
-  font-size: 1.8rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.75rem;
   font-weight: 800;
-  color: var(--text-main);
+  color: var(--text-primary);
   margin-bottom: 4px;
+  line-height: 1.2;
 }
 
 .cp-subtitle {
-  font-size: 0.95rem;
-  color: var(--text-muted);
+  font-size: 0.925rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }
 
-/* Browse / CTA Button */
+/* ── Browse / CTA Button ── */
 .cp-browse-btn {
-  background: var(--header-bg);
-  color: var(--text-white);
+  background: var(--brand-primary);
+  color: white;
   border: none;
   padding: 10px 22px;
-  border-radius: 10px;
-  font-size: 0.92rem;
-  font-weight: 600;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(111, 78, 55, 0.3);
+  font-family: 'Inter', sans-serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .cp-browse-btn:hover {
+  background: var(--brand-primary-hover, #4B2E2B);
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(111, 78, 55, 0.35);
+  box-shadow: 0 6px 20px rgba(111, 78, 55, 0.4);
 }
 
-/* Section */
+/* ── Section ── */
 .cp-section {
   margin-bottom: 36px;
 }
 
 .cp-section-title {
-  font-size: 1.15rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -72,15 +86,30 @@
 
 .cp-count {
   margin-left: auto;
-  background: var(--card-border);
-  color: var(--text-muted);
-  font-size: 0.78rem;
+  background: var(--brand-primary-light, rgba(255,107,53,0.1));
+  color: var(--brand-primary);
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 2px 9px;
+  padding: 2px 10px;
   border-radius: 999px;
 }
 
-/* Cards Grid */
+/* ── Two-column layout for desktop ── */
+.cp-sections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .cp-sections-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* ── Cards Grid ── */
 .cp-cards-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -96,41 +125,26 @@
   }
 }
 
-/* Sections Grid for Side-by-Side layout */
-.cp-sections-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-  align-items: start;
-}
-
-@media (max-width: 1024px) {
-  .cp-sections-grid {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-  
-  .cp-content {
-    max-width: 960px;
-  }
-}
-
-/* Card */
+/* ───────────────────────────────────
+   Order / Booking Card
+─────────────────────────────────── */
 .cp-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 18px 20px;
   box-shadow: var(--card-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.25s ease;
+  animation: fadeUpIn 0.3s ease-out;
 }
 
 .cp-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-hover);
+  border-color: rgba(111, 78, 55, 0.2);
 }
 
-/* Card Header */
+/* Card header row */
 .cp-card-header {
   display: flex;
   align-items: center;
@@ -139,31 +153,38 @@
 }
 
 .cp-card-id {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
-  font-family: monospace;
+  letter-spacing: 0.06em;
+  font-family: 'Courier New', monospace;
+  background: var(--card-bg-alt);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
 }
 
-/* Status Badge */
+/* ── Status Badges ── */
 .cp-status-badge {
   padding: 4px 12px;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  text-transform: capitalize;
-  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 /* Order Total */
 .cp-order-total {
-  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.05rem;
   font-weight: 800;
-  color: var(--accent-color);
+  color: var(--brand-primary);
+  text-align: right;
+  margin-bottom: 10px;
 }
 
-/* Details Row */
+/* Detail rows */
 .cp-details-row {
   display: flex;
   flex-wrap: wrap;
@@ -174,61 +195,67 @@
 .cp-detail-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 7px;
   flex: 1 1 80px;
   min-width: 80px;
 }
 
 .cp-detail-icon {
-  font-size: 1rem;
-  margin-top: 1px;
+  font-size: 0.95rem;
+  margin-top: 2px;
+  color: var(--brand-primary);
+  flex-shrink: 0;
 }
 
 .cp-detail-label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 1px;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
 }
 
 .cp-detail-value {
-  font-size: 0.88rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-main);
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
 }
 
 .cp-pending-text {
-  color: #d97706;
+  color: var(--warning-color, #F59E0B);
   font-style: italic;
   font-weight: 500;
 }
 
-/* Items List */
+/* Items list */
 .cp-items-list {
   background: var(--card-bg-alt);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border-radius: 10px;
+  padding: 10px 14px;
   border: 1px solid var(--card-border);
 }
 
 .cp-items-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .cp-item-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 0;
-  border-bottom: 1px solid var(--card-border, #f0e8e0);
-  font-size: 0.85rem;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--card-border);
+  font-size: 0.84rem;
 }
 
 .cp-item-row:last-child {
@@ -237,39 +264,46 @@
 
 .cp-item-name {
   flex: 1;
-  color: var(--text-main);
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 .cp-item-qty {
   color: var(--text-muted);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.78rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 4px;
+  padding: 1px 6px;
 }
 
 .cp-item-price {
-  color: var(--accent-color);
+  color: var(--brand-primary);
   font-weight: 700;
   font-size: 0.8rem;
+  font-family: 'Poppins', sans-serif;
 }
 
-/* Cancel Button */
+/* Cancel button */
 .cp-cancel-btn {
   margin-top: 14px;
   width: 100%;
   padding: 8px;
-  background: #fee2e2;
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  background: rgba(239, 68, 68, 0.07);
+  color: #DC2626;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
 .cp-cancel-btn:hover:not(:disabled) {
-  background: #fecaca;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
 .cp-cancel-btn:disabled {
@@ -277,54 +311,59 @@
   cursor: not-allowed;
 }
 
-/* Empty State */
+/* ── Empty State ── */
 .cp-empty {
   text-align: center;
   padding: 40px 20px;
-  background: var(--card-bg, #ffffff);
-  border: 1px dashed var(--card-border, #e8d4c0);
-  border-radius: 14px;
-  color: var(--text-muted, #9b8b7a);
+  background: var(--card-bg);
+  border: 1.5px dashed var(--card-border);
+  border-radius: 16px;
+  color: var(--text-muted);
 }
 
 .cp-empty-icon {
-  font-size: 2.5rem;
+  font-size: 2.75rem;
   margin-bottom: 12px;
 }
 
 .cp-empty p {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--text-muted);
+  margin-bottom: 18px;
+  color: var(--text-secondary);
 }
 
-/* Loading State */
+/* ── Loading / Skeleton ── */
 .cp-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   min-height: 60vh;
-  gap: 16px;
-  color: var(--text-muted, #9b8b7a);
+  gap: 14px;
+  color: var(--text-muted);
   font-weight: 600;
 }
 
 .cp-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--card-border, #e8d4c0);
-  border-top-color: #6f4e37;
+  width: 38px;
+  height: 38px;
+  border: 3px solid var(--card-border);
+  border-top-color: var(--brand-primary);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.75s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* Skeleton section cards */
+.cp-skeleton-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 14px;
 }
 
-/* Error State */
+/* ── Error State ── */
 .cp-error {
   display: flex;
   flex-direction: column;
@@ -332,33 +371,131 @@
   justify-content: center;
   min-height: 60vh;
   gap: 16px;
-  color: #b91c1c;
+  color: var(--error-color, #EF4444);
   text-align: center;
 }
 
 .cp-retry-btn {
-  background: #6f4e37;
+  background: var(--brand-primary);
   color: white;
   border: none;
-  padding: 10px 24px;
-  border-radius: 8px;
+  padding: 10px 26px;
+  border-radius: 10px;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
 }
 
 .cp-retry-btn:hover {
-  background: #8b5a3c;
+  background: var(--brand-primary-hover, #4B2E2B);
+  transform: translateY(-1px);
 }
 
-/* Unify Dark Mode overrides into global theme variables */
-body.dark .cp-spinner {
-  border-color: var(--card-border);
-  border-top-color: var(--accent-primary);
+/* ── Modal ── */
+.cp-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(5px);
+  animation: fadeUpIn 0.2s ease-out;
 }
 
-/* ── Profile Page Layout Enhancements ── */
+.cp-modal {
+  background: var(--card-bg);
+  padding: 28px;
+  border-radius: 18px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--card-border);
+  animation: fadeUpIn 0.25s ease-out;
+}
+
+.cp-modal-title {
+  margin: 0 0 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.cp-modal-body {
+  margin: 0 0 22px;
+  font-size: 0.925rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.cp-modal-body small {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.cp-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.cp-modal-keep-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1.5px solid var(--border-color);
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.cp-modal-keep-btn:hover:not(:disabled) {
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+  background: var(--brand-primary-light);
+}
+
+.cp-modal-cancel-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #EF4444;
+  color: white;
+  border: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.cp-modal-cancel-btn:hover:not(:disabled) {
+  background: #DC2626;
+  transform: translateY(-1px);
+}
+
+.cp-modal-keep-btn:disabled,
+.cp-modal-cancel-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ───────────────────────────────────
+   Profile Page
+─────────────────────────────────── */
 .profile-container-flex {
   display: flex;
   gap: 24px;
@@ -371,7 +508,7 @@ body.dark .cp-spinner {
 .wallet-card {
   flex: 1;
   min-width: 320px;
-  max-width: 480px;
+  max-width: 500px;
 }
 
 @media (max-width: 768px) {
@@ -386,41 +523,24 @@ body.dark .cp-spinner {
   }
 }
 
-/* Wallet History Button Enhancements */
+/* Wallet History Button */
 .wallet-history-btn {
-  background: var(--accent-color, #8B5E3C);
+  background: linear-gradient(135deg, #6F4E37 0%, #4B2E2B 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-weight: 500;
-  transition: background 0.2s ease, transform 0.2s ease;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 700;
+  transition: all 0.2s ease;
   cursor: pointer;
   width: 100%;
-  font-size: 0.95rem;
+  font-size: 0.925rem;
+  box-shadow: 0 4px 14px rgba(111, 78, 55, 0.25);
+  font-family: 'Inter', sans-serif;
 }
 
 .wallet-history-btn:hover {
-  background: var(--accent-hover, #6f4e37);
+  background: linear-gradient(135deg, #7c573f 0%, #563431 100%);
   transform: translateY(-1px);
-}
-
-/* Light Theme Strong Contrast */
-[data-theme="light"] .wallet-history-btn {
-  background: #8B5E3C;
-  color: white;
-}
-
-[data-theme="light"] .wallet-history-btn:hover {
-  background: #6f4e37;
-}
-
-/* Dark Theme Strong Contrast */
-[data-theme="dark"] .wallet-history-btn {
-  background: #A9784A;
-  color: white;
-}
-
-[data-theme="dark"] .wallet-history-btn:hover {
-  background: #C48B57;
+  box-shadow: 0 6px 18px rgba(111, 78, 55, 0.35);
 }

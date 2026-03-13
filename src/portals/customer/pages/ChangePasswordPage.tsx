@@ -51,6 +51,7 @@ const ChangePasswordPage: React.FC = () => {
             <div className="form-group">
               <label>Current Password</label>
               <input
+                className="form-input"
                 type="password"
                 required
                 value={formData.currentPassword}
@@ -62,6 +63,7 @@ const ChangePasswordPage: React.FC = () => {
             <div className="form-group">
               <label>New Password</label>
               <input
+                className="form-input"
                 type="password"
                 required
                 value={formData.newPassword}
@@ -73,6 +75,7 @@ const ChangePasswordPage: React.FC = () => {
             <div className="form-group">
               <label>Confirm New Password</label>
               <input
+                className="form-input"
                 type="password"
                 required
                 value={formData.confirmPassword}

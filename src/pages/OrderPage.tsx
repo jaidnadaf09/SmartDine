@@ -1,12 +1,44 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-// Removed Firebase imports
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '../context/AuthContext';
 import '../styles/Order.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+
+/* Food category emoji map */
+const categoryEmoji: Record<string, string> = {
+  'Chicken Starters': '🍗',
+  'Veg Main Course': '🥗',
+  'Chicken Main Course': '🍛',
+  'Indian Breads': '🫓',
+  'Mandi Special': '🍖',
+  'Biryani Course': '🍚',
+  'Rice': '🍚',
+  'Orders Per KG': '⚖️',
+};
+
+/* Skeleton grid shown while menu loads */
+const MenuSkeleton: React.FC = () => (
+  <div>
+    {[1, 2].map(section => (
+      <div key={section} className="category-block">
+        <div className="skeleton skeleton-title" style={{ width: 200, marginBottom: 14 }} />
+        <div className="menu-skeleton-grid">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="menu-skeleton-card">
+              <div className="skeleton" style={{ height: 64, borderRadius: 10, marginBottom: 10 }} />
+              <div className="skeleton skeleton-line long" />
+              <div className="skeleton skeleton-line short" style={{ marginTop: 6 }} />
+              <div className="skeleton skeleton-btn" style={{ marginTop: 10 }} />
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 interface OrderItem {
   id: number;
@@ -354,7 +386,7 @@ const OrderPage: React.FC = () => {
           </div>
 
           {loading ? (
-            <div className="loading-spinner">Loading menu...</div>
+            <MenuSkeleton />
           ) : error ? (
             <div className="error-message">{error}</div>
           ) : (
@@ -376,8 +408,15 @@ const OrderPage: React.FC = () => {
                           const cartItem = cart.find(c => c.id === item.id);
                           return (
                             <div key={item.id} className="compact-menu-card">
+                              {/* Food emoji zone */}
+                              <div className="menu-card-emoji">
+                                {categoryEmoji[category] || '🍽️'}
+                              </div>
                               <div className="item-main-info">
                                 <h4 className="item-name">{item.name}</h4>
+                                {item.description && (
+                                  <p className="item-description">{item.description}</p>
+                                )}
                                 <p className="item-price">
                                   {new Intl.NumberFormat('en-IN', {
                                     style: 'currency',
@@ -386,7 +425,6 @@ const OrderPage: React.FC = () => {
                                   }).format(item.price)}
                                 </p>
                               </div>
-                              
                               <div className="item-actions">
                                 {cartItem ? (
                                   <div className="compact-qty-controls">
@@ -424,7 +462,11 @@ const OrderPage: React.FC = () => {
           </div>
           <h2>Your Order</h2>
           {cart.length === 0 ? (
-            <p className="empty-cart">Your cart is empty</p>
+            <div className="empty-cart">
+              <span className="empty-cart-icon">🛒</span>
+              <p>Your cart is empty</p>
+              <p style={{ fontSize: '0.8rem', marginTop: 4 }}>Add items from the menu</p>
+            </div>
           ) : (
             <>
               <div className="cart-items">
