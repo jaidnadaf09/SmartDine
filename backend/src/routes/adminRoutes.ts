@@ -21,6 +21,7 @@ import {
     updateOrderStatus,
     getPayments
 } from '../controllers/adminController';
+import { updateRestaurantStatus } from '../controllers/restaurantController';
 import { protect, adminOnly } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -56,5 +57,6 @@ router.route('/orders/history').get(getOrdersHistory);
 router.route('/orders/:id/status').put(updateOrderStatus);
 
 router.route('/payments').get(getPayments);
+router.route('/restaurant-status').put(updateRestaurantStatus);
 
 export default router;

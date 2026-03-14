@@ -17,7 +17,7 @@
 .book-table-box {
   background: var(--card-bg);
   width: 100%;
-  max-width: 640px;
+  max-width: 900px; /* Increased width to accommodate horizontal row */
   margin: 0 auto;
   padding: 2.4rem 2.75rem;
   border-radius: 22px;
@@ -60,19 +60,19 @@
 
 /* Error / Auth Messages */
 .error-msg-banner {
-  background: rgba(239, 68, 68, 0.07);
-  color: #DC2626;
+  background: rgba(217, 83, 79, 0.07);
+  color: var(--error);
   padding: 10px 14px;
   border-radius: 10px;
   margin-bottom: 14px;
   text-align: center;
   font-weight: 600;
   font-size: 0.875rem;
-  border: 1px solid rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(217, 83, 79, 0.2);
 }
 
 .success-banner {
-  color: var(--success-color, #10B981);
+  color: var(--success);
   font-family: 'Poppins', sans-serif;
   font-size: 1.4rem;
   font-weight: 800;
@@ -88,8 +88,9 @@
 
 /* Account Info Card */
 .account-info-card {
-  background: rgba(46, 196, 182, 0.06);
-  border: 1px solid rgba(46, 196, 182, 0.3);
+  background: var(--brand-primary-light);
+  border: 1px solid var(--brand-primary);
+  opacity: 0.8;
   border-radius: 12px;
   padding: 14px 18px;
   margin-bottom: 2px;
@@ -101,7 +102,7 @@
   gap: 7px;
   font-size: 0.7rem;
   font-weight: 800;
-  color: var(--brand-secondary, #2EC4B6);
+  color: var(--brand-primary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 8px;
@@ -126,6 +127,19 @@
 }
 
 /* Form rows and groups */
+.booking-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.booking-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -138,6 +152,7 @@
   gap: 0.4rem;
 }
 
+.booking-field label,
 .form-group label {
   color: var(--text-primary);
   font-weight: 600;
@@ -148,6 +163,8 @@
   font-family: 'Inter', sans-serif;
 }
 
+.booking-field input,
+.booking-field select,
 .form-group input,
 .form-group select {
   height: 46px;
@@ -239,7 +256,7 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 /* Submit Button */
 .submit-btn {
   background: var(--brand-primary);
-  color: white;
+  color: var(--btn-text);
   border: none;
   height: 52px;
   border-radius: 14px;
@@ -249,14 +266,14 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   transition: all 0.25s ease;
   margin-top: 4px;
-  box-shadow: 0 6px 20px rgba(111, 78, 55, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   width: 100%;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: var(--brand-primary-hover, #4B2E2B);
+  background: var(--brand-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(111, 78, 55, 0.4);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
 }
 
 .submit-btn:disabled {
@@ -333,13 +350,13 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 .payment-card:hover {
   border-color: var(--brand-primary);
-  background: var(--brand-primary-light, rgba(255,107,53,0.06));
+  background: var(--brand-primary-light);
 }
 
 .payment-card.selected {
   border-color: var(--brand-primary);
-  background: var(--brand-primary-light, rgba(255,107,53,0.08));
-  box-shadow: 0 0 0 3px rgba(111, 78, 55, 0.12);
+  background: var(--brand-primary-light);
+  box-shadow: 0 0 0 3px rgba(111, 97, 52, 0.12);
 }
 
 .payment-card-icon {
@@ -393,8 +410,42 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     grid-template-columns: 1fr;
   }
 
+  .booking-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
   .submit-btn {
     height: 50px;
     font-size: 0.95rem;
   }
+}
+
+.booking-info-box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--brand-primary-light);
+  border: 1px solid var(--brand-primary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booking-hours {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.booking-hint {
+  font-size: 12px;
+  opacity: 0.85;
+  color: var(--brand-primary);
+}
+
+body[data-theme="light"] .booking-info-box {
+  background: var(--brand-primary-light);
+  border: 1px solid var(--brand-primary);
+  opacity: 0.8;
 }

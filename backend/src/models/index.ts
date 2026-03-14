@@ -6,6 +6,9 @@ import MenuItem from './MenuItem';
 import InventoryItem from './InventoryItem';
 import Order from './Order';
 import WalletTransaction from './WalletTransaction';
+import Notification from './Notification';
+import Review from './Review';
+import RestaurantSetting from './RestaurantSetting';
 // import OrderItem from './OrderItem';
 
 // Define Associations
@@ -26,6 +29,18 @@ User.hasMany(Order, { foreignKey: 'userId' });
 WalletTransaction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 User.hasMany(WalletTransaction, { foreignKey: 'userId', as: 'walletTransactions' });
 
+// Notification -> User
+Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(Notification, { foreignKey: 'userId', as: 'notifications' });
+
+// Review -> User
+Review.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(Review, { foreignKey: 'userId', as: 'reviews' });
+
+// Review -> Order
+Review.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
+Order.hasOne(Review, { foreignKey: 'orderId', as: 'review' });
+
 export {
     sequelize,
     User,
@@ -35,4 +50,7 @@ export {
     InventoryItem,
     Order,
     WalletTransaction,
+    Notification,
+    Review,
+    RestaurantSetting,
 };

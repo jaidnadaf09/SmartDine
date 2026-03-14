@@ -92,6 +92,7 @@ const LoginPage: React.FC = () => {
               onChange={handleChange}
               placeholder="you@example.com"
               required
+              autoFocus
             />
           </div>
 

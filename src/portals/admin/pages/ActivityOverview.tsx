@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Calendar, AlertCircle, Inbox, Users, Info, Utensils, CreditCard } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -73,7 +74,7 @@ const ActivityOverview: React.FC = () => {
                 <div className="activity-card">
                     <div className="activity-card-header">
                         <div className="activity-card-title">
-                            <span className="activity-icon">📅</span>
+                            <span className="activity-icon"><Calendar size={20} /></span>
                             <h3>Table Bookings</h3>
                         </div>
                         {!bookingsLoading && !bookingsError && (
@@ -85,12 +86,12 @@ const ActivityOverview: React.FC = () => {
                         <div className="activity-loading"><div className="spinner"></div><p>Loading bookings...</p></div>
                     ) : bookingsError ? (
                         <div className="activity-error">
-                            <p>⚠️ {bookingsError}</p>
+                            <p><AlertCircle size={16} className="inline-icon" /> {bookingsError}</p>
                             <button className="retry-btn" onClick={fetchBookings}>Retry</button>
                         </div>
                     ) : bookings.length === 0 ? (
                         <div className="activity-empty">
-                            <span>📭</span>
+                            <span><Inbox size={32} /></span>
                             <p>No booking history found.</p>
                         </div>
                     ) : (
@@ -104,12 +105,12 @@ const ActivityOverview: React.FC = () => {
                                         </span>
                                     </div>
                                     <div className="activity-item-meta">
-                                        <span>👥 {booking.guests} Guest{booking.guests !== 1 ? 's' : ''}</span>
-                                        <span>🗓 {new Date(booking.date).toLocaleDateString()} at {booking.time}</span>
+                                        <span><Users size={14} className="inline-icon" /> {booking.guests} Guest{booking.guests !== 1 ? 's' : ''}</span>
+                                        <span><Calendar size={14} className="inline-icon" /> {new Date(booking.date).toLocaleDateString()} at {booking.time}</span>
                                     </div>
                                     {booking.status === 'cancelled' && booking.cancelReason && (
                                         <div className="activity-cancel-reason">
-                                            ℹ️ {booking.cancelReason}
+                                            <Info size={14} className="inline-icon" /> {booking.cancelReason}
                                         </div>
                                     )}
                                 </div>
@@ -122,7 +123,7 @@ const ActivityOverview: React.FC = () => {
                 <div className="activity-card">
                     <div className="activity-card-header">
                         <div className="activity-card-title">
-                            <span className="activity-icon">🍽️</span>
+                            <span className="activity-icon"><Utensils size={20} /></span>
                             <h3>Food Orders</h3>
                         </div>
                         {!ordersLoading && !ordersError && (
@@ -134,12 +135,12 @@ const ActivityOverview: React.FC = () => {
                         <div className="activity-loading"><div className="spinner"></div><p>Loading orders...</p></div>
                     ) : ordersError ? (
                         <div className="activity-error">
-                            <p>⚠️ {ordersError}</p>
+                            <p><AlertCircle size={16} className="inline-icon" /> {ordersError}</p>
                             <button className="retry-btn" onClick={fetchOrders}>Retry</button>
                         </div>
                     ) : orders.length === 0 ? (
                         <div className="activity-empty">
-                            <span>📭</span>
+                            <span><Inbox size={32} /></span>
                             <p>No order history found.</p>
                         </div>
                     ) : (
@@ -158,7 +159,7 @@ const ActivityOverview: React.FC = () => {
                                         <span className={`status-badge status-${order.orderType === 'TAKEAWAY' ? 'ready' : 'preparing'}`} style={{ fontSize: '0.75rem' }}>
                                             {order.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-In'}
                                         </span>
-                                        <span>💰 {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span>
+                                        <span><CreditCard size={14} className="inline-icon" /> {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span>
                                     </div>
                                     <div className="activity-order-items">
                                         {order.items && Array.isArray(order.items)

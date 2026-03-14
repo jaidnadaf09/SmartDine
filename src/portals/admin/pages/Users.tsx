@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import ConfirmDialog from '../../../components/shared/ConfirmDialog';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -7,6 +8,8 @@ const Users: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const currentUser = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
 
     const fetchUsers = async () => {
@@ -52,7 +55,13 @@ const Users: React.FC = () => {
             return;
         }
 
-        if (!window.confirm('Are you sure you want to delete this user?')) return;
+        setUserToDelete(userId);
+        setConfirmDeleteOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!userToDelete) return;
+        
         try {
             const token = currentUser.token;
 
@@ -60,13 +69,15 @@ const Users: React.FC = () => {
                 toast.error('Authentication token missing. Please login again.');
                 return;
             }
-            const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+            const res = await fetch(`${API_URL}/admin/users/${userToDelete}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 toast.success('User deleted successfully');
-                setUsers(users.filter(u => u.id !== userId));
+                setUsers(users.filter(u => u.id !== userToDelete));
+                setConfirmDeleteOpen(false);
+                setUserToDelete(null);
             } else {
                 const data = await res.json();
                 toast.error(data.message || 'Failed to delete user');
@@ -181,6 +192,18 @@ const Users: React.FC = () => {
                     </table>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmDeleteOpen}
+                title="Delete User"
+                message="Are you sure you want to delete this user? This action cannot be undone."
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setConfirmDeleteOpen(false);
+                    setUserToDelete(null);
+                }}
+                confirmText="Delete User"
+            />
         </div>
     );
 };

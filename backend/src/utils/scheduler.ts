@@ -1,7 +1,6 @@
 import cron from 'node-cron';
 import { Op } from 'sequelize';
-import Booking from '../models/Booking';
-import Table from '../models/Table';
+import { Booking, Table, RestaurantSetting } from '../models';
 
 /**
  * Scheduler to handle automatic restaurant operations
@@ -60,4 +59,23 @@ export const initScheduler = () => {
     });
 
     console.log('Scheduler: Auto Table Release Job scheduled to run every 5 minutes.');
+
+    // Run every minute for restaurant auto-resume
+    cron.schedule('* * * * *', async () => {
+        try {
+            const now = new Date();
+            const settings = await RestaurantSetting.findOne();
+            
+            if (settings && settings.status === 'PAUSED' && settings.pauseUntil && now > settings.pauseUntil) {
+                console.log('--- Restaurant Pause Session Expired. Resuming to OPEN ---');
+                settings.status = 'OPEN';
+                settings.pauseUntil = null;
+                await settings.save();
+            }
+        } catch (error) {
+            console.error('Error in Restaurant Auto-Resume Job:', error);
+        }
+    });
+
+    console.log('Scheduler: Restaurant Auto-Resume Job scheduled to run every minute.');
 };

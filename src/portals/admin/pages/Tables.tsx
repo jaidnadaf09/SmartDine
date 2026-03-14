@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import ConfirmDialog from '../../../components/shared/ConfirmDialog';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -8,6 +9,8 @@ const Tables: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [newTable, setNewTable] = useState({ tableNumber: '', capacity: 2 });
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [tableToDelete, setTableToDelete] = useState<number | null>(null);
 
     const fetchTables = async () => {
         setLoading(true);
@@ -70,17 +73,25 @@ const Tables: React.FC = () => {
     };
 
     const deleteTable = async (id: number) => {
-        if (!window.confirm('Delete this table?')) return;
+        setTableToDelete(id);
+        setConfirmDeleteOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!tableToDelete) return;
+
         try {
             const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/admin/tables/${id}`, {
+            const res = await fetch(`${API_URL}/admin/tables/${tableToDelete}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${userData.token}` }
             });
 
             if (res.ok) {
-                setTables(tables.filter(t => t.id !== id));
+                setTables(tables.filter(t => t.id !== tableToDelete));
                 toast.success('Table deleted!');
+                setConfirmDeleteOpen(false);
+                setTableToDelete(null);
             } else {
                 toast.error('Failed to delete table');
             }
@@ -208,6 +219,18 @@ const Tables: React.FC = () => {
                     </table>
                 </div>
             )}
+
+            <ConfirmDialog
+                open={confirmDeleteOpen}
+                title="Delete Table"
+                message="Are you sure you want to delete this table? This cannot be undone if there are active bookings."
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setConfirmDeleteOpen(false);
+                    setTableToDelete(null);
+                }}
+                confirmText="Delete Table"
+            />
         </div>
     );
 };

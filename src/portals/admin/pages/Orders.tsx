@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -81,7 +82,7 @@ const Orders: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p><span>⚠️</span> {error}</p>
+                    <p><span><AlertCircle size={16} className="inline-icon" /></span> {error}</p>
                     <button className="retry-btn" onClick={fetchOrders}>Retry</button>
                 </div>
             ) : orders.length === 0 ? (

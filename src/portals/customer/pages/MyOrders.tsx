@@ -2,7 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
-import { Calendar, Clock, Users, UtensilsCrossed, ShoppingBag, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Users, UtensilsCrossed, ShoppingBag, AlertCircle, Bell, Star } from 'lucide-react';
+import BookingReminder from '../../../components/BookingReminder';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
 
@@ -40,6 +41,10 @@ interface Order {
   totalAmount?: string;
   status?: string;
   createdAt: any;
+  review?: {
+    rating: number;
+    comment: string;
+  };
 }
 
 /* ── Skeleton card shown while loading ── */
@@ -60,12 +65,17 @@ const MyOrders: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [upcomingBooking, setUpcomingBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [cancellingId, setCancellingId] = useState<string | number | null>(null);
   const [bookingToCancel, setBookingToCancel] = useState<Booking | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const [cancellingOrderId, setCancellingOrderId] = useState<string | number | null>(null);
+  const [reviewOrder, setReviewOrder] = useState<Order | null>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const fetchUserData = useCallback(async () => {
     if (!user || !user.token) {
@@ -78,16 +88,32 @@ const MyOrders: React.FC = () => {
         'Content-Type': 'application/json'
       };
 
-      const [bookingsRes, ordersRes] = await Promise.all([
+      const [bookingsRes, ordersRes, upcomingRes, reviewsRes] = await Promise.all([
         fetch(`${API_URL}/bookings/user/${user.id}`, { headers }),
         fetch(`${API_URL}/orders/my`, { headers }),
+        fetch(`${API_URL}/bookings/upcoming`, { headers }),
+        fetch(`${API_URL}/reviews/my`, { headers }),
       ]);
 
       if (!bookingsRes.ok) throw new Error(`Bookings: ${bookingsRes.status} ${bookingsRes.statusText}`);
       if (!ordersRes.ok) throw new Error(`Orders: ${ordersRes.status} ${ordersRes.statusText}`);
+      if (!upcomingRes.ok) throw new Error(`Upcoming: ${upcomingRes.status} ${upcomingRes.statusText}`);
 
       const bookingsData = await bookingsRes.json() || [];
       const rawOrders = await ordersRes.json();
+      const upcomingData = await upcomingRes.json();
+      const reviewsData = await reviewsRes.json() || [];
+
+      if (upcomingData.upcomingBooking && !upcomingBooking) {
+        toast(() => (
+          <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Bell size={18} color="var(--brand-primary)" />
+            Reminder: You have a booking at {upcomingData.upcomingBooking.time} today!
+          </span>
+        ), { duration: 6000, id: 'booking-reminder' });
+      }
+
+      setUpcomingBooking(upcomingData.upcomingBooking);
 
       let processedOrders: Order[] = [];
       if (Array.isArray(rawOrders)) {
@@ -98,7 +124,11 @@ const MyOrders: React.FC = () => {
           } catch (e) {
             items = [];
           }
-          return { ...o, items: Array.isArray(items) ? items : [] };
+          return { 
+            ...o, 
+            items: Array.isArray(items) ? items : [] ,
+            review: reviewsData.find((r: any) => r.orderId === o.id)
+          };
         });
       }
 
@@ -172,6 +202,37 @@ const MyOrders: React.FC = () => {
     }
   };
 
+  const handleSubmitReview = async () => {
+    if (!reviewOrder || !user) return;
+    setSubmittingReview(true);
+    try {
+      const res = await fetch(`${API_URL}/reviews`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${user.token}`,
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({
+          orderId: reviewOrder.id,
+          rating,
+          comment
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to submit review');
+      
+      toast.success('Thank you for your feedback! ⭐');
+      setReviewOrder(null);
+      setRating(5);
+      setComment('');
+      fetchUserData();
+    } catch (err: any) {
+      toast.error(err.message || 'Could not submit review.');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   const isCancellable = (booking: Booking) => {
     const status = booking.status?.toLowerCase();
     return (status === 'pending' || status === 'confirmed') && booking.tableId === null;
@@ -235,11 +296,22 @@ const MyOrders: React.FC = () => {
           </button>
         </div>
 
+        {/* ── UPCOMING REMINDER ── */}
+        {upcomingBooking && (
+          <BookingReminder 
+            booking={upcomingBooking} 
+            onView={() => {
+              const el = document.getElementById('bookings-section');
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }} 
+          />
+        )}
+
         {/* ── SECTIONS ── */}
         <div className="cp-sections-grid">
 
           {/* ── TABLE BOOKINGS ── */}
-          <section className="cp-section">
+          <section className="cp-section" id="bookings-section">
             <h2 className="cp-section-title">
               <Calendar size={18} style={{ color: 'var(--brand-primary)' }} />
               Table Bookings
@@ -248,7 +320,7 @@ const MyOrders: React.FC = () => {
 
             {bookings.length === 0 ? (
               <div className="cp-empty">
-                <div className="cp-empty-icon">🗓️</div>
+                <div className="cp-empty-icon"><Calendar size={48} /></div>
                 <p>No bookings yet</p>
                 <button className="cp-browse-btn" onClick={() => navigate('/book-table')}>
                   <Calendar size={15} /> Book a Table
@@ -327,7 +399,7 @@ const MyOrders: React.FC = () => {
 
             {orders.length === 0 ? (
               <div className="cp-empty">
-                <div className="cp-empty-icon">🛒</div>
+                <div className="cp-empty-icon"><ShoppingCart size={48} /></div>
                 <p>You haven't placed any orders yet.</p>
                 <button className="cp-browse-btn" onClick={() => navigate('/order')}>
                   <UtensilsCrossed size={15} /> Browse Menu
@@ -395,7 +467,7 @@ const MyOrders: React.FC = () => {
                       }
                     </div>
 
-                    {order.status?.toLowerCase() === 'pending' && (
+                    {order.status?.toLowerCase() === 'pending' ? (
                       <button
                         className="cp-cancel-btn"
                         onClick={() => setOrderToCancel(order)}
@@ -403,6 +475,38 @@ const MyOrders: React.FC = () => {
                       >
                         ✕ Cancel Order
                       </button>
+                    ) : order.status?.toLowerCase() === 'preparing' || order.status?.toLowerCase() === 'ready' ? (
+                      <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <AlertCircle size={14} />
+                        Cannot cancel order once preparation starts
+                      </div>
+                    ) : null}
+
+                    {order.status?.toLowerCase() === 'completed' && (
+                      <div className="cp-review-section" style={{ marginTop: 14, borderTop: '1px solid var(--glass-border)', paddingTop: 14 }}>
+                        {order.review ? (
+                          <div className="cp-submitted-review">
+                            <div className="cp-review-stars">
+                              {[1, 2, 3, 4, 5].map(s => (
+                                <Star key={s} size={14} fill={s <= order.review!.rating ? 'var(--brand-primary)' : 'none'} color={s <= order.review!.rating ? 'var(--brand-primary)' : 'var(--text-dim)'} />
+                              ))}
+                            </div>
+                            <p className="cp-review-comment">"{order.review.comment}"</p>
+                          </div>
+                        ) : (
+                          <button
+                            className="cp-review-btn"
+                            onClick={() => {
+                              setReviewOrder(order);
+                              setRating(5);
+                              setComment('');
+                            }}
+                            style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'rgba(var(--brand-primary-rgb), 0.1)', color: 'var(--brand-primary)', border: '1px solid rgba(var(--brand-primary-rgb), 0.2)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                          >
+                            <Star size={16} /> Rate & Review
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}
@@ -410,6 +514,55 @@ const MyOrders: React.FC = () => {
             )}
           </section>
         </div>
+
+        {/* ── REVIEW MODAL ── */}
+        {reviewOrder && (
+          <div className="cp-modal-overlay">
+            <div className="cp-modal">
+              <h3 className="cp-modal-title">Rate Order #{String(reviewOrder.id).slice(-6).toUpperCase()}</h3>
+              <div className="cp-star-rating" style={{ display: 'flex', justifyContent: 'center', gap: '10px', margin: '20px 0' }}>
+                {[1, 2, 3, 4, 5].map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setRating(s)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                  >
+                    <Star 
+                      size={32} 
+                      fill={s <= rating ? 'var(--brand-primary)' : 'none'} 
+                      color={s <= rating ? 'var(--brand-primary)' : 'var(--text-dim)'} 
+                      style={{ transition: 'all 0.2s' }}
+                    />
+                  </button>
+                ))}
+              </div>
+              <textarea
+                className="cp-modal-textarea"
+                placeholder="Share your experience (optional)..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-color)', minHeight: '100px', marginBottom: '20px', resize: 'vertical' }}
+              />
+              <div className="cp-modal-actions">
+                <button
+                  className="cp-modal-keep-btn"
+                  onClick={() => setReviewOrder(null)}
+                  disabled={submittingReview}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="cp-modal-cancel-btn"
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview}
+                  style={{ background: 'var(--brand-primary)' }}
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── CANCEL ORDER MODAL ── */}
         {orderToCancel && (

@@ -2,22 +2,25 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
+import { 
+  FolderOpen, 
+  Search, 
+  ShoppingBag, 
+  ShoppingCart, 
+  CreditCard, 
+  Wallet, 
+  Utensils, 
+  Pause, 
+  CircleCheck, 
+  CircleAlert, 
+  X 
+} from 'lucide-react';
 import '../styles/Order.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-/* Food category emoji map */
-const categoryEmoji: Record<string, string> = {
-  'Chicken Starters': '🍗',
-  'Veg Main Course': '🥗',
-  'Chicken Main Course': '🍛',
-  'Indian Breads': '🫓',
-  'Mandi Special': '🍖',
-  'Biryani Course': '🍚',
-  'Rice': '🍚',
-  'Orders Per KG': '⚖️',
-};
 
 /* Skeleton grid shown while menu loads */
 const MenuSkeleton: React.FC = () => (
@@ -68,7 +71,8 @@ const OrderPage: React.FC = () => {
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const { status, isOperating, pauseUntil } = useRestaurantStatus();
   const [assignedTable, setAssignedTable] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -136,7 +140,7 @@ const OrderPage: React.FC = () => {
     return acc;
   }, {});
 
-  const categories = [
+  const categoriesList = [
     'Chicken Starters',
     'Veg Main Course',
     'Chicken Main Course',
@@ -174,6 +178,12 @@ const OrderPage: React.FC = () => {
 
     if (!user) {
       setError('You must be logged in to place an order.');
+      return;
+    }
+
+    if (!isOperating || status === 'PAUSED') {
+      setError('The restaurant is currently not accepting orders.');
+      toast.error('Restaurant not accepting orders.');
       return;
     }
 
@@ -350,7 +360,7 @@ const OrderPage: React.FC = () => {
       <div className="order-layout">
         {/* Left Sidebar: Categories */}
         <aside className="categories-sidebar">
-          <h3>📂 Categories</h3>
+          <h3><FolderOpen size={20} className="inline-icon" /> Categories</h3>
           <div className="sidebar-filters">
             <button
               className={`sidebar-filter-btn ${activeCategory === 'All' ? 'active' : ''}`}
@@ -358,7 +368,7 @@ const OrderPage: React.FC = () => {
             >
               All Items
             </button>
-            {categories.map((category) => (
+            {categoriesList.map((category) => (
               groupedMenu[category] && (
                 <button
                   key={category}
@@ -375,7 +385,7 @@ const OrderPage: React.FC = () => {
         {/* Center: Menu Content */}
         <div className="menu-content-area">
           <div className="menu-search-container">
-            <span className="search-icon">🔍</span>
+            <Search className="search-icon-svg" size={18} />
             <input
               type="text"
               placeholder="Search menu..."
@@ -385,13 +395,29 @@ const OrderPage: React.FC = () => {
             />
           </div>
 
+          <div className={`restaurant-status ${status === 'PAUSED' ? 'paused' : isOperating ? "open" : "closed"}`}>
+            {status === 'PAUSED' ? (
+              <>
+                <Pause size={18} /> Orders temporarily Paused — Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+              </>
+            ) : isOperating ? (
+              <>
+                <CircleCheck size={18} /> Restaurant Open Now — Orders available until <strong>11:00 PM</strong>
+              </>
+            ) : (
+              <>
+                <CircleAlert size={18} /> Restaurant Closed — Orders will resume at <strong>10:00 AM</strong>
+              </>
+            )}
+          </div>
+
           {loading ? (
             <MenuSkeleton />
-          ) : error ? (
+          ) : error && !menuItems.length ? (
             <div className="error-message">{error}</div>
           ) : (
             <div className="menu-display">
-              {categories
+              {categoriesList
                 .filter(category => activeCategory === 'All' || activeCategory === category)
                 .map((category) => {
                   const filteredItems = (groupedMenu[category] || []).filter(item =>
@@ -408,10 +434,6 @@ const OrderPage: React.FC = () => {
                           const cartItem = cart.find(c => c.id === item.id);
                           return (
                             <div key={item.id} className="compact-menu-card">
-                              {/* Food emoji zone */}
-                              <div className="menu-card-emoji">
-                                {categoryEmoji[category] || '🍽️'}
-                              </div>
                               <div className="item-main-info">
                                 <h4 className="item-name">{item.name}</h4>
                                 {item.description && (
@@ -436,6 +458,7 @@ const OrderPage: React.FC = () => {
                                   <button
                                     className="compact-add-btn"
                                     onClick={() => addToCart(item)}
+                                    disabled={!isOperating || status === 'PAUSED'}
                                   >
                                     Add
                                   </button>
@@ -455,15 +478,15 @@ const OrderPage: React.FC = () => {
         <div className="cart-section">
           <div className="table-status-banner compact-banner">
             {assignedTable ? (
-              <p>🍽️ Table {assignedTable} (Dine-In)</p>
+              <p><Utensils size={18} className="inline-icon" /> Table {assignedTable} (Dine-In)</p>
             ) : (
-              <p>🛍️ Parcel (Table Pending)</p>
+              <p><ShoppingBag size={18} className="inline-icon" /> Parcel (Table Pending)</p>
             )}
           </div>
           <h2>Your Order</h2>
           {cart.length === 0 ? (
             <div className="empty-cart">
-              <span className="empty-cart-icon">🛒</span>
+              <ShoppingCart className="empty-cart-icon-svg" size={48} />
               <p>Your cart is empty</p>
               <p style={{ fontSize: '0.8rem', marginTop: 4 }}>Add items from the menu</p>
             </div>
@@ -472,9 +495,13 @@ const OrderPage: React.FC = () => {
               <div className="cart-items">
                 {cart.map((item) => (
                   <div key={item.id} className="cart-item">
-                    <div className="item-info">
-                      <h4>{item.name}</h4>
-                      <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}</p>
+                    <div className="cart-item-header">
+                      <div className="item-info">
+                        <h4>{item.name}</h4>
+                      </div>
+                      <div className="item-info">
+                        <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}</p>
+                      </div>
                     </div>
                     <div className="item-controls">
                       <button
@@ -486,10 +513,7 @@ const OrderPage: React.FC = () => {
                       <input
                         type="number"
                         value={item.quantity}
-                        onChange={(e) =>
-                          updateQuantity(item.id, parseInt(e.target.value) || 1)
-                        }
-                        min="1"
+                        readOnly
                         className="qty-input"
                       />
                       <button
@@ -502,12 +526,11 @@ const OrderPage: React.FC = () => {
                     <div className="item-total">
                       {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
                     </div>
-                    <button
-                      className="remove-btn"
+                    <X 
+                      className="remove-btn-icon" 
+                      size={18}
                       onClick={() => removeFromCart(item.id)}
-                    >
-                      ✕
-                    </button>
+                    />
                   </div>
                 ))}
               </div>
@@ -535,7 +558,7 @@ const OrderPage: React.FC = () => {
                       className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
                       onClick={() => setPaymentMethod('online')}
                     >
-                      <div className="payment-card-icon">💳</div>
+                      <div className="payment-card-icon"><CreditCard size={24} /></div>
                       <div className="payment-card-info">
                         <span className="payment-card-title">Online Payment</span>
                         <span className="payment-card-subtitle">Pay via Razorpay</span>
@@ -546,7 +569,7 @@ const OrderPage: React.FC = () => {
                       className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
                       onClick={() => setPaymentMethod('wallet')}
                     >
-                      <div className="payment-card-icon">👛</div>
+                      <div className="payment-card-icon"><Wallet size={24} /></div>
                       <div className="payment-card-info">
                         <span className="payment-card-title">SmartDine Wallet</span>
                         <span className="payment-card-subtitle">
@@ -557,13 +580,22 @@ const OrderPage: React.FC = () => {
                   </div>
                 </div>
 
+                {(!isOperating || status === 'PAUSED') && (
+                  <div className="working-hours-warning" style={{ color: 'var(--error-color)', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '8px' }}>
+                    {status === 'PAUSED' ? (
+                      <><Pause size={14} className="inline-icon" /> Orders temporarily paused. Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
+                    ) : (
+                      <><CircleAlert size={14} className="inline-icon" /> Restaurant closed. Orders will resume at <strong>10:00 AM</strong></>
+                    )}
+                  </div>
+                )}
                 <button 
                    className="checkout-btn" 
                    onClick={handleCheckout} 
-                   disabled={loading}
-                   style={{ marginTop: '15px' }}
+                   disabled={loading || !isOperating || status === 'PAUSED'}
+                   style={{ marginTop: '5px' }}
                 >
-                  {loading ? 'Processing...' : 'Checkout & Pay'}
+                  {loading ? 'Processing...' : (!isOperating || status === 'PAUSED') ? 'Restaurant Closed' : 'Checkout & Pay'}
                 </button>
               </div>
             </>
@@ -575,4 +607,3 @@ const OrderPage: React.FC = () => {
 };
 
 export default OrderPage;
-

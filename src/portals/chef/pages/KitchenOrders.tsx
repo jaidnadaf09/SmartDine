@@ -13,7 +13,8 @@ import {
     Timer,
     History,
     ChefHat as ActiveIcon, 
-    User
+    User,
+    FolderOpen
 } from 'lucide-react';
 import '../../../styles/Portals.css';
 import '../../../styles/ChefPortal.css';
@@ -145,7 +146,7 @@ const KitchenOrders: React.FC = () => {
     return (
         <div className="chef-page">
             <header className="page-header">
-                <h1 className="page-title">👨‍🍳 Kitchen Control</h1>
+                <h1 className="page-title"><ChefHat size={32} className="inline-icon" /> Kitchen Control</h1>
                 <div className="kitchen-legend">
                     <div className="legend-item"><span className="dot normal"></span> 0-10m</div>
                     <div className="legend-item"><span className="dot warning"></span> 10-20m</div>
@@ -173,7 +174,7 @@ const KitchenOrders: React.FC = () => {
             {activeTab === 'active' ? (
                 orders.length === 0 ? (
                     <div className="chef-empty-state">
-                        <div className="chef-empty-icon">🍳</div>
+                        <div className="chef-empty-icon"><Utensils size={48} /></div>
                         <h3 className="chef-empty-title">No Active Orders</h3>
                         <p className="chef-empty-sub">The kitchen is all caught up. New orders will appear here automatically.</p>
                     </div>
@@ -281,7 +282,7 @@ const KitchenOrders: React.FC = () => {
             ) : (
                 history.length === 0 ? (
                     <div className="chef-empty-state">
-                        <div className="chef-empty-icon">📂</div>
+                        <div className="chef-empty-icon"><FolderOpen size={48} /></div>
                         <h3 className="chef-empty-title">History is Empty</h3>
                         <p className="chef-empty-sub">Completed orders from today will show up here.</p>
                     </div>

@@ -2,9 +2,14 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/LandingPage.css';
 import restaurantImage from '../assets/Restaurant_business_plan_main.jpg';
+import restaurantInterior from '../assets/restaurant_interior.png';
+import reservedTable from '../assets/reserved_table.png';
+import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
+import { Utensils, ChefHat, Home, Zap } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { status, isOperating, pauseUntil } = useRestaurantStatus();
 
   const featuredDishes = [
     { id: 1, name: 'Paneer Butter Masala', price: '₹280', description: 'Paneer in tomato gravy' },
@@ -19,20 +24,27 @@ const LandingPage: React.FC = () => {
 
   return (
     <div className="landing-page">
-      {/* Hero Section */}
+      {/* Hero Section - Optimized 2-Column Grid */}
       <section className="hero">
-        <div className="hero-content">
-          <h2>Welcome to Rasoi Ghar</h2>
-          <p>Experience the finest Food culture</p>
-          <button
-            className="cta-btn"
-            onClick={() => {
-              const element = document.getElementById('featured-menu');
-              element?.scrollIntoView({ behavior: 'smooth' });
-            }}
-          >
-            Explore Our Menu
-          </button>
+        <div className="hero-grid-container">
+          <div className="hero-text-content">
+            <div className={`restaurant-status-badge ${isOperating ? 'open' : status === 'PAUSED' ? 'paused' : 'closed'}`}>
+              <span className="status-dot"></span>
+              {status === 'PAUSED' ? 'Orders Paused' : isOperating ? 'Open Now' : 'Closed'} • {
+                status === 'PAUSED' ? `Resumes at ${new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
+                isOperating ? `Closes at 11:00 PM` : `Opens at 10:00 AM`
+              }
+            </div>
+            <h2>Ready to Taste the Excellence?</h2>
+            <p>Experience the finest culinary culture at Rasoi Ghar. Delicious food meets authentic recipes for an unforgettable meal.</p>
+            <div className="hero-actions">
+              <button className="cta-btn" onClick={() => navigate('/order')}>Order Online Now</button>
+              <button className="cta-btn secondary" onClick={() => navigate('/book-table')}>Table Reservation</button>
+            </div>
+          </div>
+          <div className="hero-image-wrapper">
+            <img src={restaurantInterior} alt="Rasoi Ghar Interior" className="hero-side-image" />
+          </div>
         </div>
       </section>
 
@@ -43,8 +55,8 @@ const LandingPage: React.FC = () => {
           <p className="menu-subtitle">Taste the most loved dishes from our kitchen</p>
         </div>
         <div className="menu-grid">
-          {featuredDishes.map((item) => (
-            <div key={item.id} className="menu-item">
+          {featuredDishes.slice(0, 4).map((item) => (
+            <div key={item.id} className="menu-item" onClick={() => navigate('/order')}>
               <h3>{item.name}</h3>
               <p className="description">{item.description}</p>
               <p className="price">{item.price}</p>
@@ -58,62 +70,66 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* SmartDine Restaurant Showcase Section */}
-      <section className="showcase">
-        <div className="showcase-content">
-          <div className="showcase-text">
-            <h2>Experience Dining at Rasoi Ghar</h2>
-            <p>Enjoy a comfortable and elegant restaurant environment where delicious food meets great hospitality.
-              Perfect for family dinners, celebrations, and casual dining.</p>
-            <ul className="showcase-features">
-              <li>✓ Natural lighting and fresh ambiance</li>
-              <li>✓ Comfortable seating arrangements</li>
-              <li>✓ Modern and elegant design</li>
-              <li>✓ Perfect for meetings and social gatherings</li>
-            </ul>
-            <button className="cta-btn" onClick={() => navigate('/book-table')}>
-              Book a Table Now
-            </button>
+      {/* Book Table Section - 2-Column Grid */}
+      <section className="book-table-section">
+        <div className="book-table-grid">
+          <div className="book-table-image">
+            <img src={reservedTable} alt="Reserved Table" className="side-image" />
           </div>
-          <div className="showcase-image">
-            <img
-              src={restaurantImage}
-              alt="Rasoi Ghar Restaurant Interior"
-              onError={(e) => {
-                const img = e.target as HTMLImageElement;
-                img.style.display = "none";
-              }}
-            />
+          <div className="book-table-content">
+            <h2>Reserve Your Table Now</h2>
+            <p>Skip the wait and secure your spot for a delightful dining experience. Perfect for family gatherings, dates, or celebrating special moments.</p>
+            <button className="cta-btn" onClick={() => navigate('/book-table')}>
+              Book Table
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="features">
-        <h2>Why Choose Rasoi Ghar?</h2>
-        <div className="features-grid">
-          <div className="feature">
-            <div className="feature-icon">🍽️</div>
-            <h3>Premium Quality</h3>
-            <p>Fresh ingredients and authentic recipes</p>
+      {/* Experience & Features - Simplified */}
+      <section className="showcase">
+        <div className="showcase-content">
+          <div className="showcase-text">
+            <h2>Why Choose Rasoi Ghar?</h2>
+            <p>Enjoy a comfortable and elegant restaurant environment where delicious food meets great hospitality.</p>
+            
+            <div className="features-mini-grid">
+               <div className="mini-feature">
+                  <Utensils className="mini-icon" size={28} />
+                  <div>
+                    <h4>Premium Quality</h4>
+                    <p>Fresh ingredients & authentic recipes</p>
+                  </div>
+               </div>
+               <div className="mini-feature">
+                  <ChefHat className="mini-icon" size={28} />
+                  <div>
+                    <h4>Expert Chefs</h4>
+                    <p>Experienced culinary masters</p>
+                  </div>
+               </div>
+               <div className="mini-feature">
+                  <Home className="mini-icon" size={28} />
+                  <div>
+                    <h4>Cozy Ambiance</h4>
+                    <p>Perfect place to relax and enjoy</p>
+                  </div>
+               </div>
+               <div className="mini-feature">
+                  <Zap className="mini-icon" size={28} />
+                  <div>
+                    <h4>Quick Service</h4>
+                    <p>Fast delivery without compromise</p>
+                  </div>
+               </div>
+            </div>
           </div>
-          <div className="feature">
-            <div className="feature-icon">👨🏻‍🍳</div>
-            <h3>Expert Chefs</h3>
-            <p>Experienced chefs preparing delicious meals</p>
-          </div>
-          <div className="feature">
-            <div className="feature-icon">🏠</div>
-            <h3>Cozy Ambiance</h3>
-            <p>The perfect place to relax and connect</p>
-          </div>
-          <div className="feature">
-            <div className="feature-icon">⚡</div>
-            <h3>Quick Service</h3>
-            <p>Fast delivery without compromising quality</p>
+          <div className="showcase-image">
+            <img src={restaurantImage} alt="Rasoi Ghar Vibe" />
           </div>
         </div>
       </section>
+
 
       {/* Footer */}
       <footer className="footer">

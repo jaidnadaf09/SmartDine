@@ -1,9 +1,11 @@
 import express from 'express';
-import { getBookings, createBooking, updateBooking, getUserBookings, checkAvailability, cancelBooking } from '../controllers/bookingController';
+import { getBookings, createBooking, updateBooking, getUserBookings, checkAvailability, cancelBooking, getUpcomingBooking } from '../controllers/bookingController';
 import { updateBookingTable } from '../controllers/adminController';
 import { protect, staffOnly } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+router.get('/upcoming', protect, getUpcomingBooking);
 
 router.route('/')
     .get(protect, staffOnly, getBookings)

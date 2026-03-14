@@ -13,9 +13,9 @@ const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
       <Navbar 
         roleTag="Chef Portal" 
         customLinks={[
-          { name: '📊 Dashboard', path: '/chef/dashboard' },
-          { name: '👨‍🍳 Kitchen Orders', path: '/chef/orders' },
-          { name: '📜 Completed Orders', path: '/chef/order-history' },
+          { name: 'Dashboard', path: '/chef/dashboard' },
+          { name: 'Kitchen Orders', path: '/chef/orders' },
+          { name: 'Completed Orders', path: '/chef/order-history' },
         ]} 
       />
 
