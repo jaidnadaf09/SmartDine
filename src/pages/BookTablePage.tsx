@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, Utensils, Lock, Users, CreditCard, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { isValidWorkingHour } from '../utils/workingHours';
 import '../styles/BookTable.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -54,7 +55,7 @@ const BookTablePage: React.FC = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
 
   // Calculate min time if date is today (rounded to next 5 mins)
@@ -156,12 +157,10 @@ const BookTablePage: React.FC = () => {
         return;
       }
 
-      // Past Date/Time Validation
-      const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
-      const now = new Date();
-      if (selectedDateTime < now) {
-        setError('You cannot book a table in the past. Please select a future time.');
-        toast.error('Invalid time selection: past date/time.');
+      // Restaurant Hours Validation
+      if (!isValidWorkingHour(formData.time)) {
+        setError('Tables can only be booked between 10:00 AM and 11:00 PM');
+        toast.error('Tables can only be booked between 10:00 AM and 11:00 PM');
         setLoading(false);
         bookingInProgress.current = false;
         return;
@@ -376,7 +375,7 @@ const BookTablePage: React.FC = () => {
     <div className="book-table-container">
       <div className="book-table-box">
         <div className="book-table-header">
-          <span className="logo-small">🍽️ SMARTDINE</span>
+          <span className="logo-small"><Utensils size={24} className="inline-icon" /> SMARTDINE</span>
           <h2>Reserve Your Table</h2>
           <p>Premium Dining Experience</p>
         </div>
@@ -401,18 +400,28 @@ const BookTablePage: React.FC = () => {
             {/* Read-only Customer Info */}
             <div className="account-info-card">
               <div className="card-label">
-                <span>🔒</span> BOOKING AS (FROM YOUR ACCOUNT)
+                <Lock size={16} className="inline-icon" /> BOOKING AS (FROM YOUR ACCOUNT)
               </div>
               <div className="account-details">
                 <p><strong>Name:</strong> {user?.name}</p>
                 <p><strong>Email:</strong> {user?.email}</p>
                 <p><strong>Phone:</strong> {user?.phone || 'Not provided — update profile to add one'}</p>
               </div>
+
+              {/* Booking Information */}
+              <div className="booking-info-box">
+                <div className="booking-hours">
+                  <Clock size={16} className="inline-icon" /> Bookings accepted from <strong>10:00 AM – 11:00 PM</strong>
+                </div>
+                <div className="booking-hint">
+                  <Calendar size={16} className="inline-icon" /> Selected booking time must fall within restaurant hours
+                </div>
+              </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="date">Date</label>
+            <div className="booking-row">
+              <div className="booking-field">
+                <label htmlFor="date"><Calendar size={16} className="inline-icon" /> Date</label>
                 <div className="input-wrapper" onClick={() => handleWrapperClick(dateInputRef)}>
                   <input
                     type="date"
@@ -432,8 +441,8 @@ const BookTablePage: React.FC = () => {
                 </small>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="time">Time</label>
+              <div className="booking-field">
+                <label htmlFor="time"><Clock size={16} className="inline-icon" /> Time</label>
                 <div className="input-wrapper" onClick={() => handleWrapperClick(timeInputRef)}>
                   <input
                     type="time"
@@ -449,15 +458,15 @@ const BookTablePage: React.FC = () => {
                   <Clock className="input-icon" size={18} />
                 </div>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label htmlFor="guests">👥 Guests</label>
-              <select id="guests" name="guests" value={formData.guests} onChange={handleChange}>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                  <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
-                ))}
-              </select>
+              <div className="booking-field">
+                <label htmlFor="guests"><Users size={16} className="inline-icon" /> Guests</label>
+                <select id="guests" name="guests" value={formData.guests} onChange={handleChange}>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                    <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="form-group" style={{ marginBottom: '15px' }}>
@@ -467,7 +476,7 @@ const BookTablePage: React.FC = () => {
                   className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
                   onClick={() => setPaymentMethod('online')}
                 >
-                  <div className="payment-card-icon">💳</div>
+                  <div className="payment-card-icon"><CreditCard size={24} /></div>
                   <div className="payment-card-info">
                     <span className="payment-card-title">Online Payment</span>
                     <span className="payment-card-subtitle">Pay via Razorpay</span>
@@ -478,7 +487,7 @@ const BookTablePage: React.FC = () => {
                   className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
                   onClick={() => setPaymentMethod('wallet')}
                 >
-                  <div className="payment-card-icon">👛</div>
+                  <div className="payment-card-icon"><Wallet size={24} /></div>
                   <div className="payment-card-info">
                     <span className="payment-card-title">SmartDine Wallet</span>
                     <span className="payment-card-subtitle">
@@ -488,12 +497,11 @@ const BookTablePage: React.FC = () => {
                 </div>
               </div>
             </div>
-
             <div className="button-group" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
               <button type="submit" className="submit-btn" disabled={loading}>
                 {loading ? 'Processing...' : `Pay ₹10 & Reserve Table`}
               </button>
-
+              
               {isAdmin && (
                 <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn" disabled={loading}>
                   Admin: Instant Booking (No Payment)

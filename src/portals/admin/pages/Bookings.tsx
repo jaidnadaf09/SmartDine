@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Calendar, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -176,7 +177,7 @@ const Bookings: React.FC = () => {
             <div className="admin-guidance-section" style={{ marginTop: '0', marginBottom: '3rem' }}>
                 <div className="guidance-card dashboard-card" style={{ padding: '2rem' }}>
                     <div className="guidance-header" style={{ marginBottom: '1rem' }}>
-                        <span className="icon">📅</span>
+                        <span className="icon"><Calendar size={24} /></span>
                         <h3 style={{ fontSize: '1.4rem' }}>Table Management</h3>
                     </div>
                     <p style={{ color: 'var(--text-secondary)', opacity: 0.8 }}>
@@ -191,7 +192,7 @@ const Bookings: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p>❌ {error}</p>
+                    <p><AlertCircle size={16} className="inline-icon" /> {error}</p>
                     <button onClick={fetchData}>Retry</button>
                 </div>
             ) : bookings.length === 0 ? (

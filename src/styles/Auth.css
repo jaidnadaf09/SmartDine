@@ -107,19 +107,19 @@ body[data-theme="dark"] .auth-card::before {
 /* ── Light Mode Visibility Fixes ── */
 body[data-theme="light"] .auth-card label,
 body[data-theme="light"] .auth-card h2 {
-  color: #222222;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
 body[data-theme="light"] .auth-card h1 {
-  color: #3b2a1f; /* SmartDine logo text color */
+  color: var(--text-primary); /* SmartDine logo text color */
   font-weight: 600;
 }
 
 /* ── Titles ── */
 .auth-card h1 {
   text-align: center;
-  color: var(--accent-primary);
+  color: var(--brand-primary);
   font-size: 28px;
   font-weight: 700;
   margin: 0;
@@ -174,8 +174,8 @@ body[data-theme="light"] .auth-card h1 {
 }
 
 .form-input:focus {
-  border-color: #A67B5B;
-  box-shadow: 0 0 12px rgba(166, 123, 91, 0.35);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 12px rgba(111, 97, 52, 0.35);
   transform: translateY(-1px);
 }
 
@@ -185,7 +185,7 @@ body[data-theme="light"] .auth-card h1 {
 
 /* ── Light Mode Overrides ── */
 body[data-theme="light"] .form-input {
-  color: #222;
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.25);
   border: 1px solid rgba(0, 0, 0, 0.15);
 }
@@ -195,7 +195,7 @@ body[data-theme="light"] .form-input::placeholder {
 }
 
 body[data-theme="light"] .form-group label {
-  color: #222222;
+  color: var(--text-primary);
 }
 
 /* ── Password Layout ── */
@@ -236,7 +236,7 @@ body[data-theme="light"] .password-toggle:hover {
 
 /* ── Form Actions ── */
 .auth-btn {
-  background: linear-gradient(135deg, #6F4E37, #4B2E2B);
+  background: var(--brand-primary);
   color: white;
   border: none;
   padding: 14px;
@@ -255,7 +255,8 @@ body[data-theme="light"] .password-toggle:hover {
 
 .auth-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(111, 78, 55, 0.45);
+  background: var(--brand-primary-hover);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
 }
 
 .auth-btn:disabled {
@@ -290,7 +291,7 @@ body[data-theme="light"] .password-toggle:hover {
 }
 
 body[data-theme="light"] .auth-back-btn {
-  color: #222222;
+  color: var(--text-primary);
   border-color: rgba(0, 0, 0, 0.15);
   background: rgba(0, 0, 0, 0.05);
 }
@@ -312,7 +313,7 @@ body[data-theme="light"] .auth-link {
 }
 
 .auth-link a {
-  color: #A67B5B;
+  color: var(--brand-primary);
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
@@ -325,7 +326,90 @@ body[data-theme="light"] .auth-link {
 
 /* Unified under global variables */
 
-/* ΓöÇΓöÇ Responsive ΓöÇΓöÇ */
+/* ── Password Feedback ── */
+.password-feedback {
+  margin-top: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  border-left: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.strength-indicator {
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.password-requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.password-requirements p {
+  margin: 0;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 4px;
+}
+
+.requirement-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.requirement-item svg {
+  opacity: 0.5;
+}
+
+.requirement-item.satisfied {
+  color: var(--success);
+}
+
+.requirement-item.satisfied svg {
+  opacity: 1;
+}
+
+.match-feedback {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.match-feedback.error {
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.05);
+}
+
+.match-feedback.success {
+  color: var(--success);
+  background: rgba(76, 175, 80, 0.05);
+}
+
+body[data-theme="light"] .password-feedback {
+  background: rgba(0, 0, 0, 0.03);
+  border-left-color: rgba(0, 0, 0, 0.1);
+}
+
+body[data-theme="light"] .password-requirements p {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+body[data-theme="light"] .requirement-item {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+body[data-theme="light"] .requirement-item.satisfied {
+  color: var(--success);
+}
+
+/* ── Responsive ── */
 @media (max-width: 480px) {
   .auth-card {
     padding: 24px;

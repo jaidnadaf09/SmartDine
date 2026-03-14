@@ -13,7 +13,7 @@ const WaiterLayout: React.FC<WaiterLayoutProps> = ({ children }) => {
       <Navbar 
         roleTag="Waiter Portal" 
         customLinks={[
-          { name: '📋 Tables & Orders', path: '/waiter' },
+          { name: 'Tables & Orders', path: '/waiter' },
         ]} 
       />
 

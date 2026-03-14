@@ -6,8 +6,14 @@ import {
     Calendar, 
     ClipboardList, 
     IndianRupee,
-    TrendingUp
+    TrendingUp,
+    BarChart3,
+    CircleDot,
+    AlertCircle,
+    ShoppingBag,
+    Utensils
 } from 'lucide-react';
+import RestaurantStatusControl from '../components/RestaurantStatusControl';
 import '../../../styles/ChefPortal.css';
 
 
@@ -65,15 +71,17 @@ const Dashboard: React.FC = () => {
             {/* Admin Welcome Banner */}
             <div className="chef-welcome-banner" style={{ background: 'linear-gradient(135deg, #6f4e37 0%, #4a3425 100%)' }}>
                 <div>
-                    <h1 className="chef-welcome-title">📊 Good day, {user?.name || 'Admin'}!</h1>
+                    <h1 className="chef-welcome-title"><BarChart3 size={28} className="inline-icon" /> Good day, {user?.name || 'Admin'}!</h1>
                     <p className="chef-welcome-sub">Here's your restaurant at a glance. Manage and grow your business.</p>
                 </div>
-                <div className="chef-live-badge">🔴 Live Metrics</div>
+                <div className="chef-live-badge"><CircleDot size={14} className="pulse-icon" /> Live Metrics</div>
             </div>
+
+            <RestaurantStatusControl />
 
             {error ? (
                 <div className="error-state">
-                    <p>⚠️ {error}</p>
+                    <p><AlertCircle size={16} className="inline-icon" /> {error}</p>
                     <button className="retry-btn" onClick={fetchStats}>Try Again</button>
                 </div>
             ) : (
@@ -103,7 +111,7 @@ const Dashboard: React.FC = () => {
                     {/* Recent Bookings */}
                     <div className="chef-card dashboard-card">
                         <div className="chef-card-header">
-                            <span className="chef-card-id" style={{ color: '#6f4e37' }}>📅 NEW BOOKINGS</span>
+                            <span className="chef-card-id" style={{ color: '#6f4e37' }}><Calendar size={14} className="inline-icon" /> NEW BOOKINGS</span>
                             <button className="btn-secondary-chef" style={{ fontSize: '0.7rem', padding: '4px 8px', color: '#6f4e37', borderColor: '#6f4e37' }} onClick={() => navigate('/admin/bookings')}>
                                 View All
                             </button>
@@ -129,7 +137,7 @@ const Dashboard: React.FC = () => {
                     {/* Recent Orders */}
                     <div className="chef-card dashboard-card">
                         <div className="chef-card-header">
-                            <span className="chef-card-id" style={{ color: '#6f4e37' }}>🛍️ RECENT ORDERS</span>
+                            <span className="chef-card-id" style={{ color: '#6f4e37' }}><ShoppingBag size={14} className="inline-icon" /> RECENT ORDERS</span>
                             <button className="btn-secondary-chef" style={{ fontSize: '0.7rem', padding: '4px 8px', color: '#6f4e37', borderColor: '#6f4e37' }} onClick={() => navigate('/admin/orders')}>
                                 View All
                             </button>
@@ -157,7 +165,7 @@ const Dashboard: React.FC = () => {
                     {/* Recent Payments */}
                     <div className="chef-card dashboard-card">
                         <div className="chef-card-header">
-                            <span className="chef-card-id" style={{ color: '#6f4e37' }}>💰 LATEST PAYMENTS</span>
+                            <span className="chef-card-id" style={{ color: '#6f4e37' }}><IndianRupee size={14} className="inline-icon" /> LATEST PAYMENTS</span>
                             <button className="btn-secondary-chef" style={{ fontSize: '0.7rem', padding: '4px 8px', color: '#6f4e37', borderColor: '#6f4e37' }} onClick={() => navigate('/admin/payments')}>
                                 View All
                             </button>
@@ -186,7 +194,7 @@ const Dashboard: React.FC = () => {
 
             {/* Info Strip */}
             <div className="chef-info-strip">
-                <span>🍽️ SmartDine Admin Operations</span>
+                <span><Utensils size={14} className="inline-icon" /> SmartDine Admin Operations</span>
                 <span><TrendingUp size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Monitor · Grow · Scale</span>
             </div>
         </div>

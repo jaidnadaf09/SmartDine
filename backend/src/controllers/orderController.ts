@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { Order, User, Table, Booking, WalletTransaction, sequelize } from '../models';
+import { Order, User, Table, Booking, WalletTransaction, sequelize, Notification, RestaurantSetting } from '../models';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Op } from 'sequelize';
+import { isRestaurantOpen } from '../utils/workingHours';
 
 // @desc    Get all orders
 // @route   GET /api/orders
@@ -28,6 +29,20 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
 // @access  Public (from customer frontend) or Private
 export const createOrder = async (req: Request, res: Response) => {
     try {
+        const settings = await RestaurantSetting.findOne();
+        const restaurantStatus = settings?.status || 'OPEN';
+
+        if (restaurantStatus === 'CLOSED') {
+            return res.status(403).json({ message: 'Restaurant is currently closed for orders.' });
+        }
+
+        if (restaurantStatus === 'PAUSED') {
+            return res.status(403).json({ message: 'Orders are temporarily paused. Please try again in a few minutes.' });
+        }
+
+        if (!isRestaurantOpen()) {
+            return res.status(403).json({ message: 'Restaurant is currently closed. Orders are accepted between 10:00 AM and 11:00 PM.' });
+        }
         const { items, totalAmount, userId, paymentId, paymentStatus } = req.body;
 
         if (!items || Object.keys(items).length === 0) {
@@ -87,6 +102,15 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
         order.status = status;
         const updatedOrder = await order.save();
+
+        // Create notification for customer
+        if (order.userId) {
+            await Notification.create({
+                userId: order.userId,
+                message: `Your order #${order.id} status is now: ${status.toUpperCase()}`,
+                type: 'order'
+            });
+        }
 
         // Table Management: When order is completed, release table and booking
         if (status === 'completed') {
@@ -199,6 +223,13 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
         // Update order status
         order.status = 'cancelled';
         await order.save();
+
+        // Create notification for cancellation
+        await Notification.create({
+            userId,
+            message: `Order #${order.id} has been cancelled and refunded to your wallet.`,
+            type: 'order'
+        });
 
         const refundAmount = Number(order.totalAmount || 0);
         let currentBalance = 0;

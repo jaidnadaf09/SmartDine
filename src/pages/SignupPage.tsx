@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
@@ -26,6 +26,32 @@ const SignupPage: React.FC = () => {
       [name]: value,
     }));
   };
+
+  const getPasswordStrength = (password: string) => {
+    if (password.length === 0) return { label: '', color: '' };
+    if (password.length < 6) return { label: 'Weak', color: '#ff4d4d' };
+
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasUpper = /[A-Z]/.test(password);
+
+    if (hasNumber && hasSpecial && hasUpper && password.length >= 8) return { label: 'Strong', color: '#4caf50' };
+    if ((hasNumber && hasSpecial) || (hasNumber && hasUpper) || (hasSpecial && hasUpper)) return { label: 'Medium', color: '#ffa500' };
+
+    return { label: 'Weak', color: '#ff4d4d' };
+  };
+
+  const passwordStrength = getPasswordStrength(formData.password);
+
+  const passwordRequirements = [
+    { label: 'At least 6 characters', met: formData.password.length >= 6 },
+    { label: 'One number', met: /\d/.test(formData.password) },
+    { label: 'One uppercase letter', met: /[A-Z]/.test(formData.password) },
+  ];
+
+  const passwordsMatch = formData.password && formData.confirmPassword 
+    ? formData.password === formData.confirmPassword 
+    : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,6 +140,7 @@ const SignupPage: React.FC = () => {
               onChange={handleChange}
               placeholder="Your Name"
               required
+              autoFocus
             />
           </div>
 
@@ -167,6 +194,25 @@ const SignupPage: React.FC = () => {
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            {formData.password && (
+              <div className="password-feedback">
+                <div className="strength-indicator">
+                  <span>Strength: </span>
+                  <span style={{ color: passwordStrength.color, fontWeight: 700 }}>
+                    {passwordStrength.label} {passwordStrength.label === 'Strong' && '✅'}
+                  </span>
+                </div>
+                <div className="password-requirements">
+                  <p>Password must contain:</p>
+                  {passwordRequirements.map((req, idx) => (
+                    <div key={idx} className={`requirement-item ${req.met ? 'satisfied' : ''}`}>
+                      {req.met ? <CheckCircle2 size={14} /> : <Circle size={14} />}
+                      <span>{req.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="form-group">
@@ -190,6 +236,11 @@ const SignupPage: React.FC = () => {
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
+            {formData.confirmPassword && (
+              <div className={`match-feedback ${passwordsMatch ? 'success' : 'error'}`}>
+                {passwordsMatch ? '✅ Passwords match' : '❌ Passwords do not match'}
+              </div>
+            )}
           </div>
 
           <button type="submit" className="auth-btn" disabled={loading}>

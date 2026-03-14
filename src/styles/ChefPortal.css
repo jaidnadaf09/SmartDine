@@ -10,8 +10,8 @@
 
 /* ── Header / Navbar ── */
 .chef-header {
-  background: linear-gradient(135deg, #1a3a2a 0%, #2d5a3d 100%);
-  color: white;
+  background: var(--brand-primary);
+  color: var(--btn-text);
   height: 64px;
   position: sticky;
   top: 0;
@@ -50,7 +50,7 @@
   font-weight: 700;
   background: rgba(255, 255, 255, 0.18);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #a7f3d0;
+  color: white;
   padding: 2px 8px;
   border-radius: 999px;
   letter-spacing: 0.05em;
@@ -86,9 +86,9 @@
 }
 
 .chef-nav-btn.active {
-  background: rgba(167, 243, 208, 0.2);
-  color: #a7f3d0;
-  border-color: #a7f3d0;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border-color: white;
 }
 
 /* Header Right */
@@ -112,14 +112,15 @@
 .chef-avatar {
   width: 30px;
   height: 30px;
-  background: #a7f3d0;
-  color: #1a3a2a;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 0.8rem;
+  border: 1px solid var(--brand-primary);
 }
 
 .chef-user-name {
@@ -167,10 +168,10 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 28px;
-  background: linear-gradient(135deg, #1a3a2a 0%, #2d5a3d 100%);
+  background: var(--brand-primary);
   border-radius: 14px;
   padding: 22px 26px;
-  color: white;
+  color: var(--btn-text);
 }
 
 .chef-welcome-title {
@@ -339,7 +340,7 @@
 .chef-card-id {
   font-size: 0.85rem;
   font-weight: 800;
-  color: #2d5a3d;
+  color: var(--brand-primary);
   letter-spacing: 0.02em;
 }
 
@@ -354,8 +355,8 @@
 
 .badge-pending { background: #fef3c7; color: #b45309; }
 .badge-preparing { background: #dbeafe; color: #1d4ed8; }
-.badge-ready { background: #d1fae5; color: #065f46; }
-.badge-completed { background: #dcfce7; color: #15803d; }
+.badge-ready { background: var(--success); color: white; }
+.badge-completed { background: var(--success); color: white; }
 
 .chef-card-details {
   display: grid;
@@ -430,8 +431,8 @@
 
 .chef-item-qty {
   font-weight: 800;
-  color: #1a3a2a;
-  background: rgba(167, 243, 208, 0.4);
+  color: var(--brand-primary);
+  background: var(--brand-primary-light);
   padding: 2px 8px;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -450,8 +451,8 @@
 }
 
 .btn-primary-chef {
-  background: #2d5a3d;
-  color: white;
+  background: var(--brand-primary);
+  color: var(--btn-text);
   border: none;
   padding: 10px;
   border-radius: 10px;
@@ -472,8 +473,8 @@
 
 .btn-secondary-chef {
   background: transparent;
-  color: #2d5a3d;
-  border: 1.5px solid #2d5a3d;
+  color: var(--brand-primary);
+  border: 1.5px solid var(--brand-primary);
   padding: 8px;
   border-radius: 10px;
   font-weight: 700;
@@ -737,7 +738,7 @@ body.dark .btn-secondary-chef:hover {
 }
 
 .chef-customer-icon {
-  color: #2d5a3d;
+  color: var(--brand-primary);
 }
 
 /* Item Row Adjustments */

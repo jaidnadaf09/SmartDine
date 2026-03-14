@@ -4,6 +4,8 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { findAvailableTable } from '../utils/bookingUtils';
 import WalletTransaction from '../models/WalletTransaction';
+import { isRestaurantOpen, isValidWorkingHour } from '../utils/workingHours';
+import { Notification, RestaurantSetting } from '../models';
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
@@ -76,7 +78,19 @@ export const checkAvailability = async (req: AuthRequest, res: Response) => {
 // @access  Private (requires login)
 export const createBooking = async (req: AuthRequest, res: Response) => {
     try {
-        console.log('Received booking request:', req.body);
+        const settings = await RestaurantSetting.findOne();
+        if (settings && settings.status === 'CLOSED') {
+            return res.status(403).json({ 
+                message: 'Restaurant is currently closed for bookings. Please try again later.' 
+            });
+        }
+
+        // 2. Validate Restaurant Opening Hours for the SELECTED booking time
+        if (!isValidWorkingHour(req.body.time)) {
+            return res.status(400).json({ 
+                message: 'Tables can only be booked during restaurant working hours (10 AM - 11 PM)' 
+            });
+        }    console.log('Received booking request:', req.body);
 
         // Fetch authenticated user from DB
         const user = await User.findByPk(req.user!.id);
@@ -102,6 +116,13 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
             status: req.body.status || 'pending',
         });
 
+        // Create notification for new booking
+        await Notification.create({
+            userId: user.id,
+            message: `Your table booking request #${booking.id} has been received.`,
+            type: 'booking'
+        });
+
         res.status(201).json(booking);
     } catch (error: any) {
         console.error('CRITICAL BOOKING ERROR:', error);
@@ -124,6 +145,16 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
             booking.tableNumber = req.body.tableNumber || booking.tableNumber;
 
             const updatedBooking = await booking.save();
+
+            // Create notification for booking update
+            if (booking.userId) {
+                await Notification.create({
+                    userId: booking.userId,
+                    message: `Your booking #${booking.id} has been updated to: ${booking.status.toUpperCase()}`,
+                    type: 'booking'
+                });
+            }
+
             res.json(updatedBooking);
         } else {
             res.status(404).json({ message: 'Booking not found' });
@@ -204,6 +235,59 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// @desc    Get user's nearest upcoming booking (within next 2 hours)
+// @route   GET /api/bookings/upcoming
+// @access  Private
+export const getUpcomingBooking = async (req: AuthRequest, res: Response) => {
+    try {
+        const { Op } = require('sequelize');
+        
+        // Use current local time for comparison
+        const now = new Date();
+        const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+
+        const booking = await Booking.findOne({
+            where: {
+                userId: req.user!.id,
+                status: 'confirmed',
+                date: {
+                    [Op.lte]: twoHoursFromNow,
+                    [Op.gte]: new Date(now.getFullYear(), now.getMonth(), now.getDate()) // Today or later
+                }
+            },
+            order: [
+                ['date', 'ASC'],
+                ['time', 'ASC']
+            ]
+        });
+
+        if (!booking) {
+            return res.json({ upcomingBooking: null });
+        }
+
+        // Additional filter for time if needed (since time is a string)
+        // Convert "HH:MM" to a comparable number
+        const bookingDateTime = new Date(`${booking.date.toISOString().split('T')[0]}T${booking.time}`);
+        const timeDiff = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60);
+
+        if (timeDiff > 0 && timeDiff <= 120) {
+            return res.json({
+                upcomingBooking: {
+                    id: booking.id,
+                    tableNumber: booking.tableNumber,
+                    date: booking.date,
+                    time: booking.time,
+                    guests: booking.guests
+                }
+            });
+        }
+
+        res.json({ upcomingBooking: null });
+    } catch (error: any) {
+        console.error('Error fetching upcoming booking:', error);
+        res.status(500).json({ message: error.message || 'Server Error' });
+    }
+};
 // @desc    Get user bookings
 // @route   GET /api/bookings/user/:userId
 // @access  Public (for now, based on frontend implementation)

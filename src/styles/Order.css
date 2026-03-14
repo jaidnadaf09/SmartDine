@@ -15,7 +15,7 @@
   max-width: 1440px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 210px 1fr 330px;
+  grid-template-columns: 240px 1fr 420px;
   gap: 1.5rem;
   align-items: start;
 }
@@ -79,9 +79,9 @@
 
 .sidebar-filter-btn.active {
   background: var(--brand-primary);
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(111, 78, 55, 0.3);
+  color: white !important;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* ───────────────────────────────────
@@ -104,6 +104,7 @@
   transition: all 0.2s ease;
   gap: 8px;
 }
+
 
 .menu-search-container:focus-within {
   border-color: var(--brand-primary);
@@ -128,6 +129,39 @@
 
 .menu-search-input::placeholder {
   color: var(--text-muted);
+}
+
+/* Restaurant Status Banner */
+.restaurant-status {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: fadeUpIn 0.3s ease-out;
+}
+
+.restaurant-status.open {
+  background: rgba(63, 163, 106, 0.12);
+  border: 1px solid rgba(63, 163, 106, 0.4);
+  color: var(--success);
+}
+
+.restaurant-status.closed {
+  background: rgba(217, 83, 79, 0.12);
+  border: 1px solid rgba(217, 83, 79, 0.4);
+  color: var(--error);
+}
+
+body[data-theme="light"] .restaurant-status.open {
+  background: rgba(63, 163, 106, 0.08);
+}
+
+body[data-theme="light"] .restaurant-status.closed {
+  background: rgba(217, 83, 79, 0.08);
 }
 
 /* Category block */
@@ -173,12 +207,12 @@
 /* ── Food Card ── */
 .compact-menu-card {
   background: var(--card-bg);
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid var(--card-border);
-  padding: 16px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: var(--card-shadow);
   position: relative;
@@ -200,23 +234,13 @@
 }
 
 .compact-menu-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   box-shadow: var(--card-shadow-hover);
-  border-color: rgba(111, 78, 55, 0.3);
+  border-color: var(--brand-primary);
 }
 
 .compact-menu-card:hover::before {
   opacity: 1;
-}
-
-/* Food emoji zone */
-.menu-card-emoji {
-  font-size: 2.2rem;
-  text-align: center;
-  background: var(--bg-primary);
-  border-radius: 10px;
-  padding: 10px;
-  line-height: 1;
 }
 
 /* Item info */
@@ -267,7 +291,7 @@
 .compact-add-btn {
   width: 100%;
   background: var(--brand-primary);
-  color: white;
+  color: var(--btn-text);
   border: none;
   padding: 8px 12px;
   border-radius: 10px;
@@ -280,9 +304,9 @@
 }
 
 .compact-add-btn:hover {
-  background: var(--brand-primary-hover, #4B2E2B);
+  background: var(--brand-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(111, 78, 55, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 /* Quantity controls */
@@ -314,7 +338,7 @@
 }
 
 .compact-qty-controls button:hover {
-  background: var(--brand-primary-hover, #4B2E2B);
+  background: var(--brand-primary-hover);
   transform: scale(1.1);
 }
 
@@ -353,9 +377,9 @@
    Cart Section
 ─────────────────────────────────── */
 .cart-section {
-  background: var(--card-bg);
-  padding: 1.25rem;
-  border-radius: 16px;
+  background: var(--modal-bg);
+  padding: 1.5rem;
+  border-radius: 18px;
   box-shadow: var(--card-shadow);
   height: fit-content;
   position: sticky;
@@ -416,23 +440,35 @@
 }
 
 .cart-item:hover {
-  border-color: rgba(111, 78, 55, 0.3);
-  box-shadow: 0 2px 8px rgba(111, 78, 55, 0.08);
+  border-color: var(--brand-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cart-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .item-info h4 {
   font-family: 'Poppins', sans-serif;
   color: var(--text-primary);
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
 }
 
 .item-info p {
   color: var(--brand-primary);
-  margin: 2px 0 0;
+  margin: 0;
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
 }
 
 .item-controls {
@@ -533,10 +569,10 @@
   background: var(--brand-primary);
   color: white;
   border: none;
-  padding: 0.85rem;
+  padding: 14px;
   border-radius: 12px;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
   margin-top: 1rem;
   transition: all 0.2s ease;
@@ -546,8 +582,8 @@
 
 .checkout-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(111, 78, 55, 0.4);
-  background: var(--brand-primary-hover, #4B2E2B);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background: var(--brand-primary-hover);
 }
 
 .checkout-btn:disabled {
@@ -565,7 +601,7 @@
 
 .error-message {
   text-align: center;
-  color: var(--error-color, #EF4444);
+  color: var(--error);
   padding: 1.5rem;
   background: rgba(239, 68, 68, 0.06);
   border: 1px solid rgba(239, 68, 68, 0.15);
@@ -589,6 +625,57 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+/* Payment Methods Selector in Cart */
+.payment-methods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.payment-card {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.payment-card:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light, rgba(111, 78, 55, 0.05));
+}
+
+.payment-card.selected {
+  border: 2px solid var(--brand-primary);
+  background: var(--brand-primary-light, rgba(111, 78, 55, 0.08));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.payment-card-icon {
+  font-size: 1.2rem;
+}
+
+.payment-card-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-card-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.payment-card-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 /* ── Responsive ── */
