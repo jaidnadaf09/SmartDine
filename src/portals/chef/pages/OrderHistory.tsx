@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
-import { 
-    CheckCircle, 
-    Clock, 
-    Utensils, 
-    IndianRupee,
-    History
-} from 'lucide-react';
+import { Icons } from '../../../components/icons/IconSystem';
 import '../../../styles/Portals.css';
 import '../../../styles/ChefPortal.css';
 
@@ -66,63 +60,50 @@ const OrderHistory: React.FC = () => {
 
     return (
         <div className="chef-page">
-            <header className="page-header">
-                <h1 className="page-title">📜 Completed Orders</h1>
-                <div className="kitchen-legend">
-                    <span className="legend-item"><History size={16} /> Latest completions from today</span>
-                </div>
+            <header className="admin-page-header">
+                <h1 className="admin-page-title">Activity History</h1>
+                <p className="admin-page-subtitle">Review completed kitchen orders and performance stats.</p>
+                <div className="admin-header-divider"></div>
             </header>
             
             {orders.length === 0 ? (
-                <div className="chef-empty-state" style={{ textAlign: 'center', padding: '60px', background: 'var(--card-bg)', borderRadius: '16px', border: '1px dashed var(--card-border)' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📜</div>
-                    <h3>No Completed Orders</h3>
-                    <p style={{ color: 'var(--text-muted)' }}>Orders you complete today will appear here.</p>
+                <div className="admin-card" style={{ textAlign: 'center', padding: '80px 20px', background: 'transparent' }}>
+                    <div style={{ opacity: 0.2 }}><Icons.historyIcon size={80} /></div>
+                    <h3 className="chef-empty-title" style={{ marginTop: '24px' }}>History is Empty</h3>
+                    <p style={{ color: 'var(--text-secondary)' }}>Orders completed during this session will appear here.</p>
                 </div>
             ) : (
                 <div className="chef-cards-grid">
                     {orders.map(order => (
-                        <div key={order.id} className="chef-card">
-                            {/* Card Header */}
-                            <div className="chef-card-header">
-                                <span className="chef-card-id">ORDER #{order.id}</span>
-                                <span className="status-badge status-completed">
-                                    Completed
+                        <div key={order.id} className="admin-card" style={{ padding: '0', overflow: 'hidden' }}>
+                            <div className="chef-card-header" style={{ padding: '15px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span className="chef-card-id" style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>ORD-#{order.id}</span>
+                                <span className="status-pill-modern status-modern-completed">
+                                    COMPLETED
                                 </span>
                             </div>
 
                             {/* Details Grid */}
-                            <div className="chef-card-details">
-                                <div className="chef-detail-item">
-                                    <span className="chef-detail-icon"><Utensils size={16} /></span>
-                                    <div className="chef-detail-content">
-                                        <span className="chef-detail-label">Location</span>
-                                        <span className="chef-detail-value">
-                                            {order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber}`}
-                                        </span>
+                            <div className="chef-card-details" style={{ padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <Icons.utensils size={16} style={{ color: 'var(--brand-primary)' }} />
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Location</div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber}`}</div>
                                     </div>
                                 </div>
-                                <div className="chef-detail-item">
-                                    <span className="chef-detail-icon"><Clock size={16} /></span>
-                                    <div className="chef-detail-content">
-                                        <span className="chef-detail-label">Completed At</span>
-                                        <span className="chef-detail-value">
-                                            {new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <Icons.clock size={16} style={{ color: '#3b82f6' }} />
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Finished</div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                     </div>
                                 </div>
-                                <div className="chef-detail-item">
-                                    <span className="chef-detail-icon"><IndianRupee size={16} /></span>
-                                    <div className="chef-detail-content">
-                                        <span className="chef-detail-label">Total Amount</span>
-                                        <span className="chef-detail-value">{formatCurrency(order.totalAmount)}</span>
-                                    </div>
-                                </div>
-                                <div className="chef-detail-item">
-                                    <span className="chef-detail-icon"><CheckCircle size={16} /></span>
-                                    <div className="chef-detail-content">
-                                        <span className="chef-detail-label">Status</span>
-                                        <span className="chef-detail-value">Paid & Serving</span>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <Icons.rupee size={16} style={{ color: '#10b981' }} />
+                                    <div>
+                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Rev</div>
+                                        <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{formatCurrency(order.totalAmount)}</div>
                                     </div>
                                 </div>
                             </div>

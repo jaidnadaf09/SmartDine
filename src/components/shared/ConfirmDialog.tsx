@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { Icons } from '../icons/IconSystem';
 import '../../App.css'; 
 
 interface ConfirmDialogProps {
@@ -29,11 +29,11 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <div className="confirm-overlay" onClick={onCancel}>
       <div className="confirm-modal fade-up" onClick={(e) => e.stopPropagation()}>
         <button className="confirm-close" onClick={onCancel}>
-          <X size={20} />
+          <Icons.close size={20} />
         </button>
         
         <div className={`confirm-icon-wrapper ${type}`}>
-          <AlertTriangle size={32} />
+          <Icons.warning size={32} />
         </div>
         
         <h3 className="confirm-title">{title}</h3>

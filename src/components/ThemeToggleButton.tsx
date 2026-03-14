@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { Icons } from './icons/IconSystem';
 import './ThemeToggleButton.css';
 
 const ThemeToggleButton: React.FC = () => {
@@ -11,7 +12,7 @@ const ThemeToggleButton: React.FC = () => {
             onClick={toggleTheme}
             aria-label="Toggle Theme"
         >
-            {theme === 'light' ? '🌙' : '☀'}
+            {theme === 'light' ? <Icons.moon size={18} /> : <Icons.sun size={18} />}
         </button>
     );
 };

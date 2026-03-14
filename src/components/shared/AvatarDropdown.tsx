@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Icons } from '../icons/IconSystem';
 import '../../App.css';
 
 interface AvatarDropdownProps {
@@ -11,13 +12,6 @@ const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ showName = true }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const getInitials = (name: string) => {
-    if (!name) return '??';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -51,23 +45,23 @@ const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ showName = true }) => {
             style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} 
           />
         ) : (
-          getInitials(user.name)
+          <Icons.user size={18} />
         )}
       </div>
 
       {dropdownOpen && (
         <div className="dropdown-menu">
           <button className="dropdown-item" onClick={() => navigate('/profile')}>
-            <span className="icon">👤</span> My Profile
+            <span className="icon"><Icons.user size={16} /></span> My Profile
           </button>
           <button className="dropdown-item" onClick={() => navigate('/profile/edit')}>
-            <span className="icon">✏️</span> Edit Profile
+            <span className="icon"><Icons.edit size={16} /></span> Edit Profile
           </button>
           <button className="dropdown-item" onClick={() => navigate('/profile/password')}>
-            <span className="icon">🔑</span> Change Password
+            <span className="icon"><Icons.key size={16} /></span> Change Password
           </button>
           <button className="dropdown-item" onClick={handleLogout}>
-            <span className="icon">🚪</span> Logout
+            <span className="icon"><Icons.logout size={16} /></span> Logout
           </button>
         </div>
       )}

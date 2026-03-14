@@ -66,8 +66,11 @@ const ActivityOverview: React.FC = () => {
 
     return (
         <div className="management-page">
-            <h2 className="dashboard-title">Activity History</h2>
-            <p className="section-subtitle">A merged history of all table bookings and food orders.</p>
+            <header className="admin-page-header">
+                <h1 className="admin-page-title">Activity History</h1>
+                <p className="admin-page-subtitle">A merged history of all table bookings and food orders.</p>
+                <div className="admin-header-divider"></div>
+            </header>
 
             <div className="admin-activity-container">
                 {/* ── Bookings History Card ── */}
@@ -98,9 +101,9 @@ const ActivityOverview: React.FC = () => {
                         <div className="activity-list">
                             {bookings.map(booking => (
                                 <div key={booking.id} className="activity-item">
-                                    <div className="activity-item-top">
-                                        <strong className="activity-customer">{booking.customerName}</strong>
-                                        <span className={getStatusBadgeClass(booking.status)}>
+                                    <div className="activity-item-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                        <strong className="activity-customer" style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{booking.customerName}</strong>
+                                        <span className={`status-pill-modern status-modern-${booking.status?.toLowerCase()}`}>
                                             {booking.status}
                                         </span>
                                     </div>
@@ -147,11 +150,11 @@ const ActivityOverview: React.FC = () => {
                         <div className="activity-list">
                             {orders.map(order => (
                                 <div key={order.id} className="activity-item">
-                                    <div className="activity-item-top">
-                                        <strong className="activity-customer">
-                                            #{order.id} · {order.customer?.name || 'Guest'}
+                                    <div className="activity-item-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                        <strong className="activity-customer" style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+                                            ORD-#{order.id} · {order.customer?.name || 'Guest'}
                                         </strong>
-                                        <span className={getStatusBadgeClass(order.status)}>
+                                        <span className={`status-pill-modern status-modern-${order.status === 'completed' ? 'completed' : 'cancelled'}`}>
                                             {order.status === 'completed' ? 'Completed' : 'Cancelled'}
                                         </span>
                                     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog';
+import { Icons } from '../../../components/icons/IconSystem';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -114,16 +115,19 @@ const Users: React.FC = () => {
 
     const getRoleBadgeClass = (role: string) => {
         switch (role.toLowerCase()) {
-            case 'admin': return 'pill-cancelled'; // Using red from existing status pills
-            case 'chef': return 'pill-takeaway'; // Using orange from existing status pills
-            default: return 'pill-confirmed'; // Using blue/green from existing status pills
+            case 'admin': return 'status-modern-cancelled';
+            case 'chef': return 'status-modern-pending';
+            default: return 'status-modern-confirmed';
         }
     };
 
     return (
         <div className="management-page">
-            <h2 className="dashboard-title">User Management</h2>
-            <p className="section-subtitle">Manage all system users and their access levels.</p>
+            <header className="admin-page-header">
+                <h1 className="admin-page-title">User Management</h1>
+                <p className="admin-page-subtitle">Manage all system users and their access levels.</p>
+                <div className="admin-header-divider"></div>
+            </header>
 
             {loading ? (
                 <div className="loading-state">
@@ -131,7 +135,7 @@ const Users: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p>❌ {error}</p>
+                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
                     <button onClick={fetchUsers}>Retry</button>
                 </div>
             ) : users.length === 0 ? (
@@ -139,12 +143,12 @@ const Users: React.FC = () => {
                     <p>No registered users found.</p>
                 </div>
             ) : (
-                <div className="table-responsive">
+                <div className="admin-table-container">
                     <table className="admin-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Name</th>
+                                <th>User</th>
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Joined</th>
@@ -154,19 +158,19 @@ const Users: React.FC = () => {
                         <tbody>
                             {users.map(user => (
                                 <tr key={user.id}>
-                                    <td>#{user.id}</td>
+                                    <td><span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>#{user.id}</span></td>
                                     <td><strong>{user.name}</strong></td>
                                     <td>{user.email}</td>
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <span className={`status-pill ${getRoleBadgeClass(user.role)}`} style={{ minWidth: '85px', textAlign: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <span className={`status-pill-modern ${getRoleBadgeClass(user.role)}`} style={{ minWidth: '90px', justifyContent: 'center' }}>
                                                 {user.role}
                                             </span>
                                             <select 
                                                 value={user.role} 
                                                 onChange={(e) => handleRoleChange(user.id, e.target.value)}
                                                 className="admin-select"
-                                                style={{ padding: '4px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '0.85rem' }}
+                                                style={{ border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '6px 10px', borderRadius: '8px', fontSize: '0.85rem' }}
                                             >
                                                 <option value="customer">Customer</option>
                                                 <option value="chef">Chef</option>
@@ -174,15 +178,15 @@ const Users: React.FC = () => {
                                             </select>
                                         </div>
                                     </td>
-                                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                                    <td><span style={{ color: 'var(--text-secondary)' }}>{new Date(user.createdAt).toLocaleDateString()}</span></td>
                                     <td>
                                         {currentUser.id !== user.id && (
                                             <button 
-                                                className="btn-delete" 
+                                                className="btn-danger-premium" 
                                                 onClick={() => deleteUser(user.id)}
-                                                style={{ padding: '0.5rem 1rem', background: '#f8d7da', color: '#721c24', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}
+                                                style={{ padding: '8px 16px', fontSize: '0.85rem' }}
                                             >
-                                                Delete
+                                                <Icons.trash size={14} /> Delete
                                             </button>
                                         )}
                                     </td>

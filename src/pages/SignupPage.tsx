@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react';
+import { Icons } from '../components/icons/IconSystem';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
@@ -125,7 +125,7 @@ const SignupPage: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>🍽️ SmartDine</h1>
+        <h1><Icons.utensils size={32} className="logo-icon" /> SmartDine</h1>
         <h2>Create Account</h2>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -191,7 +191,7 @@ const SignupPage: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="password-toggle"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <Icons.eyeOff size={20} /> : <Icons.eye size={20} />}
               </button>
             </div>
             {formData.password && (
@@ -199,14 +199,14 @@ const SignupPage: React.FC = () => {
                 <div className="strength-indicator">
                   <span>Strength: </span>
                   <span style={{ color: passwordStrength.color, fontWeight: 700 }}>
-                    {passwordStrength.label} {passwordStrength.label === 'Strong' && '✅'}
+                    {passwordStrength.label} {passwordStrength.label === 'Strong' && <Icons.check size={14} className="inline-icon" />}
                   </span>
                 </div>
                 <div className="password-requirements">
                   <p>Password must contain:</p>
                   {passwordRequirements.map((req, idx) => (
                     <div key={idx} className={`requirement-item ${req.met ? 'satisfied' : ''}`}>
-                      {req.met ? <CheckCircle2 size={14} /> : <Circle size={14} />}
+                      {req.met ? <Icons.checkCircle size={14} /> : <Icons.circle size={14} />}
                       <span>{req.label}</span>
                     </div>
                   ))}
@@ -233,12 +233,12 @@ const SignupPage: React.FC = () => {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="password-toggle"
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirmPassword ? <Icons.eyeOff size={20} /> : <Icons.eye size={20} />}
               </button>
             </div>
             {formData.confirmPassword && (
               <div className={`match-feedback ${passwordsMatch ? 'success' : 'error'}`}>
-                {passwordsMatch ? '✅ Passwords match' : '❌ Passwords do not match'}
+                {passwordsMatch ? <><Icons.check size={14} className="inline-icon" /> Passwords match</> : <><Icons.close size={14} className="inline-icon" /> Passwords do not match</>}
               </div>
             )}
           </div>

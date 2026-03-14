@@ -213,29 +213,29 @@
 
 .chef-stat-card {
   background: var(--card-bg, #ffffff);
-  border: 1px solid var(--card-border, #e8d4c0);
-  border-radius: 14px;
-  padding: 18px 20px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 18px;
+  padding: 22px 24px;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chef-stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .chef-stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   flex-shrink: 0;
 }
 
@@ -310,11 +310,11 @@
 
 .chef-card {
   background: var(--card-bg, #ffffff);
-  border: 1px solid var(--card-border, #e8d4c0);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -395,10 +395,10 @@
 }
 
 .chef-items-container {
-  background: rgba(167, 243, 208, 0.1);
-  border-radius: 12px;
-  padding: 14px;
-  border: 1px solid rgba(167, 243, 208, 0.3);
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
   flex-grow: 1;
 }
@@ -454,8 +454,8 @@
   background: var(--brand-primary);
   color: var(--btn-text);
   border: none;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 12px;
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
@@ -475,8 +475,8 @@
   background: transparent;
   color: var(--brand-primary);
   border: 1.5px solid var(--brand-primary);
-  padding: 8px;
-  border-radius: 10px;
+  padding: 10px;
+  border-radius: 12px;
   font-weight: 700;
   font-size: 0.82rem;
   cursor: pointer;

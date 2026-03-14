@@ -3,19 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
-import { 
-  FolderOpen, 
-  Search, 
-  ShoppingBag, 
-  ShoppingCart, 
-  CreditCard, 
-  Wallet, 
-  Utensils, 
-  Pause, 
-  CircleCheck, 
-  CircleAlert, 
-  X 
-} from 'lucide-react';
+import { Icons } from '../components/icons/IconSystem';
 import '../styles/Order.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -331,7 +319,7 @@ const OrderPage: React.FC = () => {
           ondismiss: () => {
             // User closed the payment dialog — reset state
             setLoading(false);
-            toast('Payment cancelled.', { icon: '🚫' });
+            toast('Payment cancelled.', { icon: <Icons.ban size={20} className="icon-muted" /> });
           }
         }
       };
@@ -360,7 +348,7 @@ const OrderPage: React.FC = () => {
       <div className="order-layout">
         {/* Left Sidebar: Categories */}
         <aside className="categories-sidebar">
-          <h3><FolderOpen size={20} className="inline-icon" /> Categories</h3>
+          <h3><Icons.folderOpen size={20} className="inline-icon" /> Categories</h3>
           <div className="sidebar-filters">
             <button
               className={`sidebar-filter-btn ${activeCategory === 'All' ? 'active' : ''}`}
@@ -385,7 +373,7 @@ const OrderPage: React.FC = () => {
         {/* Center: Menu Content */}
         <div className="menu-content-area">
           <div className="menu-search-container">
-            <Search className="search-icon-svg" size={18} />
+            <Icons.search className="search-icon-svg" size={18} />
             <input
               type="text"
               placeholder="Search menu..."
@@ -398,15 +386,15 @@ const OrderPage: React.FC = () => {
           <div className={`restaurant-status ${status === 'PAUSED' ? 'paused' : isOperating ? "open" : "closed"}`}>
             {status === 'PAUSED' ? (
               <>
-                <Pause size={18} /> Orders temporarily Paused — Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                <Icons.pause size={18} /> Orders temporarily Paused — Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
               </>
             ) : isOperating ? (
               <>
-                <CircleCheck size={18} /> Restaurant Open Now — Orders available until <strong>11:00 PM</strong>
+                <Icons.checkCircle size={18} /> Restaurant Open Now — Orders available until <strong>11:00 PM</strong>
               </>
             ) : (
               <>
-                <CircleAlert size={18} /> Restaurant Closed — Orders will resume at <strong>10:00 AM</strong>
+                <Icons.alertCircle size={18} /> Restaurant Closed — Orders will resume at <strong>10:00 AM</strong>
               </>
             )}
           </div>
@@ -478,15 +466,15 @@ const OrderPage: React.FC = () => {
         <div className="cart-section">
           <div className="table-status-banner compact-banner">
             {assignedTable ? (
-              <p><Utensils size={18} className="inline-icon" /> Table {assignedTable} (Dine-In)</p>
+              <p><Icons.utensils size={18} className="inline-icon" /> Table {assignedTable} (Dine-In)</p>
             ) : (
-              <p><ShoppingBag size={18} className="inline-icon" /> Parcel (Table Pending)</p>
+              <p><Icons.shoppingBag size={18} className="inline-icon" /> Parcel (Table Pending)</p>
             )}
           </div>
           <h2>Your Order</h2>
           {cart.length === 0 ? (
             <div className="empty-cart">
-              <ShoppingCart className="empty-cart-icon-svg" size={48} />
+              <Icons.cart className="empty-cart-icon-svg" size={48} />
               <p>Your cart is empty</p>
               <p style={{ fontSize: '0.8rem', marginTop: 4 }}>Add items from the menu</p>
             </div>
@@ -526,7 +514,7 @@ const OrderPage: React.FC = () => {
                     <div className="item-total">
                       {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
                     </div>
-                    <X 
+                    <Icons.close 
                       className="remove-btn-icon" 
                       size={18}
                       onClick={() => removeFromCart(item.id)}
@@ -558,7 +546,7 @@ const OrderPage: React.FC = () => {
                       className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
                       onClick={() => setPaymentMethod('online')}
                     >
-                      <div className="payment-card-icon"><CreditCard size={24} /></div>
+                      <div className="payment-card-icon"><Icons.card size={24} /></div>
                       <div className="payment-card-info">
                         <span className="payment-card-title">Online Payment</span>
                         <span className="payment-card-subtitle">Pay via Razorpay</span>
@@ -569,7 +557,7 @@ const OrderPage: React.FC = () => {
                       className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
                       onClick={() => setPaymentMethod('wallet')}
                     >
-                      <div className="payment-card-icon"><Wallet size={24} /></div>
+                      <div className="payment-card-icon"><Icons.wallet size={24} /></div>
                       <div className="payment-card-info">
                         <span className="payment-card-title">SmartDine Wallet</span>
                         <span className="payment-card-subtitle">
@@ -583,9 +571,9 @@ const OrderPage: React.FC = () => {
                 {(!isOperating || status === 'PAUSED') && (
                   <div className="working-hours-warning" style={{ color: 'var(--error-color)', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '8px' }}>
                     {status === 'PAUSED' ? (
-                      <><Pause size={14} className="inline-icon" /> Orders temporarily paused. Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
+                      <><Icons.pause size={14} className="inline-icon" /> Orders temporarily paused. Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
                     ) : (
-                      <><CircleAlert size={14} className="inline-icon" /> Restaurant closed. Orders will resume at <strong>10:00 AM</strong></>
+                      <><Icons.alertCircle size={14} className="inline-icon" /> Restaurant closed. Orders will resume at <strong>10:00 AM</strong></>
                     )}
                   </div>
                 )}

@@ -65,7 +65,7 @@ const ProfilePage: React.FC = () => {
                     <div className="profile-details">
                         <div className="profile-detail-item">
                             <label className="profile-detail-label">WALLET BALANCE</label>
-                            <p className="profile-detail-value" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--success-color, #27ae60)' }}>
+                            <p className="profile-detail-value" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--success)' }}>
                                 {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(user.walletBalance || 0))}
                             </p>
                         </div>

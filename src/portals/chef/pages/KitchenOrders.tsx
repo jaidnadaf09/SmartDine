@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
+import { Icons } from '../../../components/icons/IconSystem';
 import ChefOrderModal from '../components/ChefOrderModal';
 import { 
     Clock, 
@@ -83,7 +84,7 @@ const KitchenOrders: React.FC = () => {
 
             if (hasNewOrder && prevOrdersRef.current.length > 0) {
                 soundRef.current?.play().catch(() => {});
-                toast('New Order Received!', { icon: '🔔' });
+                toast('New Order Received!', { icon: <Icons.bell size={20} className="icon-primary" /> });
             }
 
             setOrders(newOrders);
@@ -145,37 +146,43 @@ const KitchenOrders: React.FC = () => {
 
     return (
         <div className="chef-page">
-            <header className="page-header">
-                <h1 className="page-title"><ChefHat size={32} className="inline-icon" /> Kitchen Control</h1>
-                <div className="kitchen-legend">
-                    <div className="legend-item"><span className="dot normal"></span> 0-10m</div>
-                    <div className="legend-item"><span className="dot warning"></span> 10-20m</div>
-                    <div className="legend-item"><span className="dot urgent"></span> 20m+</div>
+            <header className="admin-page-header">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h1 className="admin-page-title">Kitchen Control</h1>
+                        <p className="admin-page-subtitle">Live kitchen management and order processing.</p>
+                        <div className="admin-header-divider"></div>
+                    </div>
+                    <div className="kitchen-legend">
+                        <div className="legend-item"><span className="dot normal"></span> 0-10m</div>
+                        <div className="legend-item"><span className="dot warning"></span> 10-20m</div>
+                        <div className="legend-item"><span className="dot urgent"></span> 20m+</div>
+                    </div>
                 </div>
             </header>
 
-            <div className="chef-tabs">
+            <div className="admin-tabs" style={{ marginBottom: '32px' }}>
                 <button 
-                    className={`chef-tab-btn ${activeTab === 'active' ? 'active' : ''}`}
+                    className={`tab-btn ${activeTab === 'active' ? 'active' : ''}`}
                     onClick={() => setActiveTab('active')}
                 >
-                    <ActiveIcon size={18} /> Kitchen Orders
-                    <span className="chef-tab-count">{orders.length}</span>
+                    <Icons.chef size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> Kitchen Orders
+                    <span className="chef-tab-count" style={{ marginLeft: '8px', background: activeTab === 'active' ? 'white' : 'var(--brand-primary)', color: activeTab === 'active' ? 'var(--brand-primary)' : 'white' }}>{orders.length}</span>
                 </button>
                 <button 
-                    className={`chef-tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+                    className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
                     onClick={() => setActiveTab('history')}
                 >
-                    <History size={18} /> History
-                    <span className="chef-tab-count">{history.length}</span>
+                    <Icons.historyIcon size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} /> History
+                    <span className="chef-tab-count" style={{ marginLeft: '8px', background: activeTab === 'history' ? 'white' : 'var(--brand-primary)', color: activeTab === 'history' ? 'var(--brand-primary)' : 'white' }}>{history.length}</span>
                 </button>
             </div>
 
             {activeTab === 'active' ? (
                 orders.length === 0 ? (
-                    <div className="chef-empty-state">
-                        <div className="chef-empty-icon"><Utensils size={48} /></div>
-                        <h3 className="chef-empty-title">No Active Orders</h3>
+                    <div className="admin-card" style={{ textAlign: 'center', padding: '60px 20px', background: 'transparent' }}>
+                        <div className="chef-empty-icon" style={{ opacity: 0.3 }}><Icons.utensils size={64} /></div>
+                        <h3 className="chef-empty-title" style={{ marginTop: '20px' }}>No Active Orders</h3>
                         <p className="chef-empty-sub">The kitchen is all caught up. New orders will appear here automatically.</p>
                     </div>
                 ) : (
@@ -183,53 +190,39 @@ const KitchenOrders: React.FC = () => {
                         {orders.map(order => {
                             const { minutes, color } = getTimerData(order.createdAt);
                             return (
-                                <div key={order.id} className={`chef-card ${getUrgencyClass(order.createdAt)}`}>
-                                    <div className="chef-card-header">
-                                        <div className={`timer-badge ${color}`}>
-                                            <Timer size={14} /> {minutes} min
+                                <div key={order.id} className={`admin-card ${getUrgencyClass(order.createdAt)}`} style={{ padding: '0', overflow: 'hidden' }}>
+                                    <div className="chef-card-header" style={{ padding: '20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div className={`timer-badge ${color}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 700 }}>
+                                            <Icons.clock size={14} /> {minutes} min
                                         </div>
-                                        <span className="chef-card-id">ORDER #{order.id}</span>
-                                        <span className={getStatusBadgeClass(order.status)}>
+                                        <span className="chef-card-id" style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>#{order.id}</span>
+                                        <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`}>
                                             {order.status}
                                         </span>
                                     </div>
 
-                                    <div className="chef-customer-info">
-                                        <User size={16} className="chef-customer-icon" />
+                                    <div className="chef-customer-info" style={{ padding: '15px 20px', background: 'rgba(139, 90, 43, 0.04)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--brand-primary)', borderBottom: '1px solid var(--card-border)' }}>
+                                        <Icons.user size={18} style={{ marginRight: '10px' }} />
                                         {order.customer?.name || 'Guest'}
                                     </div>
 
-                                    <div className="chef-card-details">
-                                        <div className="chef-detail-item">
-                                            <span className="chef-detail-icon"><Utensils size={16} /></span>
-                                            <div className="chef-detail-content">
-                                                <span className="chef-detail-label">Location</span>
-                                                <span className="chef-detail-value">
-                                                    {order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber}`}
-                                                </span>
+                                    <div className="chef-card-details" style={{ padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#ececec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand-primary)' }}>
+                                                <Icons.utensils size={16} />
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Location</div>
+                                                <div style={{ fontWeight: 700 }}>{order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber}`}</div>
                                             </div>
                                         </div>
-                                        <div className="chef-detail-item">
-                                            <span className="chef-detail-icon"><Clock size={16} /></span>
-                                            <div className="chef-detail-content">
-                                                <span className="chef-detail-label">Time Placed</span>
-                                                <span className="chef-detail-value">
-                                                    {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </span>
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#ececec', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6' }}>
+                                                <Icons.clock size={16} />
                                             </div>
-                                        </div>
-                                        <div className="chef-detail-item">
-                                            <span className="chef-detail-icon"><Users size={16} /></span>
-                                            <div className="chef-detail-content">
-                                                <span className="chef-detail-label">Type</span>
-                                                <span className="chef-detail-value">{order.orderType}</span>
-                                            </div>
-                                        </div>
-                                        <div className="chef-detail-item">
-                                            <span className="chef-detail-icon"><Timer size={16} /></span>
-                                            <div className="chef-detail-content">
-                                                <span className="chef-detail-label">Waiting</span>
-                                                <span className="chef-detail-value">{minutes} mins</span>
+                                            <div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Placed At</div>
+                                                <div style={{ fontWeight: 700 }}>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -246,32 +239,33 @@ const KitchenOrders: React.FC = () => {
                                         ))}
                                     </div>
 
-                                    <div className="chef-card-actions">
+                                    <div className="chef-card-actions" style={{ padding: '20px', borderTop: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.02)', display: 'grid', gridTemplateColumns: '1fr auto', gap: '10px' }}>
                                         {order.status === 'pending' && (
-                                            <button className="btn-primary-chef" onClick={() => handleUpdateStatus(order.id, 'preparing')}>
-                                                <Play size={16} fill="white" /> Start Preparing
+                                            <button className="btn-primary-premium" style={{ width: '100%' }} onClick={() => handleUpdateStatus(order.id, 'preparing')}>
+                                                <Icons.play size={16} fill="white" /> Start Preparing
                                             </button>
                                         )}
                                         {order.status === 'preparing' && (
-                                            <button className="btn-primary-chef" onClick={() => handleUpdateStatus(order.id, 'ready')}>
-                                                <ChefHat size={16} /> Mark Ready
+                                            <button className="btn-primary-premium" style={{ width: '100%', background: '#3b82f6' }} onClick={() => handleUpdateStatus(order.id, 'ready')}>
+                                                <Icons.chef size={16} /> Mark Ready
                                             </button>
                                         )}
                                         {order.status === 'ready' && (
-                                            <button className="btn-primary-chef" onClick={() => handleUpdateStatus(order.id, 'completed')}>
-                                                <CheckCircle size={16} /> Mark Completed
+                                            <button className="btn-primary-premium" style={{ width: '100%', background: '#10b981' }} onClick={() => handleUpdateStatus(order.id, 'completed')}>
+                                                <Icons.checkCircle size={16} /> Mark Completed
                                             </button>
                                         )}
                                         
                                         <select 
-                                            className="status-dropdown-chef"
+                                            className="admin-select"
+                                            style={{ padding: '10px' }}
                                             value={order.status}
                                             onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
                                         >
-                                            <option value="pending">Move to Pending</option>
-                                            <option value="preparing">Move to Preparing</option>
-                                            <option value="ready">Move to Ready</option>
-                                            <option value="completed">Move to Completed</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="preparing">Preparing</option>
+                                            <option value="ready">Ready</option>
+                                            <option value="completed">Completed</option>
                                         </select>
                                     </div>
                                 </div>

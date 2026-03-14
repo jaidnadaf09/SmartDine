@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Icons } from '../../../components/icons/IconSystem';
+import '../../../App.css';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -73,7 +74,11 @@ const Orders: React.FC = () => {
 
     return (
         <div className="management-page">
-            <h2 className="dashboard-title">Orders</h2>
+            <header className="admin-page-header">
+                <h1 className="admin-page-title">Active Orders</h1>
+                <p className="admin-page-subtitle">Manage incoming kitchen orders and track their preparation status.</p>
+                <div className="admin-header-divider"></div>
+            </header>
 
             {loading ? (
                 <div className="loading-state">
@@ -82,7 +87,7 @@ const Orders: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p><span><AlertCircle size={16} className="inline-icon" /></span> {error}</p>
+                    <p><span><Icons.alertCircle size={16} className="inline-icon" /></span> {error}</p>
                     <button className="retry-btn" onClick={fetchOrders}>Retry</button>
                 </div>
             ) : orders.length === 0 ? (
@@ -90,16 +95,15 @@ const Orders: React.FC = () => {
                     <p>No customer orders found.</p>
                 </div>
             ) : (
-                <div className="table-responsive">
+                <div className="admin-table-container">
                     <table className="admin-table">
                         <thead>
                             <tr>
                                 <th>Order ID</th>
-                                <th>Order Type</th>
+                                <th>Status</th>
                                 <th>Items</th>
                                 <th>Table</th>
                                 <th>Amount</th>
-                                <th>Status</th>
                                 <th>Time</th>
                                 <th>Update</th>
                             </tr>
@@ -109,8 +113,8 @@ const Orders: React.FC = () => {
                                 <tr key={order.id}>
                                     <td><strong>#{order.id}</strong></td>
                                     <td>
-                                        <span className={`status-badge status-${order.orderType === 'TAKEAWAY' ? 'ready' : 'preparing'}`}>
-                                            {order.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-In'}
+                                        <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`}>
+                                            {order.status}
                                         </span>
                                     </td>
                                     <td>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Power, Pause, Play, Clock, AlertTriangle } from 'lucide-react';
+import { Icons } from '../../../components/icons/IconSystem';
 import toast from 'react-hot-toast';
 import '../../../styles/RestaurantControl.css';
 
@@ -90,7 +90,7 @@ const RestaurantStatusControl: React.FC = () => {
 
             {settings?.status === 'PAUSED' && settings.pauseUntil && (
                 <div className="pause-timer">
-                    <Clock size={16} />
+                    <Icons.clock size={16} />
                     <span>Orders resumed automatically at <strong>{new Date(settings.pauseUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
                 </div>
             )}
@@ -102,7 +102,7 @@ const RestaurantStatusControl: React.FC = () => {
                         onClick={() => updateStatus('OPEN')}
                         disabled={updating}
                     >
-                        <Play size={18} /> Open Restaurant
+                        <Icons.play size={18} /> Open Restaurant
                     </button>
                 )}
 
@@ -125,7 +125,7 @@ const RestaurantStatusControl: React.FC = () => {
                                     onClick={() => updateStatus('PAUSED', pauseMinutes)}
                                     disabled={updating}
                                 >
-                                    <Pause size={18} /> Pause Orders
+                                    <Icons.pause size={18} /> Pause Orders
                                 </button>
                             </div>
                         </div>
@@ -139,14 +139,14 @@ const RestaurantStatusControl: React.FC = () => {
                             }}
                             disabled={updating}
                         >
-                            <Power size={18} /> Close Restaurant
+                            <Icons.power size={18} /> Close Restaurant
                         </button>
                     </>
                 )}
 
                 {settings?.status === 'CLOSED' && (
                     <div className="status-warning">
-                        <AlertTriangle size={16} />
+                        <Icons.warning size={16} />
                         <span>Bookings and orders are currently disabled.</span>
                     </div>
                 )}

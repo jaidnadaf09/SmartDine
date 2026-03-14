@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Icons } from '../../../components/icons/IconSystem';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -51,7 +52,7 @@ const AdminBookingHistory: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p>❌ {error}</p>
+                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
                     <button onClick={fetchBookingHistory}>Retry</button>
                 </div>
             ) : bookings.length === 0 ? (

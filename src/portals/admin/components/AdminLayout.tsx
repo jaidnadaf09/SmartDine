@@ -4,19 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import '../../../styles/Portals.css';
 
 import AvatarDropdown from '../../../components/shared/AvatarDropdown';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  TableProperties, 
-  ClipboardList, 
-  History, 
-  CreditCard,
-  Utensils,
-  ChevronLeft,
-  ChevronRight,
-  LogOut
-} from 'lucide-react';
+import { Icons } from '../../../components/icons/IconSystem';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -34,22 +22,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     };
 
     const navItems = [
-        { path: '/admin/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-        { path: '/admin/users', label: 'Users', icon: <Users size={20} /> },
-        { path: '/admin/bookings', label: 'Bookings', icon: <Calendar size={20} /> },
-        { path: '/admin/tables', label: 'Tables', icon: <TableProperties size={20} /> },
-        { path: '/admin/orders', label: 'Orders', icon: <ClipboardList size={20} /> },
-        { path: '/admin/activity-history', label: 'Activity History', icon: <History size={20} /> },
-        { path: '/admin/payments', label: 'Payments', icon: <CreditCard size={20} /> },
+        { path: '/admin/dashboard', label: 'Dashboard', icon: <Icons.dashboard size={20} /> },
+        { path: '/admin/users', label: 'Users', icon: <Icons.user size={20} /> },
+        { path: '/admin/bookings', label: 'Bookings', icon: <Icons.calendar size={20} /> },
+        { path: '/admin/tables', label: 'Tables', icon: <Icons.tableProperties size={20} /> },
+        { path: '/admin/orders', label: 'Orders', icon: <Icons.clipboard size={20} /> },
+        { path: '/admin/activity-history', label: 'Activity History', icon: <Icons.historyIcon size={20} /> },
+        { path: '/admin/payments', label: 'Payments', icon: <Icons.card size={20} /> },
     ];
 
     return (
         <div className={`admin-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
             <aside className="admin-sidebar">
                 <div className="sidebar-header">
-                    <h2><Utensils size={24} className="inline-icon" /> SmartDine</h2>
+                    <h2><Icons.utensils size={24} className="inline-icon" /> SmartDine</h2>
                     <button className="toggle-sidebar" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                        {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                        {sidebarOpen ? <Icons.left size={20} /> : <Icons.right size={20} />}
                     </button>
                 </div>
                 <nav className="sidebar-nav">
@@ -66,7 +54,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 </nav>
                 <div className="sidebar-footer">
                     <button className="nav-link logout-link" onClick={handleLogout}>
-                        <span className="nav-icon"><LogOut size={20} /></span>
+                        <span className="nav-icon"><Icons.logout size={20} /></span>
                         <span className="nav-label">Logout</span>
                     </button>
                 </div>
