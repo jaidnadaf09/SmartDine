@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
-import { Calendar, Clock, Users, UtensilsCrossed, ShoppingBag, AlertCircle, Bell, Star } from 'lucide-react';
+import { Icons } from '../../../components/icons/IconSystem';
 import BookingReminder from '../../../components/BookingReminder';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
@@ -52,7 +52,7 @@ const SkeletonCard: React.FC = () => (
   <div className="skeleton-card">
     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 14 }}>
       <div className="skeleton skeleton-line short" />
-      <div className="skeleton" style={{ width: 70, height: 22, borderRadius: 999 }} />
+      <div className="skeleton" style={{ width: 70, height: 22, borderRadius: 999, background: 'var(--card-border)' }} />
     </div>
     <div className="skeleton skeleton-line long" />
     <div className="skeleton skeleton-line medium" style={{ marginTop: 4 }} />
@@ -107,7 +107,7 @@ const MyOrders: React.FC = () => {
       if (upcomingData.upcomingBooking && !upcomingBooking) {
         toast(() => (
           <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Bell size={18} color="var(--brand-primary)" />
+            <Icons.bell size={18} color="var(--brand-primary)" />
             Reminder: You have a booking at {upcomingData.upcomingBooking.time} today!
           </span>
         ), { duration: 6000, id: 'booking-reminder' });
@@ -162,9 +162,9 @@ const MyOrders: React.FC = () => {
 
       if (data.walletBalance !== undefined && user) {
         updateUser({ walletBalance: data.walletBalance });
-        toast.success(data.message || '✔ Booking cancelled. Amount refunded to Wallet.');
+        toast.success(data.message || 'Booking cancelled. Amount refunded to Wallet.');
       } else {
-        toast.success('✔ Booking cancelled successfully.');
+        toast.success('Booking cancelled successfully.');
       }
     } catch (err: any) {
       toast.error(err.message || 'Could not cancel booking.');
@@ -184,7 +184,7 @@ const MyOrders: React.FC = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to cancel order');
-      toast.success('✔ Order cancelled. Refund credited to your wallet.');
+      toast.success('Order cancelled. Refund credited to your wallet.');
 
       setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: 'cancelled' } : o));
 
@@ -221,7 +221,7 @@ const MyOrders: React.FC = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to submit review');
       
-      toast.success('Thank you for your feedback! ⭐');
+      toast.success('Thank you for your feedback!');
       setReviewOrder(null);
       setRating(5);
       setComment('');
@@ -265,7 +265,7 @@ const MyOrders: React.FC = () => {
 
   if (error) return (
     <div className="cp-error">
-      <AlertCircle size={40} />
+      <Icons.alertCircle size={40} />
       <p>{error}</p>
       <button onClick={fetchUserData} className="cp-retry-btn">Retry</button>
     </div>
@@ -291,7 +291,7 @@ const MyOrders: React.FC = () => {
             </p>
           </div>
           <button className="cp-browse-btn" onClick={() => navigate('/order')}>
-            <UtensilsCrossed size={16} />
+            <Icons.utensilsCrossed size={16} />
             Browse Menu
           </button>
         </div>
@@ -313,17 +313,17 @@ const MyOrders: React.FC = () => {
           {/* ── TABLE BOOKINGS ── */}
           <section className="cp-section" id="bookings-section">
             <h2 className="cp-section-title">
-              <Calendar size={18} style={{ color: 'var(--brand-primary)' }} />
+              <Icons.calendar size={18} style={{ color: 'var(--brand-primary)' }} />
               Table Bookings
               <span className="cp-count">{bookings.length}</span>
             </h2>
 
             {bookings.length === 0 ? (
               <div className="cp-empty">
-                <div className="cp-empty-icon"><Calendar size={48} /></div>
+                <div className="cp-empty-icon"><Icons.calendar size={48} /></div>
                 <p>No bookings yet</p>
                 <button className="cp-browse-btn" onClick={() => navigate('/book-table')}>
-                  <Calendar size={15} /> Book a Table
+                  <Icons.calendar size={15} /> Book a Table
                 </button>
               </div>
             ) : (
@@ -337,7 +337,7 @@ const MyOrders: React.FC = () => {
 
                     <div className="cp-details-row">
                       <div className="cp-detail-item">
-                        <Calendar className="cp-detail-icon" size={16} />
+                        <Icons.calendar className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Date</div>
                           <div className="cp-detail-value">
@@ -348,21 +348,21 @@ const MyOrders: React.FC = () => {
                         </div>
                       </div>
                       <div className="cp-detail-item">
-                        <Clock className="cp-detail-icon" size={16} />
+                        <Icons.clock className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Time</div>
                           <div className="cp-detail-value">{booking.time}</div>
                         </div>
                       </div>
                       <div className="cp-detail-item">
-                        <Users className="cp-detail-icon" size={16} />
+                        <Icons.user className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Guests</div>
                           <div className="cp-detail-value">{booking.guests}</div>
                         </div>
                       </div>
                       <div className="cp-detail-item">
-                        <UtensilsCrossed className="cp-detail-icon" size={16} />
+                        <Icons.utensilsCrossed className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Table</div>
                           <div className="cp-detail-value">
@@ -380,7 +380,7 @@ const MyOrders: React.FC = () => {
                         onClick={() => setBookingToCancel(booking)}
                         disabled={cancellingId === booking.id}
                       >
-                        {cancellingId === booking.id ? '⏳ Cancelling…' : '✕ Cancel Booking'}
+                        {cancellingId === booking.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : <><Icons.close size={14} className="inline-icon" /> Cancel Booking</>}
                       </button>
                     )}
                   </div>
@@ -392,17 +392,17 @@ const MyOrders: React.FC = () => {
           {/* ── FOOD ORDERS ── */}
           <section className="cp-section">
             <h2 className="cp-section-title">
-              <ShoppingBag size={18} style={{ color: 'var(--brand-primary)' }} />
+              <Icons.shoppingBag size={18} style={{ color: 'var(--brand-primary)' }} />
               Food Orders
               <span className="cp-count">{orders.length}</span>
             </h2>
 
             {orders.length === 0 ? (
               <div className="cp-empty">
-                <div className="cp-empty-icon"><ShoppingCart size={48} /></div>
+                <div className="cp-empty-icon"><Icons.cart size={48} /></div>
                 <p>You haven't placed any orders yet.</p>
                 <button className="cp-browse-btn" onClick={() => navigate('/order')}>
-                  <UtensilsCrossed size={15} /> Browse Menu
+                  <Icons.utensilsCrossed size={15} /> Browse Menu
                 </button>
               </div>
             ) : (
@@ -424,7 +424,7 @@ const MyOrders: React.FC = () => {
 
                     <div className="cp-details-row" style={{ marginBottom: 12 }}>
                       <div className="cp-detail-item">
-                        <Calendar className="cp-detail-icon" size={16} />
+                        <Icons.calendar className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Date</div>
                           <div className="cp-detail-value">
@@ -435,7 +435,7 @@ const MyOrders: React.FC = () => {
                         </div>
                       </div>
                       <div className="cp-detail-item">
-                        <Clock className="cp-detail-icon" size={16} />
+                        <Icons.clock className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Time</div>
                           <div className="cp-detail-value">
@@ -449,7 +449,7 @@ const MyOrders: React.FC = () => {
 
                     <div className="cp-items-list">
                       <div className="cp-items-label">
-                        <UtensilsCrossed size={13} /> Items Ordered
+                        <Icons.utensilsCrossed size={13} /> Items Ordered
                       </div>
                       {order.items && Array.isArray(order.items)
                         ? order.items.map((item: any, idx: number) => (
@@ -473,22 +473,22 @@ const MyOrders: React.FC = () => {
                         onClick={() => setOrderToCancel(order)}
                         style={{ marginTop: 14 }}
                       >
-                        ✕ Cancel Order
+                        <Icons.close size={14} className="inline-icon" /> Cancel Order
                       </button>
                     ) : order.status?.toLowerCase() === 'preparing' || order.status?.toLowerCase() === 'ready' ? (
                       <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <AlertCircle size={14} />
+                        <Icons.alertCircle size={14} />
                         Cannot cancel order once preparation starts
                       </div>
                     ) : null}
 
                     {order.status?.toLowerCase() === 'completed' && (
-                      <div className="cp-review-section" style={{ marginTop: 14, borderTop: '1px solid var(--glass-border)', paddingTop: 14 }}>
+                      <div className="cp-review-section" style={{ marginTop: 14, borderTop: '1px solid var(--card-border)', paddingTop: 14 }}>
                         {order.review ? (
                           <div className="cp-submitted-review">
                             <div className="cp-review-stars">
                               {[1, 2, 3, 4, 5].map(s => (
-                                <Star key={s} size={14} fill={s <= order.review!.rating ? 'var(--brand-primary)' : 'none'} color={s <= order.review!.rating ? 'var(--brand-primary)' : 'var(--text-dim)'} />
+                                <Icons.star key={s} size={14} fill={s <= order.review!.rating ? 'var(--brand-primary)' : 'none'} color={s <= order.review!.rating ? 'var(--brand-primary)' : 'var(--text-dim)'} />
                               ))}
                             </div>
                             <p className="cp-review-comment">"{order.review.comment}"</p>
@@ -501,9 +501,9 @@ const MyOrders: React.FC = () => {
                               setRating(5);
                               setComment('');
                             }}
-                            style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'rgba(var(--brand-primary-rgb), 0.1)', color: 'var(--brand-primary)', border: '1px solid rgba(var(--brand-primary-rgb), 0.2)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                            style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--brand-primary-light)', color: 'var(--brand-primary)', border: '1px solid var(--card-border)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                           >
-                            <Star size={16} /> Rate & Review
+                            <Icons.star size={16} /> Rate & Review
                           </button>
                         )}
                       </div>
@@ -527,7 +527,7 @@ const MyOrders: React.FC = () => {
                     onClick={() => setRating(s)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                   >
-                    <Star 
+                    <Icons.star 
                       size={32} 
                       fill={s <= rating ? 'var(--brand-primary)' : 'none'} 
                       color={s <= rating ? 'var(--brand-primary)' : 'var(--text-dim)'} 
@@ -541,7 +541,7 @@ const MyOrders: React.FC = () => {
                 placeholder="Share your experience (optional)..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--glass-border)', color: 'var(--text-color)', minHeight: '100px', marginBottom: '20px', resize: 'vertical' }}
+                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'var(--input-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', minHeight: '100px', marginBottom: '20px', resize: 'vertical' }}
               />
               <div className="cp-modal-actions">
                 <button
@@ -585,7 +585,7 @@ const MyOrders: React.FC = () => {
                   onClick={handleCancelOrder}
                   disabled={cancellingOrderId !== null}
                 >
-                  {cancellingOrderId === orderToCancel.id ? '⏳ Cancelling…' : 'Cancel Order'}
+                  {cancellingOrderId === orderToCancel.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : 'Cancel Order'}
                 </button>
               </div>
             </div>
@@ -614,7 +614,7 @@ const MyOrders: React.FC = () => {
                   onClick={handleCancelBooking}
                   disabled={cancellingId !== null}
                 >
-                  {cancellingId === bookingToCancel.id ? '⏳ Cancelling…' : 'Cancel Booking'}
+                  {cancellingId === bookingToCancel.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : 'Cancel Booking'}
                 </button>
               </div>
             </div>

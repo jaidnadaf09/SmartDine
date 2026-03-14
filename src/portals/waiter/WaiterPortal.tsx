@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, ClipboardList } from 'lucide-react';
+import { Icons } from '../../components/icons/IconSystem';
 import { useAuth } from '../../context/AuthContext';
 import WaiterLayout from './components/WaiterLayout';
 import '../../styles/Portals.css';
@@ -50,10 +50,10 @@ const WaiterPortal: React.FC = () => {
               className={`table-card status-${table.status}`}
             >
               <div className="table-number">Table {table.tableNumber}</div>
-              <div className="table-capacity"><Users size={14} className="inline-icon" /> {table.capacity}</div>
+              <div className="table-capacity"><Icons.user size={14} className="inline-icon" /> {table.capacity}</div>
               <div className="table-status">{table.status}</div>
               {table.orders > 0 && (
-                <div className="table-orders"><ClipboardList size={14} className="inline-icon" /> {table.orders}</div>
+                <div className="table-orders"><Icons.clipboard size={14} className="inline-icon" /> {table.orders}</div>
               )}
             </div>
           ))}

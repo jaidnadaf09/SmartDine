@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog';
+import { Icons } from '../../../components/icons/IconSystem';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -127,13 +128,16 @@ const Tables: React.FC = () => {
 
     return (
         <div className="management-page">
-            <h2 className="dashboard-title">Dining Tables</h2>
+            <header className="admin-page-header">
+                <h1 className="admin-page-title">Dining Tables</h1>
+                <p className="admin-page-subtitle">Configure your restaurant floor plan and table capacities.</p>
+                <div className="admin-header-divider"></div>
+            </header>
 
-            <div className="admin-guidance-section" style={{ marginTop: '0', marginBottom: '3rem' }}>
-                <div className="floor-plan-card">
-                    <div className="guidance-header">
-                        <span className="icon">🪑</span>
-                        <h3>Floor Plan Configuration</h3>
+                <div className="admin-card">
+                    <div className="guidance-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                        <span className="icon" style={{ color: 'var(--brand-primary)' }}><Icons.armchair size={24} /></span>
+                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Floor Plan Configuration</h3>
                     </div>
                     <div className="add-table-form form-container">
                         <div className="input-group">
@@ -156,10 +160,11 @@ const Tables: React.FC = () => {
                                 className="admin-input"
                             />
                         </div>
-                        <button className="add-table-btn" onClick={addTable}>Add New Table</button>
+                        <button className="btn-primary-premium" onClick={addTable}>
+                            <Icons.plus size={18} /> Add New Table
+                        </button>
                     </div>
                 </div>
-            </div>
 
             {loading ? (
                 <div className="loading-state">
@@ -176,7 +181,7 @@ const Tables: React.FC = () => {
                     <p>No tables configured yet.</p>
                 </div>
             ) : (
-                <div className="table-responsive">
+                <div className="admin-table-container">
                     <table className="admin-table">
                         <thead>
                             <tr>
@@ -206,12 +211,23 @@ const Tables: React.FC = () => {
                                         </div>
                                     </td>
                                     <td>
-                                        <span className={`status-pill pill-${table.status === 'RESERVED' ? 'pending' : 'confirmed'}`}>
-                                            {table.status}
-                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span 
+                                                className={`status-pill-modern ${table.status === 'RESERVED' ? 'status-modern-pending' : 'status-modern-confirmed'}`}
+                                                style={{ minWidth: '100px', justifyContent: 'center' }}
+                                            >
+                                                {table.status}
+                                            </span>
+                                        </div>
                                     </td>
                                     <td>
-                                        <button className="btn-delete" onClick={() => deleteTable(table.id)} style={{ padding: '0.5rem 1rem', background: '#f8d7da', color: '#721c24', border: 'none', borderRadius: '5px', cursor: 'pointer', fontWeight: 600 }}>Delete</button>
+                                        <button 
+                                            className="btn-danger-premium" 
+                                            onClick={() => deleteTable(table.id)} 
+                                            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                                        >
+                                            <Icons.trash size={14} /> Delete
+                                        </button>
                                     </td>
                                 </tr>
                             ))}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Icons } from '../components/icons/IconSystem';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import '../styles/Auth.css';
@@ -77,7 +77,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1>🍽️ SmartDine</h1>
+        <h1><Icons.utensils size={32} className="logo-icon" /> SmartDine</h1>
         <h2>Welcome Back</h2>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="password-toggle"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? <Icons.eyeOff size={20} /> : <Icons.eye size={20} />}
               </button>
             </div>
           </div>
@@ -122,7 +122,7 @@ const LoginPage: React.FC = () => {
           <button type="submit" className="auth-btn" disabled={loading}>
             {loading ? (
               <>
-                <Loader2 className="spinner" size={18} />
+                <Icons.loader className="spinner" size={18} />
                 Signing in...
               </>
             ) : (

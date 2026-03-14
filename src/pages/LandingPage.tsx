@@ -5,7 +5,7 @@ import restaurantImage from '../assets/Restaurant_business_plan_main.jpg';
 import restaurantInterior from '../assets/restaurant_interior.png';
 import reservedTable from '../assets/reserved_table.png';
 import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
-import { Utensils, ChefHat, Home, Zap } from 'lucide-react';
+import { Icons } from '../components/icons/IconSystem';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -95,28 +95,28 @@ const LandingPage: React.FC = () => {
             
             <div className="features-mini-grid">
                <div className="mini-feature">
-                  <Utensils className="mini-icon" size={28} />
+                  <Icons.utensils className="mini-icon" size={28} />
                   <div>
                     <h4>Premium Quality</h4>
                     <p>Fresh ingredients & authentic recipes</p>
                   </div>
                </div>
                <div className="mini-feature">
-                  <ChefHat className="mini-icon" size={28} />
+                  <Icons.chef className="mini-icon" size={28} />
                   <div>
                     <h4>Expert Chefs</h4>
                     <p>Experienced culinary masters</p>
                   </div>
                </div>
                <div className="mini-feature">
-                  <Home className="mini-icon" size={28} />
+                  <Icons.home className="mini-icon" size={28} />
                   <div>
                     <h4>Cozy Ambiance</h4>
                     <p>Perfect place to relax and enjoy</p>
                   </div>
                </div>
                <div className="mini-feature">
-                  <Zap className="mini-icon" size={28} />
+                  <Icons.zap className="mini-icon" size={28} />
                   <div>
                     <h4>Quick Service</h4>
                     <p>Fast delivery without compromise</p>
@@ -131,7 +131,6 @@ const LandingPage: React.FC = () => {
       </section>
 
 
-      {/* Footer */}
       <footer className="footer">
         <div className="footer-content">
           <h3 className="footer-title">Quick Links</h3>

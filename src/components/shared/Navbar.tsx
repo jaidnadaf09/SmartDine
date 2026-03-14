@@ -2,18 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AvatarDropdown from './AvatarDropdown';
-import {
-  Home,
-  UtensilsCrossed,
-  CalendarDays,
-  ShoppingBag,
-  LayoutDashboard,
-  ChefHat,
-  Bell,
-  Check,
-  History,
-  ClipboardList
-} from 'lucide-react';
+import { Icons } from '../icons/IconSystem';
 import '../../App.css';
 
 interface NavLink {
@@ -28,19 +17,19 @@ interface NavbarProps {
 }
 
 const iconMap: Record<string, React.ReactNode> = {
-  'Home':             <Home size={16} />,
-  'Book Table':       <CalendarDays size={16} />,
-  'Order':            <UtensilsCrossed size={16} />,
-  'Menu':             <UtensilsCrossed size={16} />,
-  'My Order':         <ShoppingBag size={16} />,
-  'My Orders':        <ShoppingBag size={16} />,
-  'Admin Dashboard':  <LayoutDashboard size={16} />,
-  'Chef Portal':      <ChefHat size={16} />,
-  'Dashboard':        <LayoutDashboard size={16} />,
-  'Kitchen Orders':   <ChefHat size={16} />,
-  'Order History':    <History size={16} />,
-  'Completed Orders': <History size={16} />,
-  'Tables & Orders':  <ClipboardList size={16} />,
+  'Home':             <Icons.home size={20} />,
+  'Book Table':       <Icons.calendarDays size={20} />,
+  'Order':            <Icons.utensilsCrossed size={20} />,
+  'Menu':             <Icons.utensilsCrossed size={20} />,
+  'My Order':         <Icons.shoppingBag size={20} />,
+  'My Orders':        <Icons.shoppingBag size={20} />,
+  'Admin Dashboard':  <Icons.dashboard size={20} />,
+  'Chef Portal':      <Icons.chef size={20} />,
+  'Dashboard':        <Icons.dashboard size={20} />,
+  'Kitchen Orders':   <Icons.chef size={20} />,
+  'Order History':    <Icons.historyIcon size={20} />,
+  'Completed Orders': <Icons.historyIcon size={20} />,
+  'Tables & Orders':  <Icons.clipboard size={20} />,
 };
 
 const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
@@ -101,21 +90,21 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const defaultLinks: NavLink[] = [
-    { name: 'Home',       path: '/',              icon: <Home size={15} /> },
-    { name: 'Menu',       path: '/order',         icon: <UtensilsCrossed size={15} /> },
-    { name: 'Book Table', path: '/book-table',    icon: <CalendarDays size={15} /> },
+    { name: 'Home',       path: '/',              icon: <Icons.home size={20} /> },
+    { name: 'Menu',       path: '/order',         icon: <Icons.utensilsCrossed size={20} /> },
+    { name: 'Book Table', path: '/book-table',    icon: <Icons.calendarDays size={20} /> },
   ];
 
   if (isAuthenticated && !customLinks) {
-    defaultLinks.push({ name: 'My Orders', path: '/customer/myorders', icon: <ShoppingBag size={15} /> });
+    defaultLinks.push({ name: 'My Orders', path: '/customer/myorders', icon: <Icons.shoppingBag size={20} /> });
   }
 
   if (isAdmin && !customLinks) {
-    defaultLinks.push({ name: 'Admin Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard size={15} /> });
+    defaultLinks.push({ name: 'Admin Dashboard', path: '/admin/dashboard', icon: <Icons.dashboard size={20} /> });
   }
 
   if (isChef && !customLinks) {
-    defaultLinks.push({ name: 'Chef Portal', path: '/chef', icon: <ChefHat size={15} /> });
+    defaultLinks.push({ name: 'Chef Portal', path: '/chef', icon: <Icons.chef size={20} /> });
   }
 
   const finalLinks: NavLink[] = customLinks
@@ -132,7 +121,7 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
       <div className="header-content">
         {/* Logo */}
         <Link to="/" className="logo-link">
-          <UtensilsCrossed className="logo-icon-svg" size={24} />
+          <Icons.utensilsCrossed className="logo-icon-svg" size={24} />
           SmartDine
           {roleTag && <span className="role-tag-badge">{roleTag}</span>}
         </Link>
@@ -144,7 +133,7 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`nav-btn${isActive(link.path) ? ' active' : ''}`}
+                className={`nav-btn${isActive(link.path) ? ' active' : ''} navbar-item`}
               >
                 {link.icon}
                 <span className="nav-label">{link.name}</span>
@@ -159,7 +148,7 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
             <div className="navbar-user-welcome">
               <div className="notification-bell-container" ref={dropdownRef}>
                 <button className="notification-bell-btn" onClick={() => setShowNotifications(!showNotifications)}>
-                  <Bell size={20} />
+                  <Icons.bell size={20} />
                   {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
                 </button>
                 
@@ -178,7 +167,7 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
                             <span className="notification-time">
                               {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            {!n.isRead && <Check size={12} className="mark-read-icon" />}
+                            {!n.isRead && <Icons.check size={12} className="mark-read-icon" />}
                           </div>
                         ))
                       )}

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Calendar, Clock, Utensils, Lock, Users, CreditCard, Wallet } from 'lucide-react';
+import { Icons } from '../components/icons/IconSystem';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -375,7 +375,7 @@ const BookTablePage: React.FC = () => {
     <div className="book-table-container">
       <div className="book-table-box">
         <div className="book-table-header">
-          <span className="logo-small"><Utensils size={24} className="inline-icon" /> SMARTDINE</span>
+          <span className="logo-small"><Icons.utensils size={24} className="inline-icon" /> SMARTDINE</span>
           <h2>Reserve Your Table</h2>
           <p>Premium Dining Experience</p>
         </div>
@@ -400,7 +400,7 @@ const BookTablePage: React.FC = () => {
             {/* Read-only Customer Info */}
             <div className="account-info-card">
               <div className="card-label">
-                <Lock size={16} className="inline-icon" /> BOOKING AS (FROM YOUR ACCOUNT)
+                <Icons.user size={16} className="inline-icon" /> BOOKING AS (FROM YOUR ACCOUNT)
               </div>
               <div className="account-details">
                 <p><strong>Name:</strong> {user?.name}</p>
@@ -411,17 +411,17 @@ const BookTablePage: React.FC = () => {
               {/* Booking Information */}
               <div className="booking-info-box">
                 <div className="booking-hours">
-                  <Clock size={16} className="inline-icon" /> Bookings accepted from <strong>10:00 AM – 11:00 PM</strong>
+                  <Icons.clock size={16} className="inline-icon" /> Bookings accepted from <strong>10:00 AM – 11:00 PM</strong>
                 </div>
                 <div className="booking-hint">
-                  <Calendar size={16} className="inline-icon" /> Selected booking time must fall within restaurant hours
+                  <Icons.calendar size={16} className="inline-icon" /> Selected booking time must fall within restaurant hours
                 </div>
               </div>
             </div>
 
             <div className="booking-row">
               <div className="booking-field">
-                <label htmlFor="date"><Calendar size={16} className="inline-icon" /> Date</label>
+                <label htmlFor="date"><Icons.calendar size={16} className="inline-icon" /> Date</label>
                 <div className="input-wrapper" onClick={() => handleWrapperClick(dateInputRef)}>
                   <input
                     type="date"
@@ -434,7 +434,7 @@ const BookTablePage: React.FC = () => {
                     min={todayStr}
                     max={maxDateStr}
                   />
-                  <Calendar className="input-icon" size={18} />
+                  <Icons.calendar className="input-icon" size={18} />
                 </div>
                 <small>
                   Available up to {maxDateStr}
@@ -442,7 +442,7 @@ const BookTablePage: React.FC = () => {
               </div>
 
               <div className="booking-field">
-                <label htmlFor="time"><Clock size={16} className="inline-icon" /> Time</label>
+                <label htmlFor="time"><Icons.clock size={16} className="inline-icon" /> Time</label>
                 <div className="input-wrapper" onClick={() => handleWrapperClick(timeInputRef)}>
                   <input
                     type="time"
@@ -455,12 +455,12 @@ const BookTablePage: React.FC = () => {
                     step="300"
                     min={minTimeForToday}
                   />
-                  <Clock className="input-icon" size={18} />
+                  <Icons.clock className="input-icon" size={18} />
                 </div>
               </div>
 
               <div className="booking-field">
-                <label htmlFor="guests"><Users size={16} className="inline-icon" /> Guests</label>
+                <label htmlFor="guests"><Icons.user size={16} className="inline-icon" /> Guests</label>
                 <select id="guests" name="guests" value={formData.guests} onChange={handleChange}>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                     <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
@@ -476,7 +476,7 @@ const BookTablePage: React.FC = () => {
                   className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
                   onClick={() => setPaymentMethod('online')}
                 >
-                  <div className="payment-card-icon"><CreditCard size={24} /></div>
+                  <div className="payment-card-icon"><Icons.card size={24} /></div>
                   <div className="payment-card-info">
                     <span className="payment-card-title">Online Payment</span>
                     <span className="payment-card-subtitle">Pay via Razorpay</span>
@@ -487,7 +487,7 @@ const BookTablePage: React.FC = () => {
                   className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
                   onClick={() => setPaymentMethod('wallet')}
                 >
-                  <div className="payment-card-icon"><Wallet size={24} /></div>
+                  <div className="payment-card-icon"><Icons.wallet size={24} /></div>
                   <div className="payment-card-info">
                     <span className="payment-card-title">SmartDine Wallet</span>
                     <span className="payment-card-subtitle">

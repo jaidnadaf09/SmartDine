@@ -1,22 +1,156 @@
-/* Portal Pages Styles */
-.portal-container {
-  min-height: 100vh;
-  background: var(--bg-primary);
+/* ═══════════════════════════════════════════
+   PREMIUM DESIGN SYSTEM
+═══════════════════════════════════════════ */
+
+/* Dashboard Cards */
+.admin-card {
+  background: var(--card-bg);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.portal-header {
-  background: var(--brand-primary);
-  color: var(--btn-text);
-  padding: 2rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+.admin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* Premium Buttons */
+.btn-primary-premium {
+  background: linear-gradient(135deg, #8B5A2B 0%, #C89B6D 100%);
+  color: white !important;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(139, 90, 43, 0.2);
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+  text-decoration: none;
 }
 
-.portal-header h1 {
-  margin: 0;
+.btn-primary-premium:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(139, 90, 43, 0.3);
+  filter: brightness(1.1);
+}
+
+.btn-danger-premium {
+  background: #ef4444;
+  color: white !important;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-danger-premium:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Modern Tables */
+.admin-table-container {
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--card-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--card-border);
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table thead th {
+  background: rgba(139, 90, 43, 0.08);
+  color: var(--brand-primary);
+  text-align: left;
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid var(--card-border);
+  transition: background 0.2s ease;
+}
+
+.admin-table tbody tr:hover {
+  background: rgba(139, 90, 43, 0.05);
+}
+
+.admin-table td {
+  padding: 16px 20px;
+  color: var(--text-primary);
+}
+
+/* Status Badges */
+.status-pill-modern {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-modern-paid, .status-modern-completed, .status-modern-confirmed {
+  background: rgba(34, 197, 94, 0.15);
+  color: #15803d;
+}
+
+.status-modern-pending, .status-modern-preparing {
+  background: rgba(245, 158, 11, 0.15);
+  color: #92400e;
+}
+
+.status-modern-cancelled, .status-modern-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #991b1b;
+}
+
+.status-chef-ready {
+  background: rgba(168, 85, 247, 0.15);
+  color: #7c3aed;
+}
+
+/* Headers */
+.admin-page-header {
+  margin-bottom: 2.5rem;
+}
+
+.admin-page-title {
   font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.admin-page-subtitle {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.admin-header-divider {
+  width: 80px;
+  height: 4px;
+  background: #C89B6D;
+  border-radius: 4px;
+  margin-top: 12px;
 }
 
 /* Profile Page Styles */
@@ -140,7 +274,7 @@
   color: white;
   border: none;
   padding: 0.8rem 1.5rem;
-  border-radius: 12px;
+  border-radius: 16px;
   font-weight: 700;
   font-size: 0.925rem;
   cursor: pointer;
@@ -179,7 +313,7 @@
 .portal-content .form-group select,
 .portal-content .form-group textarea {
   padding: 0.8rem 1rem !important;
-  border-radius: 10px !important;
+  border-radius: 12px !important;
   border: 1px solid var(--border-color) !important;
   background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
@@ -237,8 +371,9 @@
   color: var(--brand-primary);
   font-size: 1.8rem;
   margin-bottom: 1.5rem;
-  border-bottom: 3px solid var(--brand-primary);
-  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--brand-primary);
+  padding-bottom: 0.8rem;
+  border-radius: 4px;
 }
 
 .section h3 {
@@ -256,15 +391,16 @@
 }
 
 .admin-sidebar {
-  width: 280px;
+  width: 260px;
   height: 100%;
-  background: var(--bg-secondary);
+  background: var(--bg-card);
   color: var(--text-primary);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
   z-index: 10;
+  border-right: 1px solid var(--card-border);
 }
 
 .sidebar-closed .admin-sidebar {
@@ -276,15 +412,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--card-border);
 }
 
 .sidebar-header h2 {
   font-size: 1.5rem;
+  font-weight: 800;
   margin: 0;
-  color: #fff;
+  color: var(--brand-primary);
   white-space: nowrap;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .sidebar-closed .sidebar-header h2 {
@@ -312,10 +452,10 @@
 }
 
 .sidebar-nav {
-  padding: 2rem 0;
+  padding: 1.5rem 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex: 1;
   overflow-y: auto;
 }
@@ -323,18 +463,25 @@
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 1rem 1.5rem;
-  color: rgba(255, 255, 255, 0.7);
+  padding: 0.8rem 1.2rem;
+  margin: 0 12px;
+  color: var(--text-secondary);
   text-decoration: none;
-  transition: all 0.3s ease;
-  border-left: 4px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 12px;
+  border-left: none;
 }
 
-.nav-link:hover,
-.nav-link.active {
-  background: var(--brand-primary-light);
+.nav-link:hover {
+  background: rgba(0, 0, 0, 0.05);
   color: var(--brand-primary);
-  border-left-color: var(--brand-primary);
+}
+
+.nav-link.active {
+  background: linear-gradient(135deg, #8B5A2B 0%, #C89B6D 100%);
+  color: white !important;
+  box-shadow: 0 8px 16px rgba(139, 90, 43, 0.25);
+  transform: translateX(4px);
 }
 
 .nav-icon {
@@ -372,9 +519,8 @@
 }
 
 .logout-link:hover {
-  background: rgba(255, 0, 0, 0.1);
-  color: #ff6b6b;
-  border-left-color: #ff6b6b;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
 /* Admin Main Area */
@@ -625,9 +771,10 @@
 .chart-section.large {
   background: var(--bg-card);
   padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   margin-bottom: 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Line Chart */
@@ -649,8 +796,9 @@
 .chart-section {
   background: var(--bg-card);
   padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .chart-container {
@@ -700,7 +848,9 @@
   gap: 3rem;
   padding: 2rem;
   background: var(--bg-card);
-  border-radius: 10px;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .pie-visual {
@@ -716,7 +866,7 @@
   width: 100%;
   height: 100%;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-  background: white;
+  background: var(--card-bg);
   border-radius: 50%;
   padding: 10px;
 }
@@ -776,14 +926,14 @@
 }
 
 .order-list-item {
-  background: white;
+  background: var(--card-bg);
   padding: 1.5rem;
-  border-radius: 10px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border-left: 4px solid #d4af37;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .order-list-left {
@@ -858,16 +1008,16 @@
 }
 
 .quick-action-card {
-  background: white;
+  background: var(--card-bg);
   padding: 1.5rem;
-  border-radius: 10px;
+  border-radius: 16px;
   display: flex;
   align-items: center;
   gap: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .quick-action-card:hover {
@@ -915,14 +1065,14 @@
 }
 
 .portal-card {
-  background: white;
+  background: var(--card-bg);
   padding: 2rem;
-  border-radius: 10px;
+  border-radius: 16px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .portal-card:hover {
@@ -955,13 +1105,13 @@
 }
 
 .admin-card {
-  background: white;
+  background: var(--card-bg);
   padding: 2rem;
-  border-radius: 10px;
+  border-radius: 16px;
   text-align: center;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 2px solid transparent;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .admin-card:hover {
@@ -995,7 +1145,7 @@
 }
 
 .stat-card.premium-card {
-  background: white;
+  background: var(--card-bg);
   padding: 2.5rem 2rem;
   border-radius: 20px;
   display: flex;
@@ -1157,8 +1307,8 @@
 }
 
 .retry-btn {
-  background: #6f4e37;
-  color: white;
+  background: var(--brand-primary);
+  color: var(--text-white);
   border: none;
   padding: 0.8rem 2rem;
   border-radius: 50px;
@@ -1193,8 +1343,9 @@
 }
 
 .admin-table tr {
-  background: var(--bg-card);
+  background: var(--card-bg);
   transition: all 0.3s ease;
+  border-radius: 12px;
 }
 
 .admin-table td {
@@ -1264,11 +1415,12 @@
 }
 
 .stat-card {
-  background: white;
+  background: var(--card-bg);
   padding: 2rem;
   border-radius: 10px;
   text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
 }
 
@@ -1479,7 +1631,7 @@ tr:hover {
   gap: 2rem;
   align-items: flex-end;
   flex-wrap: wrap;
-  background: white;
+  background: var(--card-bg);
   padding: 1.5rem;
   border-radius: 12px;
   margin-top: 1rem;
@@ -1697,7 +1849,7 @@ tr:hover {
     border-radius: 4px;
     border: 1px solid #ddd;
     font-size: 0.8rem;
-    background: white;
+    background: var(--card-bg);
 }
 
 .chef-items-list {
@@ -1922,7 +2074,7 @@ tr:hover {
     border-radius: 4px;
     border: 1px solid #ddd;
     font-size: 0.8rem;
-    background: white;
+    background: var(--card-bg);
 }
 
 .chef-items-list {
@@ -2031,8 +2183,8 @@ tr:hover {
 
 .item-badge {
   display: inline-block;
-  background: #10b981;
-  color: white;
+  background: var(--brand-primary);
+  color: var(--text-white);
   padding: 0.3rem 0.6rem;
   border-radius: 3px;
   font-size: 0.75rem;
@@ -2073,8 +2225,8 @@ tr:hover {
 }
 
 .queue-info .badge {
-  background: #f59e0b;
-  color: white;
+  background: var(--brand-primary);
+  color: var(--text-white);
   padding: 0.3rem 0.8rem;
   border-radius: 20px;
   font-weight: 700;
@@ -2100,8 +2252,8 @@ tr:hover {
 }
 
 .pending-items-section {
-  background: white;
-  border: 2px solid #e8d4c0;
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
   border-radius: 10px;
   padding: 1.5rem;
 }
@@ -2149,7 +2301,7 @@ tr:hover {
     position: absolute;
     top: calc(100% + 15px);
     right: 0;
-    background: white;
+    background: var(--card-bg);
     min-width: 200px;
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.18);
@@ -2350,7 +2502,7 @@ body.dark .btn-delete:hover {
     color: #6f4e37;
     font-weight: 600;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--card-bg);
     cursor: pointer;
 }
 
@@ -2892,7 +3044,7 @@ body.dark .cancel-booking-btn:hover {
   padding: 16px;
   border-radius: 12px;
   border: 1px solid var(--border-color, #e5e7eb);
-  background: var(--card-bg, #ffffff);
+  background: var(--card-bg);
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;

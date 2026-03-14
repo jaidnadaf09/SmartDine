@@ -79,7 +79,7 @@
 
 .sidebar-filter-btn.active {
   background: var(--brand-primary);
-  color: white !important;
+  color: var(--text-white) !important;
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -328,7 +328,7 @@ body[data-theme="light"] .restaurant-status.closed {
   height: 30px;
   border-radius: 8px;
   cursor: pointer;
-  color: white;
+  color: var(--text-white);
   font-weight: 900;
   font-size: 1rem;
   display: flex;
@@ -497,7 +497,7 @@ body[data-theme="light"] .restaurant-status.closed {
 
 .qty-btn:hover {
   background: var(--brand-primary);
-  color: white;
+  color: var(--text-white);
   border-color: var(--brand-primary);
 }
 
@@ -535,7 +535,7 @@ body[data-theme="light"] .restaurant-status.closed {
 
 .remove-btn:hover {
   background: #EF4444;
-  color: white;
+  color: var(--text-white);
   border-color: #EF4444;
 }
 
@@ -567,7 +567,7 @@ body[data-theme="light"] .restaurant-status.closed {
 .checkout-btn {
   width: 100%;
   background: var(--brand-primary);
-  color: white;
+  color: var(--text-white);
   border: none;
   padding: 14px;
   border-radius: 12px;

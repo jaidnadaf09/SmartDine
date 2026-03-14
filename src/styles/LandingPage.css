@@ -34,6 +34,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-hero-hardcoded);
 }
 
 .hero-grid-container {
@@ -82,7 +83,7 @@
   border: none;
   padding: 1rem 2.5rem;
   font-size: 1.1rem;
-  border-radius: 50px;
+  border-radius: 28px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
@@ -249,7 +250,7 @@
 }
 
 .mini-icon {
-  color: var(--brand-primary);
+  color: var(--brand-secondary);
   flex-shrink: 0;
   margin-top: 4px;
 }
@@ -257,14 +258,14 @@
 .mini-feature h4 {
   margin: 0 0 4px;
   font-size: 0.95rem;
-  color: var(--text-primary);
+  color: white;
   font-weight: 700;
 }
 
 .mini-feature p {
   margin: 0;
   font-size: 0.85rem;
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.4;
 }
 
@@ -325,9 +326,10 @@
   padding: 3rem 2rem;
   max-width: 1200px;
   margin: 1.5rem auto;
-  background: var(--card-bg);
+  background: var(--bg-section);
   border-radius: 15px;
   box-shadow: var(--card-shadow);
+  color: white;
 }
 
 .showcase-content {
@@ -339,13 +341,13 @@
 
 .showcase-text h2 {
   font-size: 2.2rem;
-  color: var(--brand-primary);
+  color: white;
   margin-bottom: 1rem;
 }
 
 .showcase-text p {
   font-size: 1.1rem;
-  color: var(--text-main);
+  color: white;
   line-height: 1.8;
   opacity: 0.9;
 }
@@ -358,9 +360,9 @@
 
 .showcase-features li {
   font-size: 1rem;
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   padding: 0.6rem 0;
-  border-bottom: 1px solid #e8d4c0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .showcase-image {
@@ -381,7 +383,7 @@
 /* Footer */
 
 .footer {
-  background: #2d2420;
+  background: var(--bg-footer-hardcoded);
   color: white;
   text-align: center;
   padding: 4rem 2rem 2rem;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { Icons } from '../../../components/icons/IconSystem';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -61,7 +62,6 @@ const Bookings: React.FC = () => {
                 body: JSON.stringify({ status })
             });
             if (res.ok) {
-                // If status is cancelled or completed, we remove it from active list
                 if (status === 'cancelled' || status === 'completed') {
                     setBookings(prev => prev.filter(b => b.id !== id));
                 } else {
@@ -92,7 +92,7 @@ const Bookings: React.FC = () => {
                 setBookings(prev => prev.filter(b => b.id !== selectedBookingId));
                 toast.success('Booking cancelled successfully');
                 setIsCancelModalOpen(false);
-                fetchData(); // Refresh tables
+                fetchData();
             } else {
                 toast.error('Failed to cancel booking');
             }
@@ -113,14 +113,11 @@ const Bookings: React.FC = () => {
             if (res.ok) {
                 const data = await res.json();
                 setBookings(prev => prev.map(b => b.id === id ? data.booking : b));
-
                 if (tableId === null) {
                     toast.success('Table unassigned successfully');
                 } else {
                     toast.success('Table updated successfully');
                 }
-
-                // Optionally refresh to sync tables array (free/occupied counts)
                 fetchData();
             } else {
                 toast.error('Failed to update table');
@@ -159,7 +156,7 @@ const Bookings: React.FC = () => {
             if (res.ok) {
                 setBookings(prev => prev.filter(b => b.id !== id));
                 toast.success('Booking completed and table released');
-                fetchData(); // Refresh tables for counts
+                fetchData();
             } else {
                 const data = await res.json();
                 toast.error(data.message || 'Failed to complete booking');
@@ -170,15 +167,28 @@ const Bookings: React.FC = () => {
         }
     };
 
+    const handleStatusUpdate = async (id: number, status: string) => {
+        if (status === 'CANCELLED') {
+            setSelectedBookingId(id);
+            setIsCancelModalOpen(true);
+        } else {
+            await updateStatus(id, status.toLowerCase());
+        }
+    };
+
     return (
         <div className="management-page">
-            <h2 className="dashboard-title">Reservations</h2>
+            <header className="admin-page-header">
+                <h1 className="admin-page-title">Bookings Management</h1>
+                <p className="admin-page-subtitle">Track and manage upcoming restaurant reservations.</p>
+                <div className="admin-header-divider"></div>
+            </header>
 
             <div className="admin-guidance-section" style={{ marginTop: '0', marginBottom: '3rem' }}>
-                <div className="guidance-card dashboard-card" style={{ padding: '2rem' }}>
-                    <div className="guidance-header" style={{ marginBottom: '1rem' }}>
-                        <span className="icon"><Calendar size={24} /></span>
-                        <h3 style={{ fontSize: '1.4rem' }}>Table Management</h3>
+                <div className="admin-card" style={{ padding: '2rem' }}>
+                    <div className="guidance-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span className="icon" style={{ color: 'var(--brand-primary)' }}><Icons.calendar size={24} /></span>
+                        <h3 style={{ fontSize: '1.4rem', margin: 0 }}>Table Management</h3>
                     </div>
                     <p style={{ color: 'var(--text-secondary)', opacity: 0.8 }}>
                         Approve incoming requests, allocate the best tables, and keep the floor moving.
@@ -192,80 +202,78 @@ const Bookings: React.FC = () => {
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p><AlertCircle size={16} className="inline-icon" /> {error}</p>
-                    <button onClick={fetchData}>Retry</button>
+                    <p><Icons.alertCircle size={16} className="inline-icon" /> {error}</p>
+                    <button className="btn-primary-premium" onClick={fetchData}>Retry</button>
                 </div>
             ) : bookings.length === 0 ? (
                 <div className="empty-state">
                     <p>No table bookings found.</p>
                 </div>
             ) : (
-                <div className="table-responsive">
+                <div className="admin-table-container">
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>Customer</th>
                                 <th>Date/Time</th>
+                                <th>Customer</th>
                                 <th>Guests</th>
+                                <th>Table</th>
                                 <th>Status</th>
-                                <th>Payment</th>
-                                <th>Assign Table</th>
-                                <th>Actions</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {bookings.map(booking => (
                                 <tr key={booking.id}>
+                                    <td>
+                                        <div style={{ fontWeight: 600 }}>{new Date(booking.date).toLocaleDateString()}</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{booking.time}</div>
+                                    </td>
                                     <td><strong>{booking.customerName}</strong></td>
-                                    <td>{new Date(booking.date).toLocaleDateString()} at {booking.time}</td>
                                     <td>{booking.guests} Guests</td>
-                                    <td><span className={`status-badge status-${booking.status}`}>{booking.status}</span></td>
-                                    <td><span className={`status-badge status-${booking.paymentStatus === 'paid' ? 'completed' : 'cancelled'}`}>{booking.paymentStatus}</span></td>
-                                    <td style={{ minWidth: '220px' }}>
+                                    <td>
                                         {(booking.tableId || booking.tableNumber) ? (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                                                    Assigned Table: Table {booking.tableId || booking.tableNumber}
-                                                </div>
-                                                <div className="actions-cell">
-                                                    <button
-                                                        className="assign-table-btn admin-button"
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ color: 'var(--brand-primary)', fontWeight: 700 }}>Table {booking.tableId || booking.tableNumber}</span>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button 
+                                                        className="btn-primary-premium" 
+                                                        style={{ padding: '4px 8px', fontSize: '0.7rem' }}
                                                         onClick={() => handleOpenModal(booking.id)}
-                                                        style={{ padding: '4px 8px', fontSize: '0.8rem', flex: 1 }}
                                                     >
-                                                        Change Table
+                                                        Change
                                                     </button>
-                                                    <button
-                                                        className="cancel-booking-btn admin-button"
+                                                    <button 
+                                                        className="btn-danger-premium" 
+                                                        style={{ padding: '4px 8px', fontSize: '0.7rem' }}
                                                         onClick={() => updateTableAPI(booking.id, null)}
-                                                        style={{ padding: '4px 8px', fontSize: '0.8rem', minWidth: '70px' }}
                                                     >
                                                         Unassign
                                                     </button>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-                                                    Assigned Table: Not Assigned
-                                                </div>
-                                                <button
-                                                    className="assign-table-btn admin-button"
-                                                    onClick={() => handleOpenModal(booking.id)}
-                                                    style={{ width: '100%' }}
-                                                >
-                                                    Assign Table
-                                                </button>
-                                            </div>
+                                            <button 
+                                                className="btn-primary-premium" 
+                                                style={{ width: '100%', fontSize: '0.8rem' }}
+                                                onClick={() => handleOpenModal(booking.id)}
+                                            >
+                                                Assign Table
+                                            </button>
                                         )}
                                     </td>
                                     <td>
-                                        <div className="actions-cell">
+                                        <span className={`status-pill-modern status-modern-${booking.status?.toLowerCase()}`}>
+                                            {booking.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
                                             {booking.status === 'pending' && (
-                                                <button className="assign-table-btn admin-button" onClick={() => updateStatus(booking.id, 'confirmed')}>Approve</button>
+                                                <button className="btn-primary-premium" style={{ padding: '6px 12px', fontSize: '0.75rem' }} onClick={() => handleStatusUpdate(booking.id, 'confirmed')}>Approve</button>
                                             )}
-                                            <button className="complete-booking-btn admin-button" onClick={() => handleCompleteBooking(booking.id)}>Complete</button>
-                                            <button className="cancel-booking-btn admin-button" onClick={() => handleOpenCancelModal(booking.id)}>Cancel</button>
+                                            <button className="btn-primary-premium" style={{ padding: '6px 12px', fontSize: '0.75rem', background: '#3b82f6' }} onClick={() => handleCompleteBooking(booking.id)}>Complete</button>
+                                            <button className="btn-danger-premium" style={{ padding: '6px 12px', fontSize: '0.75rem' }} onClick={() => handleStatusUpdate(booking.id, 'CANCELLED')}>Cancel</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -276,11 +284,11 @@ const Bookings: React.FC = () => {
             )}
             {isModalOpen && (
                 <div className="modal-overlay">
-                    <div className="cancel-modal">
-                        <h3 className="modal-title">Select a Table</h3>
+                    <div className="admin-card" style={{ maxWidth: '400px', width: '90%', position: 'relative' }}>
+                        <h3 className="modal-title" style={{ marginBottom: '20px' }}>Select a Table</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', marginBottom: '1.5rem', paddingRight: '5px' }}>
                             {tables.filter(t => t.status === 'available').length === 0 ? (
-                                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No available tables.</p>
+                                <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px' }}>No available tables.</p>
                             ) : (
                                 tables.filter(t => t.status === 'available').map(t => (
                                     <button
@@ -289,33 +297,18 @@ const Bookings: React.FC = () => {
                                         style={{
                                             padding: '12px 16px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
                                             borderRadius: '12px', cursor: 'pointer', textAlign: 'left',
-                                            fontWeight: 600, color: 'var(--text-main)', display: 'flex', justifyContent: 'space-between',
+                                            fontWeight: 600, color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between',
                                             transition: 'all 0.2s ease'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.background = 'var(--bg-card)';
-                                            e.currentTarget.style.borderColor = 'var(--accent-color)';
-                                            e.currentTarget.style.transform = 'translateX(4px)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.background = 'var(--bg-secondary)';
-                                            e.currentTarget.style.borderColor = 'var(--border-color)';
-                                            e.currentTarget.style.transform = 'translateX(0)';
                                         }}
                                     >
                                         <span>Table {t.tableNumber}</span>
-                                        <span style={{ fontSize: '0.85em', color: 'var(--text-muted)' }}>Seats: {t.capacity}</span>
+                                        <span style={{ fontSize: '0.85em', color: 'var(--text-secondary)' }}>Seats: {t.capacity}</span>
                                     </button>
                                 ))
                             )}
                         </div>
-                        <div className="modal-actions">
-                            <button
-                                className="close-btn"
-                                onClick={() => setIsModalOpen(false)}
-                            >
-                                Cancel
-                            </button>
+                        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button className="btn-danger-premium" onClick={() => setIsModalOpen(false)}>Cancel</button>
                         </div>
                     </div>
                 </div>
@@ -323,9 +316,8 @@ const Bookings: React.FC = () => {
 
             {isCancelModalOpen && (
                 <div className="modal-overlay">
-                    <div className="cancel-modal">
-                        <h3 className="modal-title">Cancel Booking</h3>
-                        
+                    <div className="admin-card" style={{ maxWidth: '400px', width: '90%' }}>
+                        <h3 className="modal-title" style={{ marginBottom: '20px' }}>Cancel Booking</h3>
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
                                 Reason for Cancellation
@@ -333,7 +325,7 @@ const Bookings: React.FC = () => {
                             <select 
                                 value={cancelReason}
                                 onChange={(e) => setCancelReason(e.target.value)}
-                                className="cancel-reason"
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                             >
                                 <option value="Customer cancelled">Customer cancelled</option>
                                 <option value="No show">No show</option>
@@ -343,33 +335,19 @@ const Bookings: React.FC = () => {
 
                             {cancelReason === 'Other' && (
                                 <div style={{ marginTop: '1rem' }}>
-                                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                                        Custom Reason
-                                    </label>
                                     <input 
                                         type="text"
                                         value={customReason}
                                         onChange={(e) => setCustomReason(e.target.value)}
                                         placeholder="Type reason here..."
-                                        className="cancel-reason"
+                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                                     />
                                 </div>
                             )}
                         </div>
-
-                        <div className="modal-actions">
-                            <button
-                                className="close-btn"
-                                onClick={() => setIsCancelModalOpen(false)}
-                            >
-                                Close
-                            </button>
-                            <button
-                                className="confirm-cancel-btn"
-                                onClick={handleCancelBooking}
-                            >
-                                Confirm Cancellation
-                            </button>
+                        <div className="modal-actions" style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                            <button className="btn-primary-premium" style={{ background: 'var(--text-secondary)' }} onClick={() => setIsCancelModalOpen(false)}>Close</button>
+                            <button className="btn-danger-premium" onClick={handleCancelBooking}>Confirm Cancellation</button>
                         </div>
                     </div>
                 </div>
