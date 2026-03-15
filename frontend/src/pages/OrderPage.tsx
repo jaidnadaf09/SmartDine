@@ -4,9 +4,11 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
 import { Icons } from '../components/icons/IconSystem';
+import api from '../utils/api';
 import '../styles/Order.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
 
@@ -68,12 +70,8 @@ const OrderPage: React.FC = () => {
   React.useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        const response = await fetch(`${API_URL}/menu`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch menu items');
-        }
-        const data = await response.json();
-        setMenuItems(data);
+        const response = await api.get('/menu');
+        setMenuItems(response.data);
       } catch (err: any) {
         console.error('Error fetching menu:', err);
         setError('Failed to load menu. Please try again later.');
@@ -83,16 +81,15 @@ const OrderPage: React.FC = () => {
     };
 
     const fetchUserBooking = async () => {
-      if (user) {
+      const token = localStorage.getItem('token');
+      if (user && token) {
         try {
-          const res = await fetch(`${API_URL}/bookings/user/${user.id}`);
-          if (res.ok) {
-            const bookings = await res.json();
-            // Find a confirmed booking with a table number
-            const active = bookings.find((b: any) => b.status === 'confirmed' && b.tableNumber);
-            if (active) {
-              setAssignedTable(active.tableNumber);
-            }
+          const res = await api.get(`/bookings/user/${user.id}`);
+          const bookings = res.data;
+          // Find a confirmed booking with a table number
+          const active = bookings.find((b: any) => b.status === 'confirmed' && b.tableNumber);
+          if (active) {
+            setAssignedTable(active.tableNumber);
           }
         } catch (err) {
           console.error('Failed to fetch user bookings:', err);
@@ -194,29 +191,18 @@ const OrderPage: React.FC = () => {
           return;
         }
 
-        const walletRes = await fetch(`${API_URL}/payment/wallet-pay`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user.token}`
-          },
-          body: JSON.stringify({
-            amount: totalAmountFloat,
-            orderData: {
-              items: cart.map(item => ({
-                itemName: item.name,
-                quantity: item.quantity,
-              }))
-            }
-          })
+        const walletRes = await api.post('/payment/wallet-pay', {
+          amount: totalAmountFloat,
+          orderData: {
+            items: cart.map(item => ({
+              itemName: item.name,
+              quantity: item.quantity,
+            }))
+          }
         });
 
-        const walletData = await walletRes.json();
+        const walletData = walletRes.data;
         
-        if (!walletRes.ok) {
-          throw new Error(walletData.message || 'Wallet payment failed');
-        }
-
         if (walletData.walletBalance !== undefined) {
            updateUser({ walletBalance: walletData.walletBalance });
         }
@@ -230,21 +216,11 @@ const OrderPage: React.FC = () => {
 
       // -- RAZORPAY PAYMENT BRANCH --
       // 1. Create Razorpay order on our backend
-      const orderRes = await fetch(`${API_URL}/payment/create-order`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({ amount: totalAmountFloat }),
+      const orderRes = await api.post('/payment/create-order', { 
+        amount: totalAmountFloat 
       });
 
-      if (!orderRes.ok) {
-        const errData = await orderRes.json().catch(() => ({}));
-        throw new Error(errData.message || 'Failed to create payment order');
-      }
-
-      const orderData = await orderRes.json();
+      const orderData = orderRes.data;
 
       // 2. Initialize Razorpay Checkout
       const options = {
@@ -258,41 +234,27 @@ const OrderPage: React.FC = () => {
           try {
             setLoading(true);
             // 3. Verify Payment Signature
-            const verifyRes = await fetch(`${API_URL}/payment/verify`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${user.token}`,
-              },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
+            const verifyRes = await api.post('/payment/verify', {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
             });
 
-            const verifyData = await verifyRes.json();
+            const verifyData = verifyRes.data;
 
             if (verifyData.success) {
               // 4. Save the order now that payment is confirmed
-              const finalOrderRes = await fetch(`${API_URL}/orders`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId: user.id,
-                  totalAmount: totalAmountFloat,
-                  paymentId: response.razorpay_payment_id,
-                  paymentStatus: 'paid',
-                  items: cart.map(item => ({
-                    itemName: item.name,
-                    quantity: item.quantity,
-                  }))
-                })
+              await api.post('/orders', {
+                userId: user.id,
+                totalAmount: totalAmountFloat,
+                paymentId: response.razorpay_payment_id,
+                paymentStatus: 'paid',
+                items: cart.map(item => ({
+                  itemName: item.name,
+                  quantity: item.quantity,
+                }))
               });
 
-              if (!finalOrderRes.ok) {
-                throw new Error('Payment succeeded, but failed to save order details.');
-              }
 
               toast.success(`Payment successful! Order placed. Total: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmountFloat)}`);
               setCart([]);

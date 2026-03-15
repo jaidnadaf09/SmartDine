@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../../../utils/api';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import ChefOrderModal from '../components/ChefOrderModal';
 import { 
     Clock, 
-    Users, 
-    ChefHat, 
-    CheckCircle, 
     Play, 
     Utensils, 
-    Timer,
-    History,
     ChefHat as ActiveIcon, 
     User,
     FolderOpen
@@ -64,15 +59,12 @@ const KitchenOrders: React.FC = () => {
     }, []);
 
     const fetchOrders = async () => {
+        const token = localStorage.getItem('token');
         if (!token) return;
         try {
             const [ordersRes, historyRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_API_URL}/chef/orders`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }),
-                axios.get(`${import.meta.env.VITE_API_URL}/chef/order-history`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                })
+                api.get('/chef/orders'),
+                api.get('/chef/order-history')
             ]);
 
             const newOrders = ordersRes.data;
@@ -105,15 +97,12 @@ const KitchenOrders: React.FC = () => {
 
     const handleUpdateStatus = async (id: number, status: string) => {
         try {
-            await axios.put(`${import.meta.env.VITE_API_URL}/chef/orders/${id}/status`, 
-                { status },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.put(`/chef/orders/${id}/status`, { status });
             toast.success(`Order marked as ${status}`);
             fetchOrders();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating order status:', error);
-            toast.error('Failed to update status');
+            toast.error(error.response?.data?.message || 'Failed to update status');
         }
     };
 

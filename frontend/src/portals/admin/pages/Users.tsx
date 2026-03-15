@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -16,31 +18,18 @@ const Users: React.FC = () => {
     const fetchUsers = async () => {
         setLoading(true);
         setError(null);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Authentication token missing. Please login again.');
+            setLoading(false);
+            return;
+        }
         try {
-            const token = currentUser.token;
-
-            if (!token) {
-                setError('Authentication token missing. Please login again.');
-                setLoading(false);
-                return;
-            }
-
-            const res = await fetch(`${API_URL}/admin/users`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!res.ok) {
-                throw new Error(`Error ${res.status}: ${res.statusText}`);
-            }
-
-            const data = await res.json();
-            setUsers(Array.isArray(data) ? data : []);
+            const res = await api.get('/admin/users');
+            setUsers(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
             console.error('Failed to fetch users:', err);
-            setError(err.message || 'Failed to load users data.');
+            setError(err.response?.data?.message || err.message || 'Failed to load users data.');
         } finally {
             setLoading(false);
         }
@@ -64,52 +53,25 @@ const Users: React.FC = () => {
         if (!userToDelete) return;
         
         try {
-            const token = currentUser.token;
-
-            if (!token) {
-                toast.error('Authentication token missing. Please login again.');
-                return;
-            }
-            const res = await fetch(`${API_URL}/admin/users/${userToDelete}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                toast.success('User deleted successfully');
-                setUsers(users.filter(u => u.id !== userToDelete));
-                setConfirmDeleteOpen(false);
-                setUserToDelete(null);
-            } else {
-                const data = await res.json();
-                toast.error(data.message || 'Failed to delete user');
-            }
-        } catch (err) {
+            await api.delete(`/admin/users/${userToDelete}`);
+            toast.success('User deleted successfully');
+            setUsers(users.filter(u => u.id !== userToDelete));
+            setConfirmDeleteOpen(false);
+            setUserToDelete(null);
+        } catch (err: any) {
             console.error(err);
-            toast.error('Error deleting user');
+            toast.error(err.response?.data?.message || 'Error deleting user');
         }
     };
 
     const handleRoleChange = async (userId: number, newRole: string) => {
         try {
-            const token = currentUser.token;
-            const res = await fetch(`${API_URL}/admin/users/${userId}/role`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ role: newRole })
-            });
-
-            if (res.ok) {
-                toast.success('Role updated');
-                setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-            } else {
-                toast.error('Failed to update role');
-            }
-        } catch (err) {
+            await api.put(`/admin/users/${userId}/role`, { role: newRole });
+            toast.success('Role updated');
+            setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+        } catch (err: any) {
             console.error(err);
-            toast.error('Error updating role');
+            toast.error(err.response?.data?.message || 'Error updating role');
         }
     };
 

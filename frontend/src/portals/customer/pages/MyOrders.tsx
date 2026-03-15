@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 import BookingReminder from '../../../components/BookingReminder';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 interface Booking {
   id: string | number;
@@ -78,31 +80,23 @@ const MyOrders: React.FC = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const fetchUserData = useCallback(async () => {
-    if (!user || !user.token) {
+    const token = localStorage.getItem('token');
+    if (!token) {
       setLoading(false);
       return;
     }
     try {
-      const headers = {
-        'Authorization': `Bearer ${user.token}`,
-        'Content-Type': 'application/json'
-      };
-
       const [bookingsRes, ordersRes, upcomingRes, reviewsRes] = await Promise.all([
-        fetch(`${API_URL}/bookings/user/${user.id}`, { headers }),
-        fetch(`${API_URL}/orders/my`, { headers }),
-        fetch(`${API_URL}/bookings/upcoming`, { headers }),
-        fetch(`${API_URL}/reviews/my`, { headers }),
+        api.get(`/bookings/user/${user?.id}`),
+        api.get('/orders/my'),
+        api.get('/bookings/upcoming'),
+        api.get('/reviews/my'),
       ]);
 
-      if (!bookingsRes.ok) throw new Error(`Bookings: ${bookingsRes.status} ${bookingsRes.statusText}`);
-      if (!ordersRes.ok) throw new Error(`Orders: ${ordersRes.status} ${ordersRes.statusText}`);
-      if (!upcomingRes.ok) throw new Error(`Upcoming: ${upcomingRes.status} ${upcomingRes.statusText}`);
-
-      const bookingsData = await bookingsRes.json() || [];
-      const rawOrders = await ordersRes.json();
-      const upcomingData = await upcomingRes.json();
-      const reviewsData = await reviewsRes.json() || [];
+      const bookingsData = bookingsRes.data || [];
+      const rawOrders = ordersRes.data;
+      const upcomingData = upcomingRes.data;
+      const reviewsData = reviewsRes.data || [];
 
       if (upcomingData.upcomingBooking && !upcomingBooking) {
         toast(() => (
@@ -151,12 +145,8 @@ const MyOrders: React.FC = () => {
     if (!bookingToCancel) return;
     setCancellingId(bookingToCancel.id);
     try {
-      const res = await fetch(`${API_URL}/bookings/${bookingToCancel.id}/cancel`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${user?.token}`, 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to cancel booking');
+      const res = await api.delete(`/bookings/${bookingToCancel.id}/cancel`);
+      const data = res.data;
 
       setBookings((prev) => prev.map((b) => b.id === bookingToCancel.id ? { ...b, status: 'cancelled' } : b));
 
@@ -178,12 +168,8 @@ const MyOrders: React.FC = () => {
     if (!orderToCancel) return;
     setCancellingOrderId(orderToCancel.id);
     try {
-      const res = await fetch(`${API_URL}/orders/${orderToCancel.id}/cancel`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${user?.token}`, 'Content-Type': 'application/json' },
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to cancel order');
+      const res = await api.post(`/orders/${orderToCancel.id}/cancel`);
+      const data = res.data;
       toast.success('Order cancelled. Refund credited to your wallet.');
 
       setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: 'cancelled' } : o));
@@ -206,20 +192,11 @@ const MyOrders: React.FC = () => {
     if (!reviewOrder || !user) return;
     setSubmittingReview(true);
     try {
-      const res = await fetch(`${API_URL}/reviews`, {
-        method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${user.token}`,
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({
-          orderId: reviewOrder.id,
-          rating,
-          comment
-        })
+      await api.post('/reviews', {
+        orderId: reviewOrder.id,
+        rating,
+        comment
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to submit review');
       
       toast.success('Thank you for your feedback!');
       setReviewOrder(null);

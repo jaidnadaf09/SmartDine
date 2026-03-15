@@ -2,10 +2,12 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 interface WalletTransaction {
   id: number;
@@ -23,21 +25,19 @@ const WalletHistory: React.FC = () => {
   const [error, setError] = useState('');
 
   const fetchHistory = useCallback(async () => {
-    if (!user || !user.token) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
     try {
-      const res = await fetch(`${API_URL}/wallet/transactions`, {
-        headers: { 'Authorization': `Bearer ${user.token}` }
-      });
-      if (!res.ok) throw new Error('Failed to fetch wallet history');
-      const data = await res.json();
-      setTransactions(data);
+      const res = await api.get('/wallet/transactions');
+      setTransactions(res.data);
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Could not load wallet history');
+      setError(err.response?.data?.message || err.message || 'Could not load wallet history');
     } finally {
       setLoading(false);
-    } // eslint-disable-next-line
-  }, [user]);
+    }
+  }, []);
 
   useEffect(() => {
     fetchHistory();

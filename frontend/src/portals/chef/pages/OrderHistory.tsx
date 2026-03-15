@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../../utils/api';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
 import '../../../styles/Portals.css';
@@ -27,10 +27,10 @@ const OrderHistory: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     const fetchHistory = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) { setLoading(false); return; }
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/chef/order-history`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/chef/order-history');
             setOrders(response.data);
             setLoading(false);
         } catch (error) {
