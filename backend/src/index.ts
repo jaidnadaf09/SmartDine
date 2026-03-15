@@ -27,9 +27,28 @@ dotenv.config();
 
 const app = express();
 
-// Security Middleware
+// 1. Enable trust proxy (must be before middleware)
+app.set("trust proxy", 1);
+
+// 2. Security Middleware (helmet and xss-clean)
 app.use(helmet());
 app.use(xss());
+
+// 3. Body Parsing
+app.use(express.json());
+
+// 4. CORS configuration
+app.use(
+    cors({
+        origin: [
+            "http://localhost:5173",
+            "https://myrasoighar.netlify.app",
+            process.env.FRONTEND_URL || ""
+        ].filter(Boolean),
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+        credentials: true,
+    })
+);
 
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -39,23 +58,8 @@ const apiLimiter = rateLimit({
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-// Apply rate limiter to all API routes
+// 5. Apply rate limiter to all API routes (after body parser and cors)
 app.use("/api", apiLimiter);
-
-// Middleware
-app.use(
-    cors({
-        origin: [
-            "http://localhost:5173",
-            "https://smartdine-l22i.onrender.com",
-            process.env.FRONTEND_URL || ""
-        ].filter(Boolean),
-        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-        credentials: true,
-    })
-);
-
-app.use(express.json());
 
 // Request logger
 app.use((req, res, next) => {

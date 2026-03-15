@@ -28,9 +28,23 @@ const scheduler_1 = require("./utils/scheduler");
 // Load environment variables
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-// Security Middleware
+// 1. Enable trust proxy (must be before middleware)
+app.set("trust proxy", 1);
+// 2. Security Middleware (helmet and xss-clean)
 app.use((0, helmet_1.default)());
 app.use((0, xss_clean_1.default)());
+// 3. Body Parsing
+app.use(express_1.default.json());
+// 4. CORS configuration
+app.use((0, cors_1.default)({
+    origin: [
+        "http://localhost:5173",
+        "https://myrasoighar.netlify.app",
+        process.env.FRONTEND_URL || ""
+    ].filter(Boolean),
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+}));
 const apiLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 200, // Limit each IP to 200 requests per windowMs
@@ -38,19 +52,8 @@ const apiLimiter = (0, express_rate_limit_1.default)({
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
     legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
-// Apply rate limiter to all API routes
+// 5. Apply rate limiter to all API routes (after body parser and cors)
 app.use("/api", apiLimiter);
-// Middleware
-app.use((0, cors_1.default)({
-    origin: [
-        "http://localhost:5173",
-        "https://smartdine-l22i.onrender.com",
-        process.env.FRONTEND_URL || ""
-    ].filter(Boolean),
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    credentials: true,
-}));
-app.use(express_1.default.json());
 // Request logger
 app.use((req, res, next) => {
     console.log(`[REQUEST] ${req.method} ${req.originalUrl}`);
