@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { sequelize } from "./models";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+// @ts-ignore
+import xss from "xss-clean";
 
 import authRoutes from "./routes/authRoutes";
 import orderRoutes from "./routes/orderRoutes";
@@ -22,6 +26,21 @@ import { initScheduler } from "./utils/scheduler";
 dotenv.config();
 
 const app = express();
+
+// Security Middleware
+app.use(helmet());
+app.use(xss());
+
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, // Limit each IP to 200 requests per windowMs
+    message: "Too many requests from this IP, please try again after 15 minutes",
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply rate limiter to all API routes
+app.use("/api", apiLimiter);
 
 // Middleware
 app.use(
