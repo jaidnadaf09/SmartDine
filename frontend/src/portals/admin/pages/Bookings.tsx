@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, AlertCircle } from 'lucide-react';
+
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const Bookings: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -19,31 +21,23 @@ const Bookings: React.FC = () => {
     const fetchData = async () => {
         setLoading(true);
         setError(null);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Auth token missing. Please login.');
+            setLoading(false);
+            return;
+        }
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const token = userData.token;
-
-            if (!token) {
-                setError('Auth token missing. Please login.');
-                setLoading(false);
-                return;
-            }
-
             const [bRes, tRes] = await Promise.all([
-                fetch(`${API_URL}/admin/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${API_URL}/admin/tables/available`, { headers: { 'Authorization': `Bearer ${token}` } })
+                api.get('/admin/bookings'),
+                api.get('/admin/tables/available')
             ]);
 
-            if (!bRes.ok || !tRes.ok) throw new Error('Failed to fetch data');
-
-            const bookingsData = await bRes.json();
-            const tablesData = await tRes.json();
-
-            setBookings(Array.isArray(bookingsData) ? bookingsData : []);
-            setTables(Array.isArray(tablesData) ? tablesData : []);
+            setBookings(Array.isArray(bRes.data) ? bRes.data : []);
+            setTables(Array.isArray(tRes.data) ? tRes.data : []);
         } catch (err: any) {
             console.error('Failed to fetch bookings data:', err);
-            setError(err.message || 'Failed to load bookings.');
+            setError(err.response?.data?.message || err.message || 'Failed to load bookings.');
         } finally {
             setLoading(false);
         }
@@ -55,25 +49,16 @@ const Bookings: React.FC = () => {
 
     const updateStatus = async (id: number, status: string) => {
         try {
-            const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
-            const res = await fetch(`${API_URL}/admin/bookings/${id}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ status })
-            });
-            if (res.ok) {
-                if (status === 'cancelled' || status === 'completed') {
-                    setBookings(prev => prev.filter(b => b.id !== id));
-                } else {
-                    setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
-                }
-                toast.success('Status updated');
+            await api.put(`/admin/bookings/${id}/status`, { status });
+            if (status === 'cancelled' || status === 'completed') {
+                setBookings(prev => prev.filter(b => b.id !== id));
             } else {
-                toast.error('Failed to update status');
+                setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
             }
-        } catch (err) {
+            toast.success('Status updated');
+        } catch (err: any) {
             console.error('Failed to update booking status:', err);
-            toast.error('Failed to update status');
+            toast.error(err.response?.data?.message || 'Failed to update status');
         }
     };
 
@@ -82,49 +67,31 @@ const Bookings: React.FC = () => {
         const finalReason = cancelReason === 'Other' ? customReason : cancelReason;
         
         try {
-            const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
-            const res = await fetch(`${API_URL}/admin/bookings/${selectedBookingId}/cancel`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ reason: finalReason })
-            });
-            if (res.ok) {
-                setBookings(prev => prev.filter(b => b.id !== selectedBookingId));
-                toast.success('Booking cancelled successfully');
-                setIsCancelModalOpen(false);
-                fetchData();
-            } else {
-                toast.error('Failed to cancel booking');
-            }
-        } catch (err) {
+            await api.put(`/admin/bookings/${selectedBookingId}/cancel`, { reason: finalReason });
+            setBookings(prev => prev.filter(b => b.id !== selectedBookingId));
+            toast.success('Booking cancelled successfully');
+            setIsCancelModalOpen(false);
+            fetchData();
+        } catch (err: any) {
             console.error('Failed to cancel booking:', err);
-            toast.error('Error cancelling booking');
+            toast.error(err.response?.data?.message || 'Error cancelling booking');
         }
     };
 
     const updateTableAPI = async (id: number, tableId: number | null) => {
         try {
-            const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
-            const res = await fetch(`${API_URL}/admin/bookings/${id}/table`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ tableId })
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setBookings(prev => prev.map(b => b.id === id ? data.booking : b));
-                if (tableId === null) {
-                    toast.success('Table unassigned successfully');
-                } else {
-                    toast.success('Table updated successfully');
-                }
-                fetchData();
+            const res = await api.put(`/admin/bookings/${id}/table`, { tableId });
+            const data = res.data;
+            setBookings(prev => prev.map(b => b.id === id ? data.booking : b));
+            if (tableId === null) {
+                toast.success('Table unassigned successfully');
             } else {
-                toast.error('Failed to update table');
+                toast.success('Table updated successfully');
             }
-        } catch (err) {
+            fetchData();
+        } catch (err: any) {
             console.error('Failed to update table:', err);
-            toast.error('Failed to update table');
+            toast.error(err.response?.data?.message || 'Failed to update table');
         }
     };
 
@@ -133,12 +100,7 @@ const Bookings: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleOpenCancelModal = (bookingId: number) => {
-        setSelectedBookingId(bookingId);
-        setCancelReason('Customer cancelled');
-        setCustomReason('');
-        setIsCancelModalOpen(true);
-    };
+    // handleOpenModal removed
 
     const handleAssignFromModal = async (tableId: number) => {
         if (!selectedBookingId) return;
@@ -148,22 +110,13 @@ const Bookings: React.FC = () => {
 
     const handleCompleteBooking = async (id: number) => {
         try {
-            const token = JSON.parse(localStorage.getItem('smartdine_user') || '{}').token;
-            const res = await fetch(`${API_URL}/admin/bookings/${id}/complete`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                setBookings(prev => prev.filter(b => b.id !== id));
-                toast.success('Booking completed and table released');
-                fetchData();
-            } else {
-                const data = await res.json();
-                toast.error(data.message || 'Failed to complete booking');
-            }
-        } catch (err) {
+            await api.patch(`/admin/bookings/${id}/complete`);
+            setBookings(prev => prev.filter(b => b.id !== id));
+            toast.success('Booking completed and table released');
+            fetchData();
+        } catch (err: any) {
             console.error('Failed to complete booking:', err);
-            toast.error('Error completing booking');
+            toast.error(err.response?.data?.message || 'Error completing booking');
         }
     };
 

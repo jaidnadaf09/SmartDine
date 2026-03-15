@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
 import RestaurantStatusControl from '../components/RestaurantStatusControl';
+import api from '../../../utils/api';
 import '../../../styles/ChefPortal.css';
 
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const Dashboard: React.FC = () => {
     const { user } = useAuth();
@@ -16,17 +18,17 @@ const Dashboard: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchStats = useCallback(async () => {
+        const token = localStorage.getItem('token');
+        if (!token) { 
+            setError('Auth token missing.'); 
+            setLoading(false); 
+            return; 
+        }
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const token = userData.token;
-            if (!token) { setError('Auth token missing.'); setLoading(false); return; }
-            const res = await fetch(`${API_URL}/admin/stats`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to fetch stats');
-            setStats(await res.json());
+            const res = await api.get('/admin/stats');
+            setStats(res.data);
         } catch (err: any) {
-            setError(err.message || 'Failed to load stats.');
+            setError(err.response?.data?.message || err.message || 'Failed to load stats.');
         } finally {
             setLoading(false);
         }
@@ -43,10 +45,7 @@ const Dashboard: React.FC = () => {
         { label: 'Total Revenue',  value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(stats?.totalRevenue || 0), icon: <Icons.payment size={24} />, accent: '#6366f1', bg: 'rgba(99, 102, 241, 0.1)' },
     ];
 
-    const getStatusBadgeClass = (status: string) => {
-        const s = status?.toLowerCase();
-        return `status-badge status-${s}`;
-    };
+    // Unified status badge function
 
     if (loading) return (
         <div className="chef-loading">

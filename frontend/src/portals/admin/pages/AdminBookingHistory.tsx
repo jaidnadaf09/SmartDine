@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const AdminBookingHistory: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -11,27 +13,18 @@ const AdminBookingHistory: React.FC = () => {
     const fetchBookingHistory = async () => {
         setLoading(true);
         setError(null);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Auth token missing. Please login.');
+            setLoading(false);
+            return;
+        }
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const token = userData.token;
-
-            if (!token) {
-                setError('Auth token missing. Please login.');
-                setLoading(false);
-                return;
-            }
-
-            const res = await fetch(`${API_URL}/admin/bookings/history`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) throw new Error('Failed to fetch booking history');
-
-            const data = await res.json();
-            setBookings(Array.isArray(data) ? data : []);
+            const res = await api.get('/admin/bookings/history');
+            setBookings(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
             console.error('Failed to fetch booking history:', err);
-            setError(err.message || 'Failed to load booking history.');
+            setError(err.response?.data?.message || err.message || 'Failed to load booking history.');
         } finally {
             setLoading(false);
         }

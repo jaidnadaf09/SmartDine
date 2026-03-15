@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 import '../../../styles/ChefPortal.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 interface DashboardStats {
   pendingOrders: number;
@@ -16,7 +18,6 @@ interface DashboardStats {
 const ChefDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate  = useNavigate();
-  const token     = user?.token;
 
   const [stats, setStats] = useState<DashboardStats>({
     pendingOrders: 0,
@@ -27,18 +28,17 @@ const ChefDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) { setLoading(false); return; }
     try {
-      const res = await fetch(`${API_URL}/chef/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to load stats');
-      setStats(await res.json());
+      const res = await api.get('/chef/stats');
+      setStats(res.data);
     } catch {
       // Stats unavailable — keep zeros
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     fetchStats();

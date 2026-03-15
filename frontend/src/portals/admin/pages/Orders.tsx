@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 import '../../../App.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const Orders: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -13,27 +15,18 @@ const Orders: React.FC = () => {
     const fetchOrders = async () => {
         setLoading(true);
         setError(null);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Auth token missing.');
+            setLoading(false);
+            return;
+        }
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const token = userData.token;
-
-            if (!token) {
-                setError('Auth token missing.');
-                setLoading(false);
-                return;
-            }
-
-            const res = await fetch(`${API_URL}/orders`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) throw new Error('Failed to fetch orders');
-
-            const data = await res.json();
-            setOrders(Array.isArray(data) ? data : []);
+            const res = await api.get('/orders');
+            setOrders(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
             console.error('Failed to fetch orders:', err);
-            setError(err.message || 'Failed to load orders.');
+            setError(err.response?.data?.message || err.message || 'Failed to load orders.');
         } finally {
             setLoading(false);
         }
@@ -47,28 +40,16 @@ const Orders: React.FC = () => {
 
     const updateStatus = async (id: number, status: string) => {
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/orders/${id}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${userData.token}`
-                },
-                body: JSON.stringify({ status })
-            });
-            if (res.ok) {
-                if (status === 'completed') {
-                    setOrders(orders.filter(o => o.id !== id));
-                } else {
-                    setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
-                }
-                toast.success('Order status updated');
+            await api.patch(`/orders/${id}/status`, { status });
+            if (status === 'completed') {
+                setOrders(orders.filter(o => o.id !== id));
             } else {
-                toast.error('Failed to update status on server');
+                setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
             }
-        } catch (err) {
+            toast.success('Order status updated');
+        } catch (err: any) {
             console.error('Failed to update order status:', err);
-            toast.error('Failed to update status');
+            toast.error(err.response?.data?.message || 'Failed to update status');
         }
     };
 
