@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 
 
 // Using centralized api instance
@@ -86,8 +87,8 @@ const OrderHistory: React.FC = () => {
                                     <td><span className="management-amount">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
                                     <td>
                                         <div style={{ fontSize: '0.8rem' }}>
-                                            {new Date(order.updatedAt).toLocaleDateString()}<br/>
-                                            {new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {formatDate(order.updatedAt)}<br/>
+                                            {formatTime(order.updatedAt)}
                                         </div>
                                     </td>
                                     <td><span className="status-badge status-completed">Completed</span></td>

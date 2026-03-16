@@ -29,19 +29,22 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
 // @access  Public (from customer frontend) or Private
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const settings = await RestaurantSetting.findOne();
-        const restaurantStatus = settings?.status || 'OPEN';
+        const ENABLE_RESTAURANT_TIMING = false;
+        if (ENABLE_RESTAURANT_TIMING) {
+            const settings = await RestaurantSetting.findOne();
+            const restaurantStatus = settings?.status || 'OPEN';
 
-        if (restaurantStatus === 'CLOSED') {
-            return res.status(403).json({ message: 'Restaurant is currently closed for orders.' });
-        }
+            if (restaurantStatus === 'CLOSED') {
+                return res.status(403).json({ message: 'Restaurant is currently closed for orders.' });
+            }
 
-        if (restaurantStatus === 'PAUSED') {
-            return res.status(403).json({ message: 'Orders are temporarily paused. Please try again in a few minutes.' });
-        }
+            if (restaurantStatus === 'PAUSED') {
+                return res.status(403).json({ message: 'Orders are temporarily paused. Please try again in a few minutes.' });
+            }
 
-        if (!isRestaurantOpen()) {
-            return res.status(403).json({ message: 'Restaurant is currently closed. Orders are accepted between 10:00 AM and 11:00 PM.' });
+            if (!isRestaurantOpen()) {
+                return res.status(403).json({ message: 'Restaurant is currently closed. Orders are accepted between 10:00 AM and 11:00 PM.' });
+            }
         }
         const { items, totalAmount, userId, paymentId, paymentStatus } = req.body;
 
@@ -80,6 +83,15 @@ export const createOrder = async (req: Request, res: Response) => {
             paymentStatus: paymentStatus || 'pending',
             orderType: orderType
         });
+
+        // Create notification for customer
+        if (userId) {
+            await Notification.create({
+                userId,
+                message: `Your order #${newOrder.id} has been placed successfully!`,
+                type: 'order'
+            });
+        }
 
         res.status(201).json(newOrder);
     } catch (error) {

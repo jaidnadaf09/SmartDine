@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
 
@@ -100,7 +101,7 @@ const WalletHistory: React.FC = () => {
                        </div>
                      )}
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', opacity: 0.7 }}>
-                       {new Date(tx.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {formatDate(tx.createdAt)} · {formatTime(tx.createdAt)}
                      </div>
                    </div>
                     <div style={{ 

@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../../../utils/api';
+import { formatTime } from '../../../utils/dateFormatter';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import ChefOrderModal from '../components/ChefOrderModal';
 import { 
     Clock, 
-    Play, 
     Utensils, 
-    ChefHat as ActiveIcon, 
     User,
     FolderOpen
 } from 'lucide-react';
@@ -211,7 +210,7 @@ const KitchenOrders: React.FC = () => {
                                             </div>
                                             <div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Placed At</div>
-                                                <div style={{ fontWeight: 700 }}>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                <div style={{ fontWeight: 700 }}>{formatTime(order.createdAt)}</div>
                                             </div>
                                         </div>
                                     </div>
@@ -298,7 +297,7 @@ const KitchenOrders: React.FC = () => {
                                         <div className="chef-detail-content">
                                             <span className="chef-detail-label">Completed</span>
                                             <span className="chef-detail-value">
-                                                {new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {formatTime(order.updatedAt)}
                                             </span>
                                         </div>
                                     </div>

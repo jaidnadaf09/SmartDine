@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 
 
 // Using centralized api instance
@@ -179,8 +180,8 @@ const Bookings: React.FC = () => {
                             {bookings.map(booking => (
                                 <tr key={booking.id}>
                                     <td>
-                                        <div style={{ fontWeight: 600 }}>{new Date(booking.date).toLocaleDateString()}</div>
-                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{booking.time}</div>
+                                        <div style={{ fontWeight: 600 }}>{formatDate(booking.date)}</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{formatTime(booking.time)}</div>
                                     </td>
                                     <td><strong>{booking.customerName}</strong></td>
                                     <td>{booking.guests} Guests</td>

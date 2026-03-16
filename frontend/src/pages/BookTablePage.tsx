@@ -3,8 +3,8 @@ import { Icons } from '../components/icons/IconSystem';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { isValidWorkingHour } from '../utils/workingHours';
 import api from '../utils/api';
+import { formatDate, formatTime } from '../utils/dateFormatter';
 import '../styles/BookTable.css';
 
 
@@ -153,7 +153,8 @@ const BookTablePage: React.FC = () => {
         return;
       }
 
-      // Restaurant Hours Validation
+      // Restaurant Hours Validation (Disabled for 24/7 operation)
+      /* 
       if (!isValidWorkingHour(formData.time)) {
         setError('Tables can only be booked between 10:00 AM and 11:00 PM');
         toast.error('Tables can only be booked between 10:00 AM and 11:00 PM');
@@ -161,6 +162,7 @@ const BookTablePage: React.FC = () => {
         bookingInProgress.current = false;
         return;
       }
+      */
 
       console.log('Initiating booking flow for:', formData.date, formData.time);
 
@@ -329,8 +331,8 @@ const BookTablePage: React.FC = () => {
             <h3 className="success-banner">✓ Booking Confirmed</h3>
             <div className="success-card">
               <p><strong>Table:</strong> {bookingDetails?.tableNumber || 'Pending Assignment'}</p>
-              <p><strong>Date:</strong> {new Date(bookingDetails?.date).toLocaleDateString()}</p>
-              <p><strong>Time:</strong> {bookingDetails?.time}</p>
+              <p><strong>Date:</strong> {formatDate(bookingDetails?.date)}</p>
+              <p><strong>Time:</strong> {formatTime(bookingDetails?.time)}</p>
               {bookingDetails?.paymentId && <p className="booking-id-tag"><strong>Ref:</strong> {bookingDetails.paymentId}</p>}
             </div>
             <p style={{ color: 'var(--booking-text-muted)', fontWeight: 500 }}>We look forward to serving you.</p>
@@ -353,10 +355,10 @@ const BookTablePage: React.FC = () => {
               {/* Booking Information */}
               <div className="booking-info-box">
                 <div className="booking-hours">
-                  <Icons.clock size={16} className="inline-icon" /> Bookings accepted from <strong>10:00 AM – 11:00 PM</strong>
+                  <Icons.clock size={16} className="inline-icon" /> Experience premium dining <strong>Open 24/7</strong>
                 </div>
                 <div className="booking-hint">
-                  <Icons.calendar size={16} className="inline-icon" /> Selected booking time must fall within restaurant hours
+                  <Icons.calendar size={16} className="inline-icon" /> Book your table anytime for a seamless experience
                 </div>
               </div>
             </div>

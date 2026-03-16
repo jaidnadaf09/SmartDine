@@ -21,6 +21,7 @@ Ensure the following environment variables are set in your Render dashboard for 
 - `DATABASE_URL`: Your PostgreSQL connection string
 - `JWT_SECRET`: Your secret for authentication
 - `NODE_ENV`: production
+If ports are already in use then run `npx kill-port 5000`
 
 ### 2. Frontend Setup
 Ensure the following environment variables are set in your Netlify or Render dashboard for the frontend:

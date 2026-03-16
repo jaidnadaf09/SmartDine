@@ -41,3 +41,39 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+// @desc    Clear all notifications
+// @route   DELETE /api/notifications/clear
+// @access  Private
+export const clearNotifications = async (req: AuthRequest, res: Response) => {
+    try {
+        await Notification.destroy({
+            where: { userId: req.user!.id }
+        });
+        res.json({ message: 'All notifications cleared' });
+    } catch (error) {
+        console.error('Error clearing notifications:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Delete a specific notification
+// @route   DELETE /api/notifications/:id
+// @access  Private
+export const deleteNotification = async (req: AuthRequest, res: Response) => {
+    try {
+        const notification = await Notification.findOne({
+            where: { id: req.params.id, userId: req.user!.id }
+        });
+
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+
+        await notification.destroy();
+        res.json({ message: 'Notification deleted' });
+    } catch (error) {
+        console.error('Error deleting notification:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};

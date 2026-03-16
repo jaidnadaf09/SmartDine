@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
 import BookingReminder from '../../../components/BookingReminder';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
 
@@ -102,7 +103,7 @@ const MyOrders: React.FC = () => {
         toast(() => (
           <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Icons.bell size={18} color="var(--brand-primary)" />
-            Reminder: You have a booking at {upcomingData.upcomingBooking.time} today!
+            Reminder: You have a booking at {formatTime(upcomingData.upcomingBooking.time)} today!
           </span>
         ), { duration: 6000, id: 'booking-reminder' });
       }
@@ -318,9 +319,7 @@ const MyOrders: React.FC = () => {
                         <div>
                           <div className="cp-detail-label">Date</div>
                           <div className="cp-detail-value">
-                            {booking.date
-                              ? new Date(booking.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                              : 'N/A'}
+                            {formatDate(booking.date)}
                           </div>
                         </div>
                       </div>
@@ -328,7 +327,7 @@ const MyOrders: React.FC = () => {
                         <Icons.clock className="cp-detail-icon" size={16} />
                         <div>
                           <div className="cp-detail-label">Time</div>
-                          <div className="cp-detail-value">{booking.time}</div>
+                          <div className="cp-detail-value">{formatTime(booking.time)}</div>
                         </div>
                       </div>
                       <div className="cp-detail-item">
@@ -405,9 +404,7 @@ const MyOrders: React.FC = () => {
                         <div>
                           <div className="cp-detail-label">Date</div>
                           <div className="cp-detail-value">
-                            {order.createdAt
-                              ? new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-                              : 'N/A'}
+                            {formatDate(order.createdAt)}
                           </div>
                         </div>
                       </div>
@@ -416,9 +413,7 @@ const MyOrders: React.FC = () => {
                         <div>
                           <div className="cp-detail-label">Time</div>
                           <div className="cp-detail-value">
-                            {order.createdAt
-                              ? new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
-                              : 'N/A'}
+                            {formatTime(order.createdAt)}
                           </div>
                         </div>
                       </div>

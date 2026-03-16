@@ -166,11 +166,14 @@ const OrderPage: React.FC = () => {
       return;
     }
 
+    // Restaurant Status Check (Disabled for 24/7 operation)
+    /*
     if (!isOperating || status === 'PAUSED') {
       setError('The restaurant is currently not accepting orders.');
       toast.error('Restaurant not accepting orders.');
       return;
     }
+    */
 
     setLoading(true);
 
@@ -345,21 +348,7 @@ const OrderPage: React.FC = () => {
             />
           </div>
 
-          <div className={`restaurant-status ${status === 'PAUSED' ? 'paused' : isOperating ? "open" : "closed"}`}>
-            {status === 'PAUSED' ? (
-              <>
-                <Icons.pause size={18} /> Orders temporarily Paused — Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
-              </>
-            ) : isOperating ? (
-              <>
-                <Icons.checkCircle size={18} /> Restaurant Open Now — Orders available until <strong>11:00 PM</strong>
-              </>
-            ) : (
-              <>
-                <Icons.alertCircle size={18} /> Restaurant Closed — Orders will resume at <strong>10:00 AM</strong>
-              </>
-            )}
-          </div>
+          {/* Restaurant Status Banner Removed for 24/7 operation */}
 
           {loading ? (
             <MenuSkeleton />
@@ -408,7 +397,7 @@ const OrderPage: React.FC = () => {
                                   <button
                                     className="compact-add-btn"
                                     onClick={() => addToCart(item)}
-                                    disabled={!isOperating || status === 'PAUSED'}
+                                    disabled={false}
                                   >
                                     Add
                                   </button>
@@ -530,22 +519,14 @@ const OrderPage: React.FC = () => {
                   </div>
                 </div>
 
-                {(!isOperating || status === 'PAUSED') && (
-                  <div className="working-hours-warning" style={{ color: 'var(--error-color)', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', padding: '8px', borderRadius: '8px' }}>
-                    {status === 'PAUSED' ? (
-                      <><Icons.pause size={14} className="inline-icon" /> Orders temporarily paused. Resuming at <strong>{new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></>
-                    ) : (
-                      <><Icons.alertCircle size={14} className="inline-icon" /> Restaurant closed. Orders will resume at <strong>10:00 AM</strong></>
-                    )}
-                  </div>
-                )}
-                <button 
+                {/* Timing Warning Removed for 24/7 operation */}
+                 <button 
                    className="checkout-btn" 
                    onClick={handleCheckout} 
-                   disabled={loading || !isOperating || status === 'PAUSED'}
+                   disabled={loading}
                    style={{ marginTop: '5px' }}
                 >
-                  {loading ? 'Processing...' : (!isOperating || status === 'PAUSED') ? 'Restaurant Closed' : 'Checkout & Pay'}
+                  {loading ? 'Processing...' : 'Checkout & Pay'}
                 </button>
               </div>
             </>

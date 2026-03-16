@@ -28,12 +28,9 @@ const LandingPage: React.FC = () => {
       <section className="hero">
         <div className="hero-grid-container">
           <div className="hero-text-content">
-            <div className={`restaurant-status-badge ${isOperating ? 'open' : status === 'PAUSED' ? 'paused' : 'closed'}`}>
+            <div className="restaurant-status-badge open">
               <span className="status-dot"></span>
-              {status === 'PAUSED' ? 'Orders Paused' : isOperating ? 'Open Now' : 'Closed'} • {
-                status === 'PAUSED' ? `Resumes at ${new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
-                isOperating ? `Closes at 11:00 PM` : `Opens at 10:00 AM`
-              }
+              Open 24/7 • Ready to Serve You
             </div>
             <h2>Ready to Taste the Excellence?</h2>
             <p>Experience the finest culinary culture at Rasoi Ghar. Delicious food meets authentic recipes for an unforgettable meal.</p>

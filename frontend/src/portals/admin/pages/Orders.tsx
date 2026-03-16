@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
+import { formatTime } from '../../../utils/dateFormatter';
 import '../../../App.css';
 
 
@@ -108,7 +109,7 @@ const Orders: React.FC = () => {
                                     <td>{order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber || order.Table?.tableNumber || 'N/A'}`}</td>
                                     <td><span className="management-amount">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
                                     <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
-                                    <td>{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                                    <td>{formatTime(order.createdAt)}</td>
                                     <td>
                                         <select
                                             className="admin-select"
