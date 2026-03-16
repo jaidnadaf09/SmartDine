@@ -4,12 +4,12 @@ import User from '../models/User';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { findAvailableTable } from '../utils/bookingUtils';
 import WalletTransaction from '../models/WalletTransaction';
-import { isRestaurantOpen, isValidWorkingHour } from '../utils/workingHours';
 import { Notification, RestaurantSetting } from '../models';
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
 const validateBookingDateTime = (dateStr: string, timeStr?: string): string | null => {
+    const now = new Date();
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -20,7 +20,7 @@ const validateBookingDateTime = (dateStr: string, timeStr?: string): string | nu
     const bookingDate = new Date(dateStr);
 
     if (bookingDate < today) {
-        return 'Booking date cannot be in the past.';
+        return 'Booking cannot be created for past date or time';
     }
     if (bookingDate > maxDate) {
         return 'Bookings allowed only within 30 days from today.';
@@ -29,8 +29,8 @@ const validateBookingDateTime = (dateStr: string, timeStr?: string): string | nu
     // If time is provided, validate combined date+time is not in the past
     if (timeStr) {
         const bookingDateTime = new Date(`${dateStr}T${timeStr}`);
-        if (bookingDateTime < new Date()) {
-            return 'Cannot book a table for a past time.';
+        if (bookingDateTime < now) {
+            return 'Booking cannot be created for past date or time';
         }
     }
 
@@ -78,22 +78,6 @@ export const checkAvailability = async (req: AuthRequest, res: Response) => {
 // @access  Private (requires login)
 export const createBooking = async (req: AuthRequest, res: Response) => {
     try {
-        const ENABLE_RESTAURANT_TIMING = false;
-        if (ENABLE_RESTAURANT_TIMING) {
-            const settings = await RestaurantSetting.findOne();
-            if (settings && settings.status === 'CLOSED') {
-                return res.status(403).json({ 
-                    message: 'Restaurant is currently closed for bookings. Please try again later.' 
-                });
-            }
-
-            // 2. Validate Restaurant Opening Hours for the SELECTED booking time
-            if (!isValidWorkingHour(req.body.time)) {
-                return res.status(400).json({ 
-                    message: 'Tables can only be booked during restaurant working hours (10 AM - 11 PM)' 
-                });
-            }
-        }
         console.log('Received booking request:', req.body);
 
         // Fetch authenticated user from DB

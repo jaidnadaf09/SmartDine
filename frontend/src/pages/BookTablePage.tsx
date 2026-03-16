@@ -153,20 +153,18 @@ const BookTablePage: React.FC = () => {
         return;
       }
 
-      // Restaurant Hours Validation (Disabled for 24/7 operation)
-      /* 
-      if (!isValidWorkingHour(formData.time)) {
-        setError('Tables can only be booked between 10:00 AM and 11:00 PM');
-        toast.error('Tables can only be booked between 10:00 AM and 11:00 PM');
+
+      console.log('Initiating booking flow for:', formData.date, formData.time);
+
+      // Verify not past date/time
+      const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
+      if (selectedDateTime < new Date()) {
+        setError('Booking time cannot be in the past.');
+        toast.error('Booking time cannot be in the past.');
         setLoading(false);
         bookingInProgress.current = false;
         return;
       }
-      */
-
-      console.log('Initiating booking flow for:', formData.date, formData.time);
-
-      // 1. Check Availability
       const availRes = await api.post('/bookings/check-availability', { 
         date: formData.date, 
         time: formData.time 

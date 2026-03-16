@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
 import { Icons } from '../components/icons/IconSystem';
 import api from '../utils/api';
 import '../styles/Order.css';
@@ -62,7 +61,6 @@ const OrderPage: React.FC = () => {
   const [cart, setCart] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { status, isOperating, pauseUntil } = useRestaurantStatus();
   const [assignedTable, setAssignedTable] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');

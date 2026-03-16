@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { Order, User, Table, Booking, WalletTransaction, sequelize, Notification, RestaurantSetting } from '../models';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Op } from 'sequelize';
-import { isRestaurantOpen } from '../utils/workingHours';
 
 // @desc    Get all orders
 // @route   GET /api/orders
@@ -29,23 +28,6 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
 // @access  Public (from customer frontend) or Private
 export const createOrder = async (req: Request, res: Response) => {
     try {
-        const ENABLE_RESTAURANT_TIMING = false;
-        if (ENABLE_RESTAURANT_TIMING) {
-            const settings = await RestaurantSetting.findOne();
-            const restaurantStatus = settings?.status || 'OPEN';
-
-            if (restaurantStatus === 'CLOSED') {
-                return res.status(403).json({ message: 'Restaurant is currently closed for orders.' });
-            }
-
-            if (restaurantStatus === 'PAUSED') {
-                return res.status(403).json({ message: 'Orders are temporarily paused. Please try again in a few minutes.' });
-            }
-
-            if (!isRestaurantOpen()) {
-                return res.status(403).json({ message: 'Restaurant is currently closed. Orders are accepted between 10:00 AM and 11:00 PM.' });
-            }
-        }
         const { items, totalAmount, userId, paymentId, paymentStatus } = req.body;
 
         if (!items || Object.keys(items).length === 0) {
