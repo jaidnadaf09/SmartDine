@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
-import RestaurantStatusControl from '../components/RestaurantStatusControl';
 import api from '../../../utils/api';
 import { formatDate, formatTime } from '../../../utils/dateFormatter';
 import '../../../styles/ChefPortal.css';
@@ -63,7 +62,6 @@ const Dashboard: React.FC = () => {
                 <div className="admin-header-divider"></div>
             </header>
 
-            <RestaurantStatusControl />
 
             {error ? (
                 <div className="error-state">

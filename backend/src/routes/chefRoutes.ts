@@ -6,6 +6,7 @@ import {
     updateChefOrderStatus,
     getChefOrderHistory
 } from '../controllers/chefController';
+import { getAllReviews } from '../controllers/reviewController';
 
 const router = express.Router();
 
@@ -22,5 +23,8 @@ router.put('/orders/:id/status', updateChefOrderStatus);
 
 // Order History (Completed Today)
 router.get('/order-history', getChefOrderHistory);
+
+// Reviews / Feedback
+router.get('/reviews', getAllReviews);
 
 export default router;

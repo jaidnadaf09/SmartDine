@@ -5,3 +5,8 @@ frontend/.env
 frontend/.env.development
 backend/.env
 backend/.env.development
+
+# Build output
+backend/dist
+frontend/dist
+dist

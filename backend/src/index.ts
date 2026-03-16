@@ -19,7 +19,6 @@ import chefRoutes from "./routes/chefRoutes";
 import walletRoutes from "./routes/walletRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import reviewRoutes from "./routes/reviewRoutes";
-import restaurantRoutes from "./routes/restaurantRoutes";
 import { initScheduler } from "./utils/scheduler";
 
 
@@ -66,21 +65,19 @@ app.use((req, res, next) => {
 });
 
 // API Routes
+app.use("/api/admin", adminRoutes);
+app.use("/api/chef", chefRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/tables", tableRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/menu", menuRoutes);
 app.use("/api/inventory", inventoryRoutes);
-app.use("/api/admin", adminRoutes);
 app.use("/api/payment", paymentRoutes);
-app.use("/api/chef", chefRoutes);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reviews", reviewRoutes);
-app.use("/api/restaurant", restaurantRoutes);
 
-// Test route
 app.get("/", (req, res) => {
     res.send("SmartDine API is running");
 });
@@ -126,6 +123,7 @@ const startServer = async () => {
 
         app.listen(PORT, () => {
             console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+            
             // Initialize automated tasks
             initScheduler();
         });

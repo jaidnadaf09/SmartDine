@@ -4,12 +4,10 @@ import '../styles/LandingPage.css';
 import restaurantImage from '../assets/Restaurant_business_plan_main.jpg';
 import restaurantInterior from '../assets/restaurant_interior.png';
 import reservedTable from '../assets/reserved_table.png';
-import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
 import { Icons } from '../components/icons/IconSystem';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { status, isOperating, pauseUntil } = useRestaurantStatus();
 
   const featuredDishes = [
     { id: 1, name: 'Paneer Butter Masala', price: '₹280', description: 'Paneer in tomato gravy' },
