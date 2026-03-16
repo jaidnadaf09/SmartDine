@@ -394,6 +394,13 @@ body.dark {
   gap: 15px;
 }
 
+.header-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  order: 2; /* Ensure it stays right of nav buttons */
+}
+
 .welcome-text {
   font-size: 0.95rem;
   font-weight: 600;
@@ -430,6 +437,12 @@ body.dark {
   vertical-align: middle;
 }
 
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+}
+
 .nav-btn {
   background: transparent;
   color: white !important;
@@ -460,6 +473,140 @@ body.dark {
   font-weight: 600;
 }
 
+.notification-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: -10px;
+  width: 320px;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 2000;
+  overflow: hidden;
+  animation: dropdownFade 0.25s ease-out;
+}
+
+.notification-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--card-bg);
+}
+
+.notification-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  color: #8B5E3C;
+}
+
+.clear-all-btn {
+  background: transparent;
+  border: none;
+  color: var(--brand-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.clear-all-btn:hover {
+  background: var(--brand-primary-light);
+  text-decoration: underline;
+}
+
+.notification-list {
+  max-height: 360px;
+  overflow-y: auto;
+  background-color: var(--card-bg);
+}
+
+.notification-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  background-color: var(--card-bg);
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-item:hover {
+  background-color: var(--card-bg-alt) !important;
+}
+
+.notification-item.unread {
+  background-color: var(--brand-primary-light);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-msg {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.notification-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.mark-read-icon {
+  color: var(--brand-primary);
+  opacity: 0.8;
+}
+
+.notification-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.4;
+}
+
+.notification-close-btn:hover {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: var(--error-color);
+  opacity: 1;
+}
+
+.notification-empty {
+  color: #8B5E3C;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+  padding: 35px 16px;
+}
 /* Login / Signup Buttons in navbar */
 .nav-btn.login-btn {
   border: none;
@@ -498,6 +645,7 @@ body.dark {
   background: rgba(255, 255, 255, 0.3);
   border-color: white;
   transform: scale(1.06);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15);
 }
 
 .avatar-container {
@@ -784,7 +932,6 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 /* Notification System Styles */
 .notification-bell-container {
   position: relative;
-  margin-right: 15px;
 }
 
 .notification-bell-btn {
@@ -809,19 +956,20 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 
 .notification-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  background: var(--brand-primary);
+  top: -4px;
+  right: -4px;
+  background-color: var(--error-color);
   color: white;
-  font-size: 10px;
-  min-width: 16px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  width: 16px;
   height: 16px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  border: 2px solid var(--glass-bg);
+  border: 1.5px solid var(--navbar-bg);
+  z-index: 10;
 }
 
 .notification-dropdown {

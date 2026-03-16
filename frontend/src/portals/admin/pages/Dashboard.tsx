@@ -4,6 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
 import RestaurantStatusControl from '../components/RestaurantStatusControl';
 import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 import '../../../styles/ChefPortal.css';
 
 
@@ -103,7 +104,7 @@ const Dashboard: React.FC = () => {
                                     <div className="chef-item-info">
                                         <div className="chef-detail-content">
                                             <span className="chef-item-name" style={{ fontWeight: 600, display: 'block' }}>{b.customerName}</span>
-                                            <span className="chef-detail-label" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{b.date} · {b.time}</span>
+                                             <span className="chef-detail-label" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{formatDate(b.date)} · {formatTime(b.time)}</span>
                                         </div>
                                     </div>
                                     <span className={`status-pill-modern status-modern-${b.status?.toLowerCase()}`}>

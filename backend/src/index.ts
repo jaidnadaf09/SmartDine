@@ -1,6 +1,6 @@
+import "./loadEnv";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import { sequelize } from "./models";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -22,8 +22,6 @@ import reviewRoutes from "./routes/reviewRoutes";
 import restaurantRoutes from "./routes/restaurantRoutes";
 import { initScheduler } from "./utils/scheduler";
 
-// Load environment variables
-dotenv.config();
 
 const app = express();
 

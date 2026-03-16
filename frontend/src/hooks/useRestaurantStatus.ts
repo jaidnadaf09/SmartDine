@@ -19,9 +19,7 @@ export const useRestaurantStatus = () => {
             // Business Hours Logic (10:00 AM - 11:00 PM)
             const now = new Date();
             const hour = now.getHours();
-            const isWorkingHour = hour >= 10 && hour < 23;
-            
-            const isOperating = isWorkingHour && data.status === 'OPEN';
+            const isOperating = true; // Restaurant is now open 24/7
             
             setStatusData({
                 ...data,

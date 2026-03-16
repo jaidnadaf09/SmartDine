@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, AlertCircle, Inbox, Users, Info, Utensils, CreditCard } from 'lucide-react';
 import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 
 
 // Using centralized api instance
@@ -95,7 +96,7 @@ const ActivityOverview: React.FC = () => {
                                     </div>
                                     <div className="activity-item-meta">
                                         <span><Users size={14} className="inline-icon" /> {booking.guests} Guest{booking.guests !== 1 ? 's' : ''}</span>
-                                        <span><Calendar size={14} className="inline-icon" /> {new Date(booking.date).toLocaleDateString()} at {booking.time}</span>
+                                        <span><Calendar size={14} className="inline-icon" /> {formatDate(booking.date)} at {formatTime(booking.time)}</span>
                                     </div>
                                     {booking.status === 'cancelled' && booking.cancelReason && (
                                         <div className="activity-cancel-reason">

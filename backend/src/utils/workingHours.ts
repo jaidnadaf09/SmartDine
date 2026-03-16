@@ -1,24 +1,19 @@
 export const isRestaurantOpen = (): boolean => {
-    const now = new Date();
-    const hour = now.getHours();
-
-    // 10:00 AM (10) to 11:00 PM (23)
-    return hour >= 10 && hour < 23;
+    // Restaurant is now open 24/7
+    return true;
 };
 
 export const isValidWorkingHour = (timeStr: string): boolean => {
-    // Expecting "HH:mm" format
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    return hours >= 10 && hours < 23;
+    // All hours are valid for 24/7 operation
+    return true;
 };
 
 export const getRestaurantStatus = () => {
-    const isOpen = isRestaurantOpen();
     return {
-        isOpen,
-        openTime: '10:00 AM',
-        closeTime: '11:00 PM',
-        message: isOpen ? 'Open Now' : 'Restaurant is currently closed',
-        subMessage: isOpen ? 'Closes at 11:00 PM' : 'Orders resume at 10:00 AM'
+        isOpen: true,
+        openTime: 'Open 24/7',
+        closeTime: 'Open 24/7',
+        message: 'Open Now',
+        subMessage: 'Open 24 hours a day'
     };
 };

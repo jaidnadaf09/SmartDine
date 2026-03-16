@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
+import { formatDate } from '../../../utils/dateFormatter';
 
 
 // Using centralized api instance
@@ -78,7 +79,7 @@ const Payments: React.FC = () => {
                                             {payment.paymentStatus}
                                         </span>
                                     </td>
-                                    <td><span style={{ color: 'var(--text-secondary)' }}>{new Date(payment.updatedAt).toLocaleDateString()}</span></td>
+                                    <td><span style={{ color: 'var(--text-secondary)' }}>{formatDate(payment.updatedAt)}</span></td>
                                 </tr>
                             ))}
                         </tbody>

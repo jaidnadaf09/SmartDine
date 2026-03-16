@@ -78,19 +78,23 @@ export const checkAvailability = async (req: AuthRequest, res: Response) => {
 // @access  Private (requires login)
 export const createBooking = async (req: AuthRequest, res: Response) => {
     try {
-        const settings = await RestaurantSetting.findOne();
-        if (settings && settings.status === 'CLOSED') {
-            return res.status(403).json({ 
-                message: 'Restaurant is currently closed for bookings. Please try again later.' 
-            });
-        }
+        const ENABLE_RESTAURANT_TIMING = false;
+        if (ENABLE_RESTAURANT_TIMING) {
+            const settings = await RestaurantSetting.findOne();
+            if (settings && settings.status === 'CLOSED') {
+                return res.status(403).json({ 
+                    message: 'Restaurant is currently closed for bookings. Please try again later.' 
+                });
+            }
 
-        // 2. Validate Restaurant Opening Hours for the SELECTED booking time
-        if (!isValidWorkingHour(req.body.time)) {
-            return res.status(400).json({ 
-                message: 'Tables can only be booked during restaurant working hours (10 AM - 11 PM)' 
-            });
-        }    console.log('Received booking request:', req.body);
+            // 2. Validate Restaurant Opening Hours for the SELECTED booking time
+            if (!isValidWorkingHour(req.body.time)) {
+                return res.status(400).json({ 
+                    message: 'Tables can only be booked during restaurant working hours (10 AM - 11 PM)' 
+                });
+            }
+        }
+        console.log('Received booking request:', req.body);
 
         // Fetch authenticated user from DB
         const user = await User.findByPk(req.user!.id);
@@ -271,6 +275,26 @@ export const getUpcomingBooking = async (req: AuthRequest, res: Response) => {
         const timeDiff = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60);
 
         if (timeDiff > 0 && timeDiff <= 120) {
+            // Logic: Create a booking_reminder notification if it doesn't already exist for this user in the last 2 hours
+            // This prevents duplicate reminders in the notification panel
+            const existingReminder = await Notification.findOne({
+                where: {
+                    userId: req.user!.id,
+                    type: 'booking_reminder',
+                    createdAt: {
+                        [Op.gte]: new Date(now.getTime() - 2 * 60 * 60 * 1000)
+                    }
+                }
+            });
+
+            if (!existingReminder) {
+                await Notification.create({
+                    userId: req.user!.id,
+                    message: `Reminder: Your table booking #${booking.id} is at ${booking.time} today.`,
+                    type: 'booking_reminder'
+                });
+            }
+
             return res.json({
                 upcomingBooking: {
                     id: booking.id,

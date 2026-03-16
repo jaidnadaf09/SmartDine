@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 
 
 // Using centralized api instance
@@ -71,7 +72,7 @@ const AdminBookingHistory: React.FC = () => {
                                 <tr key={booking.id}>
                                     <td><strong>{booking.customerName}</strong></td>
                                     <td>{booking.guests} Guests</td>
-                                    <td>{new Date(booking.date).toLocaleDateString()} at {booking.time}</td>
+                                    <td>{formatDate(booking.date)} at {formatTime(booking.time)}</td>
                                     <td>
                                         <span className={`status-badge status-${booking.paymentStatus === 'paid' ? 'completed' : 'cancelled'}`}>
                                             {booking.paymentStatus}
@@ -82,10 +83,10 @@ const AdminBookingHistory: React.FC = () => {
                                     </td>
                                     <td>
                                         <div style={{ fontSize: '0.85rem', fontWeight: 500 }}>
-                                            {new Date(booking.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {formatTime(booking.updatedAt)}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>
-                                            {new Date(booking.updatedAt).toLocaleDateString()}
+                                            {formatDate(booking.updatedAt)}
                                         </div>
                                     </td>
                                     <td>
