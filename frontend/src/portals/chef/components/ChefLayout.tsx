@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
+import AvatarDropdown from '../../../components/shared/AvatarDropdown';
+import NotificationPanel from '../../../components/shared/NotificationPanel';
 import '../../../App.css';
 import '../../../styles/ChefPortal.css';
 
@@ -10,13 +12,14 @@ interface ChefLayoutProps {
 }
 
 const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
-    const { logout, user } = useAuth();
+    const { logout } = useAuth();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     const navLinks = [
         { path: '/chef', label: 'Dashboard', icon: <Icons.dashboard size={20} /> },
         { path: '/chef/orders', label: 'Kitchen Orders', icon: <Icons.chef size={20} /> },
         { path: '/chef/history', label: 'Activity History', icon: <Icons.historyIcon size={20} /> },
+        { path: '/chef/feedback', label: 'Customer Feedback', icon: <Icons.star size={20} /> },
     ];
 
     return (
@@ -50,15 +53,29 @@ const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
             </aside>
 
             <main className="admin-main" style={{ flex: 1, height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <header className="admin-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '15px 30px', background: 'var(--card-bg)', borderBottom: '1px solid var(--card-border)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.9rem' }}>{user?.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--brand-primary)', fontWeight: 700, textTransform: 'uppercase' }}>Executive Chef</div>
-                        </div>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--brand-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>
-                            {user?.name.charAt(0)}
-                        </div>
+                <header className="admin-topbar" style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    padding: '12px 30px', 
+                    background: 'var(--card-bg)', 
+                    borderBottom: '1px solid var(--card-border)',
+                    height: '70px'
+                }}>
+                    <div className="topbar-left">
+                        {/* Only show logo here if sidebar is closed or on mobile */}
+                        {!isSidebarOpen && (
+                             <div className="mobile-logo" style={{ color: 'var(--brand-primary)', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Icons.utensils size={24} />
+                                <span>SmartDine</span>
+                             </div>
+                        )}
+                    </div>
+
+                    <div className="topbar-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <NotificationPanel />
+                        <div className="divider" style={{ width: '1px', height: '24px', background: 'var(--card-border)' }}></div>
+                        <AvatarDropdown showName={true} />
                     </div>
                 </header>
                 <div className="admin-content">

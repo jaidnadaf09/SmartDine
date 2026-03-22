@@ -3,10 +3,12 @@ import { Icons } from '../components/icons/IconSystem';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { isValidWorkingHour } from '../utils/workingHours';
+import api from '../utils/api';
+import { formatDate, formatTime } from '../utils/dateFormatter';
 import '../styles/BookTable.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -98,28 +100,22 @@ const BookTablePage: React.FC = () => {
 
   const handleAdminBook = async () => {
     setError('');
+    const token = localStorage.getItem('token');
+    if (!token) {
+        toast.error('Session expired. Please login again.');
+        navigate('/login');
+        return;
+    }
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
-        body: JSON.stringify({
-          date: formData.date,
-          time: formData.time,
-          guests: parseInt(formData.guests, 10),
-          status: 'confirmed'
-        }),
+      const res = await api.post('/bookings', {
+        date: formData.date,
+        time: formData.time,
+        guests: parseInt(formData.guests, 10),
+        status: 'confirmed'
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || 'Failed to create booking');
-      }
-
-      const data = await res.json();
+      const data = res.data;
       setBookingDetails(data);
       setSubmitted(true);
       if (data.tableNumber) {
@@ -128,8 +124,8 @@ const BookTablePage: React.FC = () => {
         toast.success('Admin Booking Confirmed! (Table pending assignment)');
       }
     } catch (err: any) {
-      setError(err.message || 'Admin booking failed');
-      toast.error(err.message || 'Admin booking failed');
+      setError(err.response?.data?.message || err.message || 'Admin booking failed');
+      toast.error(err.response?.data?.message || err.message || 'Admin booking failed');
     } finally {
       setLoading(false);
     }
@@ -157,36 +153,24 @@ const BookTablePage: React.FC = () => {
         return;
       }
 
-      // Restaurant Hours Validation
-      if (!isValidWorkingHour(formData.time)) {
-        setError('Tables can only be booked between 10:00 AM and 11:00 PM');
-        toast.error('Tables can only be booked between 10:00 AM and 11:00 PM');
+
+      console.log('Initiating booking flow for:', formData.date, formData.time);
+
+      // Verify not past date/time
+      const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
+      if (selectedDateTime < new Date()) {
+        setError('Booking time cannot be in the past.');
+        toast.error('Booking time cannot be in the past.');
         setLoading(false);
         bookingInProgress.current = false;
         return;
       }
-
-      console.log('Initiating booking flow for:', formData.date, formData.time);
-
-      // 1. Check Availability
-      const availRes = await fetch(`${API_URL}/bookings/check-availability`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date: formData.date, time: formData.time })
+      const availRes = await api.post('/bookings/check-availability', { 
+        date: formData.date, 
+        time: formData.time 
       });
 
-      if (!availRes.ok) {
-        const text = await availRes.text();
-        console.error('Availability check failed:', text);
-        try {
-          const data = JSON.parse(text);
-          throw new Error(data.message || 'Availability check failed');
-        } catch (e) {
-          throw new Error(`Server Error: ${availRes.status}. Please check backend logs.`);
-        }
-      }
-
-      const availData = await availRes.json();
+      const availData = availRes.data;
       if (!availData.available) {
         throw new Error(availData.message || 'No tables available for this slot.');
       }
@@ -203,27 +187,17 @@ const BookTablePage: React.FC = () => {
           return;
         }
 
-        const walletRes = await fetch(`${API_URL}/payment/wallet-pay`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user?.token}`
-          },
-          body: JSON.stringify({
-            amount: paymentAmount,
-            bookingData: {
-              userId: user.id,
-              date: formData.date,
-              time: formData.time,
-              guests: parseInt(formData.guests, 10),
-            }
-          })
+        const walletRes = await api.post('/payment/wallet-pay', {
+          amount: paymentAmount,
+          bookingData: {
+            userId: user.id,
+            date: formData.date,
+            time: formData.time,
+            guests: parseInt(formData.guests, 10),
+          }
         });
 
-        const walletData = await walletRes.json();
-        if (!walletRes.ok) {
-           throw new Error(walletData.message || 'Wallet payment failed.');
-        }
+        const walletData = walletRes.data;
 
         if (walletData.walletBalance !== undefined && user) {
            updateUser({ walletBalance: walletData.walletBalance });
@@ -247,22 +221,11 @@ const BookTablePage: React.FC = () => {
       // -- ORIGINAL RAZORPAY PAYMENT BRANCH --
       console.log('Creating Razorpay Order for amount:', paymentAmount);
 
-      const orderResponse = await fetch(`${API_URL}/payment/create-order`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
-        body: JSON.stringify({ amount: paymentAmount }),
+      const orderResponse = await api.post('/payment/create-order', { 
+        amount: paymentAmount 
       });
 
-      if (!orderResponse.ok) {
-        const text = await orderResponse.text();
-        console.error('Order creation failed:', text);
-        throw new Error('Failed to create payment order. Is the backend running?');
-      }
-
-      const orderData = await orderResponse.json();
+      const orderData = orderResponse.data;
       console.log('Order created successfully on backend:', orderData.orderId);
 
       // 3. Open Razorpay
@@ -289,47 +252,26 @@ const BookTablePage: React.FC = () => {
           setLoading(true);
           try {
             // Send only booking details – backend resolves customer info from token
-            const verifyRes = await fetch(`${API_URL}/payment/verify`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${user?.token}`
-              },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-                bookingData: {
-                  userId: user.id,
-                  date: formData.date,
-                  time: formData.time,
-                  guests: parseInt(formData.guests, 10),
-                }
-              }),
+            const verifyRes = await api.post('/payment/verify', {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              bookingData: {
+                userId: user.id,
+                date: formData.date,
+                time: formData.time,
+                guests: parseInt(formData.guests, 10),
+              }
             });
 
-            if (verifyRes.ok) {
-              const result = await verifyRes.json();
-              console.log('Payment verified and booking created:', result.booking);
-              setBookingDetails(result.booking);
-              setSubmitted(true);
-              if (result.booking.tableNumber) {
-                toast.success(`Booking Confirmed! Assigned Table: ${result.booking.tableNumber}`);
-              } else {
-                toast.success('Booking Confirmed! (Table pending assignment)');
-              }
+            const result = verifyRes.data;
+            console.log('Payment verified and booking created:', result.booking);
+            setBookingDetails(result.booking);
+            setSubmitted(true);
+            if (result.booking.tableNumber) {
+              toast.success(`Booking Confirmed! Assigned Table: ${result.booking.tableNumber}`);
             } else {
-              const text = await verifyRes.text();
-              console.error('Verification failed on server:', text);
-              let errorMsg = 'Payment verification failed';
-              try {
-                const errData = JSON.parse(text);
-                errorMsg = errData.message || errorMsg;
-              } catch (e) {
-                errorMsg = `Server Error: ${verifyRes.status}`;
-              }
-              toast.error(errorMsg);
-              throw new Error(errorMsg);
+              toast.success('Booking Confirmed! (Table pending assignment)');
             }
           } catch (err: any) {
             console.error('VERIFICATION ERROR:', err);
@@ -387,8 +329,8 @@ const BookTablePage: React.FC = () => {
             <h3 className="success-banner">✓ Booking Confirmed</h3>
             <div className="success-card">
               <p><strong>Table:</strong> {bookingDetails?.tableNumber || 'Pending Assignment'}</p>
-              <p><strong>Date:</strong> {new Date(bookingDetails?.date).toLocaleDateString()}</p>
-              <p><strong>Time:</strong> {bookingDetails?.time}</p>
+              <p><strong>Date:</strong> {formatDate(bookingDetails?.date)}</p>
+              <p><strong>Time:</strong> {formatTime(bookingDetails?.time)}</p>
               {bookingDetails?.paymentId && <p className="booking-id-tag"><strong>Ref:</strong> {bookingDetails.paymentId}</p>}
             </div>
             <p style={{ color: 'var(--booking-text-muted)', fontWeight: 500 }}>We look forward to serving you.</p>
@@ -411,10 +353,10 @@ const BookTablePage: React.FC = () => {
               {/* Booking Information */}
               <div className="booking-info-box">
                 <div className="booking-hours">
-                  <Icons.clock size={16} className="inline-icon" /> Bookings accepted from <strong>10:00 AM – 11:00 PM</strong>
+                  <Icons.clock size={16} className="inline-icon" /> Experience premium dining <strong>Open 24/7</strong>
                 </div>
                 <div className="booking-hint">
-                  <Icons.calendar size={16} className="inline-icon" /> Selected booking time must fall within restaurant hours
+                  <Icons.calendar size={16} className="inline-icon" /> Book your table anytime for a seamless experience
                 </div>
               </div>
             </div>

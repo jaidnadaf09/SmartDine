@@ -4,12 +4,10 @@ import '../styles/LandingPage.css';
 import restaurantImage from '../assets/Restaurant_business_plan_main.jpg';
 import restaurantInterior from '../assets/restaurant_interior.png';
 import reservedTable from '../assets/reserved_table.png';
-import { useRestaurantStatus } from '../hooks/useRestaurantStatus';
 import { Icons } from '../components/icons/IconSystem';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { status, isOperating, pauseUntil } = useRestaurantStatus();
 
   const featuredDishes = [
     { id: 1, name: 'Paneer Butter Masala', price: '₹280', description: 'Paneer in tomato gravy' },
@@ -28,12 +26,9 @@ const LandingPage: React.FC = () => {
       <section className="hero">
         <div className="hero-grid-container">
           <div className="hero-text-content">
-            <div className={`restaurant-status-badge ${isOperating ? 'open' : status === 'PAUSED' ? 'paused' : 'closed'}`}>
+            <div className="restaurant-status-badge open">
               <span className="status-dot"></span>
-              {status === 'PAUSED' ? 'Orders Paused' : isOperating ? 'Open Now' : 'Closed'} • {
-                status === 'PAUSED' ? `Resumes at ${new Date(pauseUntil!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` :
-                isOperating ? `Closes at 11:00 PM` : `Opens at 10:00 AM`
-              }
+              Open 24/7 • Ready to Serve You
             </div>
             <h2>Ready to Taste the Excellence?</h2>
             <p>Experience the finest culinary culture at Rasoi Ghar. Delicious food meets authentic recipes for an unforgettable meal.</p>

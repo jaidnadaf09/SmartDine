@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, AlertCircle, Inbox, Users, Info, Utensils, CreditCard } from 'lucide-react';
+import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const ActivityOverview: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -11,25 +14,16 @@ const ActivityOverview: React.FC = () => {
     const [bookingsError, setBookingsError] = useState<string | null>(null);
     const [ordersError, setOrdersError] = useState<string | null>(null);
 
-    const getToken = () => {
-        const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-        return userData.token || null;
-    };
-
     const fetchBookings = async () => {
         setBookingsLoading(true);
         setBookingsError(null);
+        const token = localStorage.getItem('token');
+        if (!token) { setBookingsError('Auth token missing.'); return; }
         try {
-            const token = getToken();
-            if (!token) { setBookingsError('Auth token missing.'); return; }
-            const res = await fetch(`${API_URL}/admin/bookings/history`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to fetch bookings');
-            const data = await res.json();
-            setBookings(Array.isArray(data) ? data : []);
+            const res = await api.get('/admin/bookings/history');
+            setBookings(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
-            setBookingsError(err.message || 'Failed to load booking history.');
+            setBookingsError(err.response?.data?.message || err.message || 'Failed to load booking history.');
         } finally {
             setBookingsLoading(false);
         }
@@ -38,17 +32,13 @@ const ActivityOverview: React.FC = () => {
     const fetchOrders = async () => {
         setOrdersLoading(true);
         setOrdersError(null);
+        const token = localStorage.getItem('token');
+        if (!token) { setOrdersError('Auth token missing.'); return; }
         try {
-            const token = getToken();
-            if (!token) { setOrdersError('Auth token missing.'); return; }
-            const res = await fetch(`${API_URL}/admin/orders/history`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Failed to fetch orders');
-            const data = await res.json();
-            setOrders(Array.isArray(data) ? data : []);
+            const res = await api.get('/admin/orders/history');
+            setOrders(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
-            setOrdersError(err.message || 'Failed to load order history.');
+            setOrdersError(err.response?.data?.message || err.message || 'Failed to load order history.');
         } finally {
             setOrdersLoading(false);
         }
@@ -59,10 +49,7 @@ const ActivityOverview: React.FC = () => {
         fetchOrders();
     }, []);
 
-    const getStatusBadgeClass = (status: string) => {
-        const s = status?.toLowerCase();
-        return `status-badge status-${s}`;
-    };
+
 
     return (
         <div className="management-page">
@@ -109,7 +96,7 @@ const ActivityOverview: React.FC = () => {
                                     </div>
                                     <div className="activity-item-meta">
                                         <span><Users size={14} className="inline-icon" /> {booking.guests} Guest{booking.guests !== 1 ? 's' : ''}</span>
-                                        <span><Calendar size={14} className="inline-icon" /> {new Date(booking.date).toLocaleDateString()} at {booking.time}</span>
+                                        <span><Calendar size={14} className="inline-icon" /> {formatDate(booking.date)} at {formatTime(booking.time)}</span>
                                     </div>
                                     {booking.status === 'cancelled' && booking.cancelReason && (
                                         <div className="activity-cancel-reason">
