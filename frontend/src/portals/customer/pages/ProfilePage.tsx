@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { formatDate } from '../../../utils/dateFormatter';
 import '../../../styles/Portals.css';
 
 const ProfilePage: React.FC = () => {
@@ -9,10 +10,6 @@ const ProfilePage: React.FC = () => {
 
     if (!user) return null;
 
-    const formatDate = (dateString: string) => {
-        const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-        return new Date(dateString).toLocaleDateString('en-GB', options);
-    };
 
     return (
         <div className="portal-container">

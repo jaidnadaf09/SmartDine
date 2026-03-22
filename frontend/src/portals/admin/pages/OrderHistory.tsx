@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import api from '../../../utils/api';
+import { formatDate, formatTime } from '../../../utils/dateFormatter';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -10,28 +13,18 @@ const OrderHistory: React.FC = () => {
     const fetchOrderHistory = async () => {
         setLoading(true);
         setError(null);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Auth token missing.');
+            setLoading(false);
+            return;
+        }
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const token = userData.token;
-
-            if (!token) {
-                setError('Auth token missing.');
-                setLoading(false);
-                return;
-            }
-
-            // Using the new history route
-            const res = await fetch(`${API_URL}/admin/orders/history`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) throw new Error('Failed to fetch order history');
-
-            const data = await res.json();
-            setOrders(Array.isArray(data) ? data : []);
+            const res = await api.get('/admin/orders/history');
+            setOrders(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
             console.error('Failed to fetch order history:', err);
-            setError(err.message || 'Failed to load order history.');
+            setError(err.response?.data?.message || err.message || 'Failed to load order history.');
         } finally {
             setLoading(false);
         }
@@ -94,8 +87,8 @@ const OrderHistory: React.FC = () => {
                                     <td><span className="management-amount">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
                                     <td>
                                         <div style={{ fontSize: '0.8rem' }}>
-                                            {new Date(order.updatedAt).toLocaleDateString()}<br/>
-                                            {new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {formatDate(order.updatedAt)}<br/>
+                                            {formatTime(order.updatedAt)}
                                         </div>
                                     </td>
                                     <td><span className="status-badge status-completed">Completed</span></td>

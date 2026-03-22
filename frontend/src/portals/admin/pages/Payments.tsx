@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
+import { formatDate } from '../../../utils/dateFormatter';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const Payments: React.FC = () => {
     const [payments, setPayments] = useState<any[]>([]);
@@ -11,27 +14,18 @@ const Payments: React.FC = () => {
     const fetchPayments = async () => {
         setLoading(true);
         setError(null);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Auth token missing.');
+            setLoading(false);
+            return;
+        }
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const token = userData.token;
-
-            if (!token) {
-                setError('Auth token missing.');
-                setLoading(false);
-                return;
-            }
-
-            const res = await fetch(`${API_URL}/admin/payments`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) throw new Error('Failed to fetch payments');
-
-            const data = await res.json();
-            setPayments(Array.isArray(data) ? data : []);
+            const res = await api.get('/admin/payments');
+            setPayments(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
             console.error('Failed to fetch payments:', err);
-            setError(err.message || 'Failed to load payments.');
+            setError(err.response?.data?.message || err.message || 'Failed to load payments.');
         } finally {
             setLoading(false);
         }
@@ -85,7 +79,7 @@ const Payments: React.FC = () => {
                                             {payment.paymentStatus}
                                         </span>
                                     </td>
-                                    <td><span style={{ color: 'var(--text-secondary)' }}>{new Date(payment.updatedAt).toLocaleDateString()}</span></td>
+                                    <td><span style={{ color: 'var(--text-secondary)' }}>{formatDate(payment.updatedAt)}</span></td>
                                 </tr>
                             ))}
                         </tbody>

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog';
 import { Icons } from '../../../components/icons/IconSystem';
+import api from '../../../utils/api';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const Tables: React.FC = () => {
     const [tables, setTables] = useState<any[]>([]);
@@ -16,27 +18,18 @@ const Tables: React.FC = () => {
     const fetchTables = async () => {
         setLoading(true);
         setError(null);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Auth token missing.');
+            setLoading(false);
+            return;
+        }
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const token = userData.token;
-
-            if (!token) {
-                setError('Auth token missing.');
-                setLoading(false);
-                return;
-            }
-
-            const res = await fetch(`${API_URL}/admin/tables`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (!res.ok) throw new Error('Failed to fetch tables');
-
-            const data = await res.json();
-            setTables(Array.isArray(data) ? data : []);
+            const res = await api.get('/admin/tables');
+            setTables(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
             console.error('Failed to fetch tables:', err);
-            setError(err.message || 'Failed to load tables.');
+            setError(err.response?.data?.message || err.message || 'Failed to load tables.');
         } finally {
             setLoading(false);
         }
@@ -49,27 +42,13 @@ const Tables: React.FC = () => {
     const addTable = async () => {
         if (!newTable.tableNumber) return;
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/admin/tables`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${userData.token}`
-                },
-                body: JSON.stringify({ ...newTable, status: 'available' })
-            });
-
-            if (res.ok) {
-                const addedTable = await res.json();
-                setTables([...tables, addedTable]);
-                setNewTable({ tableNumber: '', capacity: 2 });
-                toast.success('Table added!');
-            } else {
-                toast.error('Failed to add table');
-            }
-        } catch (err) {
+            const res = await api.post('/admin/tables', { ...newTable, status: 'available' });
+            setTables([...tables, res.data]);
+            setNewTable({ tableNumber: '', capacity: 2 });
+            toast.success('Table added!');
+        } catch (err: any) {
             console.error('Failed to add table:', err);
-            toast.error('Failed to add table');
+            toast.error(err.response?.data?.message || 'Failed to add table');
         }
     };
 
@@ -82,47 +61,25 @@ const Tables: React.FC = () => {
         if (!tableToDelete) return;
 
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/admin/tables/${tableToDelete}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${userData.token}` }
-            });
-
-            if (res.ok) {
-                setTables(tables.filter(t => t.id !== tableToDelete));
-                toast.success('Table deleted!');
-                setConfirmDeleteOpen(false);
-                setTableToDelete(null);
-            } else {
-                toast.error('Failed to delete table');
-            }
-        } catch (err) {
+            await api.delete(`/admin/tables/${tableToDelete}`);
+            setTables(tables.filter(t => t.id !== tableToDelete));
+            toast.success('Table deleted!');
+            setConfirmDeleteOpen(false);
+            setTableToDelete(null);
+        } catch (err: any) {
             console.error('Failed to delete table:', err);
-            toast.error('Failed to delete table');
+            toast.error(err.response?.data?.message || 'Failed to delete table');
         }
     };
 
     const updateCapacity = async (id: number, capacity: number) => {
         try {
-            const userData = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
-            const res = await fetch(`${API_URL}/admin/tables/${id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${userData.token}`
-                },
-                body: JSON.stringify({ capacity })
-            });
-            if (res.ok) {
-                const updated = await res.json();
-                setTables(tables.map(t => t.id === updated.id ? updated : t));
-                toast.success('Capacity updated!');
-            } else {
-                toast.error('Failed to update capacity');
-            }
-        } catch (err) {
+            const res = await api.put(`/admin/tables/${id}`, { capacity });
+            setTables(tables.map(t => t.id === res.data.id ? res.data : t));
+            toast.success('Capacity updated!');
+        } catch (err: any) {
             console.error('Failed to update capacity:', err);
-            toast.error('Failed to update capacity');
+            toast.error(err.response?.data?.message || 'Failed to update capacity');
         }
     };
 

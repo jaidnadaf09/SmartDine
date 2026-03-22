@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import api from '../utils/api';
 
 export type UserRole = 'customer' | 'waiter' | 'chef' | 'admin' | null;
 
@@ -26,7 +27,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Using api utility instead of raw fetch
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -53,20 +54,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string): Promise<User> => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      const response = await api.post('/auth/login', {
+        email: email.trim().toLowerCase(),
+        password
       });
 
-      const data = await response.json();
+      const data = response.data;
       console.log('AuthContext DEBUG: Raw API Response:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to login');
-      }
 
       const loggedInUser: User = {
         id: data.id,
@@ -83,34 +77,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Clear old data first to ensure clean state
       localStorage.removeItem('smartdine_user');
+      localStorage.removeItem('token');
+      
       setUser(loggedInUser);
       localStorage.setItem('smartdine_user', JSON.stringify(loggedInUser));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
 
       return loggedInUser;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(error.message || 'Wrong email or password.');
-      } else {
-        throw new Error('Wrong email or password.');
-      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw new Error(error.response?.data?.message || 'Wrong email or password.');
     }
   };
 
   const signup = async (name: string, email: string, password: string, phone?: string): Promise<User> => {
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name: name.trim(), email: email.trim().toLowerCase(), password, phone: phone || null, role: 'customer' }),
+      const response = await api.post('/auth/register', {
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        phone: phone || null,
+        role: 'customer'
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to register');
-      }
+      const data = response.data;
 
       const newUser: User = {
         id: data.id,
@@ -124,22 +116,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
 
       localStorage.removeItem('smartdine_user');
+      localStorage.removeItem('token');
+      
       setUser(newUser);
       localStorage.setItem('smartdine_user', JSON.stringify(newUser));
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
 
       return newUser;
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(error.message || 'Failed to register.');
-      } else {
-        throw new Error('Failed to register.');
-      }
+    } catch (error: any) {
+      console.error('Signup error:', error);
+      throw new Error(error.response?.data?.message || 'Failed to register.');
     }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('smartdine_user');
+    localStorage.removeItem('token');
   };
 
   const updateUser = (newData: Partial<User>) => {
@@ -150,20 +145,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
-    if (!user?.token) throw new Error('Not authenticated');
-
-    const response = await fetch(`${API_URL}/auth/change-password`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${user.token}`,
-      },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to change password');
+    try {
+      await api.put('/auth/change-password', {
+        currentPassword,
+        newPassword
+      });
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to change password');
     }
   };
 

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
+import api from '../../../utils/api';
 import '../../../styles/Portals.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Using centralized api instance
 
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -54,19 +56,17 @@ const EditProfilePage: React.FC = () => {
         e.preventDefault();
         if (!validate()) return;
 
+        const token = localStorage.getItem('token');
+        if (!token) {
+            toast.error('Session expired. Please login again.');
+            navigate('/login');
+            return;
+        }
+
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/auth/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${user.token}`,
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.message || 'Failed to update profile');
+            const res = await api.put('/auth/profile', formData);
+            const data = res.data;
 
             updateUser(data);
             toast.success('Profile updated successfully');

@@ -394,6 +394,13 @@ body.dark {
   gap: 15px;
 }
 
+.header-actions {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  order: 2; /* Ensure it stays right of nav buttons */
+}
+
 .welcome-text {
   font-size: 0.95rem;
   font-weight: 600;
@@ -430,6 +437,12 @@ body.dark {
   vertical-align: middle;
 }
 
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+}
+
 .nav-btn {
   background: transparent;
   color: white !important;
@@ -460,6 +473,7 @@ body.dark {
   font-weight: 600;
 }
 
+/* Notification Dropdown styles moved and consolidated below */
 /* Login / Signup Buttons in navbar */
 .nav-btn.login-btn {
   border: none;
@@ -498,6 +512,7 @@ body.dark {
   background: rgba(255, 255, 255, 0.3);
   border-color: white;
   transform: scale(1.06);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15);
 }
 
 .avatar-container {
@@ -784,13 +799,12 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 /* Notification System Styles */
 .notification-bell-container {
   position: relative;
-  margin-right: 15px;
 }
 
 .notification-bell-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-color);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
   padding: 8px;
   border-radius: 50%;
   cursor: pointer;
@@ -802,26 +816,28 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 }
 
 .notification-bell-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
-  color: var(--brand-primary);
+  border-color: white;
 }
 
 .notification-badge {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  background: var(--brand-primary);
+  top: -4px;
+  right: -4px;
+  background-color: var(--error-color);
   color: white;
-  font-size: 10px;
-  min-width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  border: 2px solid var(--glass-bg);
+  border: 2px solid var(--navbar-bg);
+  z-index: 10;
+  padding: 0 4px;
 }
 
 .notification-dropdown {
@@ -829,12 +845,11 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
   top: 100%;
   right: 0;
   margin-top: 15px;
-  width: 300px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(15px);
-  border: 1px solid var(--glass-border);
+  width: 320px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   z-index: 1000;
   overflow: hidden;
   animation: slideFadeDown 0.3s ease forwards;
@@ -842,63 +857,116 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 
 .notification-header {
   padding: 15px;
-  border-bottom: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-color);
+  background: var(--card-bg-alt);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .notification-header h3 {
   margin: 0;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--brand-primary);
+}
+
+.clear-all-btn {
+  background: transparent;
+  border: none;
+  color: var(--brand-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.clear-all-btn:hover {
+  background: var(--brand-primary-light);
 }
 
 .notification-list {
-  max-height: 350px;
+  max-height: 400px;
   overflow-y: auto;
+  background: var(--card-bg);
 }
 
 .notification-item {
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--glass-border);
+  padding: 15px;
+  border-bottom: 1px solid var(--border-color);
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .notification-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background-color: var(--card-bg-alt);
 }
 
 .notification-item.unread {
-  background: rgba(var(--brand-primary-rgb), 0.05);
+  background-color: var(--brand-primary-light);
+}
+
+.notification-item:last-child {
+  border-bottom: none;
+}
+
+.notification-content {
+  flex: 1;
 }
 
 .notification-msg {
-  margin: 0 0 5px 0;
-  font-size: 13.5px;
+  margin: 0 0 6px 0;
+  font-size: 0.875rem;
   line-height: 1.4;
-  color: var(--text-color);
+  color: var(--text-primary);
+  font-weight: 500;
 }
 
 .notification-time {
-  font-size: 11px;
-  color: var(--text-dim);
+  font-size: 0.75rem;
+  color: var(--text-muted);
 }
 
-.notification-empty {
-  padding: 30px 15px;
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 14px;
+.notification-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
 }
 
 .mark-read-icon {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   color: var(--brand-primary);
-  opacity: 0.6;
+}
+
+.notification-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.notification-close-btn:hover {
+  background: rgba(255, 0, 0, 0.1);
+  color: var(--error-color);
+  opacity: 1;
+}
+
+.notification-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 @keyframes slideFadeDown {
