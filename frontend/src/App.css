@@ -1029,7 +1029,7 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 .confirm-modal {
   background: var(--modal-bg);
   border: 1px solid var(--card-border);
-  border-radius: 20px;
+  border-radius: 24px;
   width: 90%;
   max-width: 400px;
   padding: 32px;
@@ -1153,5 +1153,80 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 @media (max-width: 480px) {
   .confirm-modal {
     padding: 24px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   ADDED GLOBAL RESPONSIVE STYLES 
+═══════════════════════════════════════════ */
+/* Root overflow guard */
+html, body, #root {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  /* Touch targets minimum size */
+  .btn-primary,
+  .btn-secondary,
+  .nav-btn,
+  .auth-btn,
+  .cp-browse-btn,
+  .save-btn,
+  .chef-nav-btn,
+  .compact-add-btn,
+  .checkout-btn {
+    min-height: 40px;
+  }
+
+  /* Inputs touch size */
+  input,
+  select,
+  textarea,
+  .form-input {
+    min-height: 40px;
+  }
+
+  /* Header adjustments */
+  .header-content {
+    gap: 8px;
+  }
+  
+  .header-actions {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Typography scaling */
+  .page-title,
+  h1 {
+    font-size: 1.8rem !important;
+  }
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  h3 {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title,
+  h1 {
+    font-size: 1.5rem !important;
+  }
+  h2 {
+    font-size: 1.35rem !important;
+  }
+  h3 {
+    font-size: 1.15rem !important;
+  }
+  
+  /* Prevent modals from touching screen edges */
+  .confirm-modal,
+  .cp-modal {
+    width: 95% !important;
+    max-width: 380px !important;
+    padding: 20px !important;
   }
 }

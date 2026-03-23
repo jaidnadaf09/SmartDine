@@ -755,3 +755,28 @@ body.dark .chef-tabs {
   background: #1e1e1e;
   border-color: #333;
 }
+
+/* ── ADDITIONAL RESPONSIVE FIXES ── */
+@media (max-width: 768px) {
+  .chef-header-inner {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .chef-quick-grid {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .chef-quick-card {
+    width: 100%;
+  }
+
+  .chef-card-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .chef-item-info {
+    flex-wrap: wrap;
+  }
+}

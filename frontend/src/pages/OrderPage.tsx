@@ -1,17 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { Icons } from '../components/icons/IconSystem';
 import api from '../utils/api';
+import MenuCard from '../components/shared/MenuCard';
+import ConfirmDialog from '../components/shared/ConfirmDialog';
 import '../styles/Order.css';
 
-
-// Using centralized api instance
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
-
-/* Skeleton grid shown while menu loads */
 const MenuSkeleton: React.FC = () => (
   <div>
     {[1, 2].map(section => (
@@ -55,7 +53,7 @@ const loadRazorpayScript = () => {
 
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth(); // Get the current user
+  const { user, updateUser } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'wallet'>('online');
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
@@ -64,8 +62,27 @@ const OrderPage: React.FC = () => {
   const [assignedTable, setAssignedTable] = useState<number | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
 
-  React.useEffect(() => {
+  // New states for UX improvements
+  const [favourites, setFavourites] = useState<number[]>(() => {
+    const saved = localStorage.getItem('smartdine_favourites');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [isClearCartDialogOpen, setIsClearCartDialogOpen] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('smartdine_favourites', JSON.stringify(favourites));
+  }, [favourites]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         const response = await api.get('/menu');
@@ -84,7 +101,6 @@ const OrderPage: React.FC = () => {
         try {
           const res = await api.get(`/bookings/user/${user.id}`);
           const bookings = res.data;
-          // Find a confirmed booking with a table number
           const active = bookings.find((b: any) => b.status === 'confirmed' && b.tableNumber);
           if (active) {
             setAssignedTable(active.tableNumber);
@@ -99,94 +115,53 @@ const OrderPage: React.FC = () => {
     fetchUserBooking();
   }, [user]);
 
-  const addToCart = (item: any) => {
-    const existingItem = cart.find((cartItem) => cartItem.id === item.id);
-    if (existingItem) {
-      setCart(
-        cart.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        )
-      );
-    } else {
-      setCart([...cart, { ...item, quantity: 1 }]);
-    }
-  };
+  const addToCart = useCallback((item: any) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(c => c.id === item.id);
+      if (existingItem) {
+        return prevCart.map(c => c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c);
+      }
+      return [...prevCart, { ...item, quantity: 1 }];
+    });
+    setIsCartOpen(true);
+  }, []);
 
-  // Group items by category
-  const groupedMenu = menuItems.reduce((acc: { [key: string]: any[] }, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
-    }
-    acc[item.category].push(item);
-    return acc;
-  }, {});
+  const removeFromCart = useCallback((id: number) => {
+    setCart(prev => prev.filter(c => c.id !== id));
+  }, []);
 
-  const categoriesList = [
-    'Chicken Starters',
-    'Veg Main Course',
-    'Chicken Main Course',
-    'Indian Breads',
-    'Mandi Special',
-    'Biryani Course',
-    'Rice',
-    'Orders Per KG'
-  ];
-
-  const removeFromCart = (id: number) => {
-    setCart(cart.filter((item) => item.id !== id));
-  };
-
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = useCallback((id: number, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
     } else {
-      setCart(
-        cart.map((item) =>
-          item.id === id ? { ...item, quantity } : item
-        )
-      );
+      setCart(prev => prev.map(c => c.id === id ? { ...c, quantity } : c));
     }
-  };
+  }, [removeFromCart]);
+
+  const toggleFavourite = useCallback((id: number) => {
+    setFavourites(prev => 
+      prev.includes(id) ? prev.filter(favId => favId !== id) : [...prev, id]
+    );
+  }, []);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleCheckout = async () => {
     setError('');
-    if (cart.length === 0) {
-      setError('Your cart is empty!');
-      return;
-    }
-
-    if (!user) {
-      setError('You must be logged in to place an order.');
-      return;
-    }
-
-    // Restaurant Status Check (Disabled for 24/7 operation)
-    /*
-    if (!isOperating || status === 'PAUSED') {
-      setError('The restaurant is currently not accepting orders.');
-      toast.error('Restaurant not accepting orders.');
-      return;
-    }
-    */
+    if (cart.length === 0) return setError('Your cart is empty!');
+    if (!user) return setError('You must be logged in to place an order.');
 
     setLoading(true);
 
     try {
       const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) {
-        throw new Error('Razorpay SDK failed to load. Are you online?');
-      }
+      if (!isLoaded) throw new Error('Razorpay SDK failed to load. Are you online?');
 
       const totalAmountFloat = parseFloat((total * 1.1).toFixed(2));
 
-      // -- WALLET PAYMENT BRANCH --
       if (paymentMethod === 'wallet') {
         if (Number(user.walletBalance || 0) < totalAmountFloat) {
-          setError(`Insufficient wallet balance. Required: ₹${totalAmountFloat}. Current: ₹${Number(user.walletBalance || 0)}.`);
+          setError(`Insufficient wallet balance. Required: ₹${totalAmountFloat}.`);
           toast.error('Insufficient wallet balance.');
           setLoading(false);
           return;
@@ -195,38 +170,28 @@ const OrderPage: React.FC = () => {
         const walletRes = await api.post('/payment/wallet-pay', {
           amount: totalAmountFloat,
           orderData: {
-            items: cart.map(item => ({
-              itemName: item.name,
-              quantity: item.quantity,
-            }))
+            items: cart.map(item => ({ itemName: item.name, quantity: item.quantity }))
           }
         });
 
-        const walletData = walletRes.data;
-        
-        if (walletData.walletBalance !== undefined) {
-           updateUser({ walletBalance: walletData.walletBalance });
+        if (walletRes.data.walletBalance !== undefined) {
+           updateUser({ walletBalance: walletRes.data.walletBalance });
         }
 
-        toast.success(`Payment successful! Order placed. Total: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmountFloat)}`);
+        toast.success(`Payment successful! Order placed. Total: ₹${totalAmountFloat}`);
         setCart([]);
+        setIsCartOpen(false);
         navigate('/');
         setLoading(false);
         return;
       }
 
-      // -- RAZORPAY PAYMENT BRANCH --
-      // 1. Create Razorpay order on our backend
-      const orderRes = await api.post('/payment/create-order', { 
-        amount: totalAmountFloat 
-      });
-
+      const orderRes = await api.post('/payment/create-order', { amount: totalAmountFloat });
       const orderData = orderRes.data;
 
-      // 2. Initialize Razorpay Checkout
       const options = {
         key: razorpayKey,
-        amount: orderData.amount, // in paise
+        amount: orderData.amount,
         currency: "INR",
         name: "SmartDine",
         description: "Food Order Payment",
@@ -234,53 +199,38 @@ const OrderPage: React.FC = () => {
         handler: async (response: any) => {
           try {
             setLoading(true);
-            // 3. Verify Payment Signature
             const verifyRes = await api.post('/payment/verify', {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_signature: response.razorpay_signature,
             });
 
-            const verifyData = verifyRes.data;
-
-            if (verifyData.success) {
-              // 4. Save the order now that payment is confirmed
+            if (verifyRes.data.success) {
               await api.post('/orders', {
                 userId: user.id,
                 totalAmount: totalAmountFloat,
                 paymentId: response.razorpay_payment_id,
                 paymentStatus: 'paid',
-                items: cart.map(item => ({
-                  itemName: item.name,
-                  quantity: item.quantity,
-                }))
+                items: cart.map(item => ({ itemName: item.name, quantity: item.quantity }))
               });
 
-
-              toast.success(`Payment successful! Order placed. Total: ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalAmountFloat)}`);
+              toast.success(`Payment successful! Order placed.`);
               setCart([]);
+              setIsCartOpen(false);
               navigate('/');
             } else {
               setError("Payment signature verification failed.");
             }
           } catch (err: any) {
-            console.error("Order completion error:", err);
             setError(err.message || 'Payment processing failed');
           } finally {
             setLoading(false);
           }
         },
-        prefill: {
-          name: user.name,
-          email: user.email,
-          contact: (user as any).phone || ""
-        },
-        theme: {
-          color: "#6f4e37",
-        },
+        prefill: { name: user.name, email: user.email, contact: user.phone || "" },
+        theme: { color: "#6f4e37" },
         modal: {
           ondismiss: () => {
-            // User closed the payment dialog — reset state
             setLoading(false);
             toast('Payment cancelled.', { icon: <Icons.ban size={20} className="icon-muted" /> });
           }
@@ -289,27 +239,70 @@ const OrderPage: React.FC = () => {
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on("payment.failed", function (response: any) {
-        console.error("Payment failed", response.error);
-        setError(`Payment Failed: ${response.error.description || 'Unknown error'}`);
+        setError(`Payment Failed: ${response.error.description}`);
         setLoading(false);
       });
       rzp.open();
 
-    } catch (err: unknown) {
-      console.error('Error placing order:', err);
-      if (err instanceof Error) {
-        setError(err.message || 'Failed to place order. Please try again.');
-      } else {
-        setError('Failed to place order. Please try again.');
-      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to place order.');
       setLoading(false);
     }
   };
 
+  const categoriesList = useMemo(() => {
+    return [
+      'Favorites',
+      'All Items',
+      'Chicken Starters',
+      'Veg Main Course',
+      'Chicken Main Course',
+      'Indian Breads',
+      'Mandi Special',
+      'Biryani Course',
+      'Rice',
+      'Orders Per KG'
+    ];
+  }, []);
+
+  const availableItems = useMemo(() => {
+    return menuItems.filter(item => item.status === 'available');
+  }, [menuItems]);
+
+  const groupedMenu = useMemo(() => {
+    const groups: { [key: string]: any[] } = {};
+    
+    // Combined Logic: Favorites + Search
+    groups['Favorites'] = availableItems.filter(item => 
+      favourites.includes(item.id) && 
+      (item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+       (item.description && item.description.toLowerCase().includes(debouncedSearch.toLowerCase())))
+    );
+    
+    availableItems.forEach(item => {
+      if (!groups[item.category]) groups[item.category] = [];
+      groups[item.category].push(item);
+    });
+    return groups;
+  }, [availableItems, favourites, debouncedSearch]);
+
+  const highlightText = (text: string, query: string) => {
+    if (!query) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return (
+      <>
+        {parts.map((part, i) => 
+          part.toLowerCase() === query.toLowerCase() ? <mark key={i} className="search-highlight">{part}</mark> : part
+        )}
+      </>
+    );
+  };
+
   return (
     <div className="order-container">
-      <div className="order-layout">
-        {/* Left Sidebar: Categories */}
+      {/* Floating Cart Button Removed from here to move to top bar */}
+
+      <div className={`order-layout ${isCartOpen ? 'cart-open' : ''}`}>
         <aside className="categories-sidebar">
           <h3><Icons.folderOpen size={20} className="inline-icon" /> Categories</h3>
           <div className="sidebar-filters">
@@ -320,99 +313,145 @@ const OrderPage: React.FC = () => {
               All Items
             </button>
             {categoriesList.map((category) => (
-              groupedMenu[category] && (
+              (groupedMenu[category] && groupedMenu[category].length > 0) && (
                 <button
                   key={category}
                   className={`sidebar-filter-btn ${activeCategory === category ? 'active' : ''}`}
                   onClick={() => setActiveCategory(category)}
                 >
-                  {category}
+                  {category === 'Favorites' ? <Icons.heart size={14} className="inline-icon" color="#f59e0b" fill={activeCategory === 'Favorites' ? '#f59e0b' : 'transparent'}/> : null} {category}
                 </button>
               )
             ))}
           </div>
         </aside>
 
-        {/* Center: Menu Content */}
         <div className="menu-content-area">
-          <div className="menu-search-container">
-            <Icons.search className="search-icon-svg" size={18} />
-            <input
-              type="text"
-              placeholder="Search menu..."
-              className="menu-search-input"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="menu-top-row">
+            <div className="menu-search-container">
+              <Icons.search className="search-icon-svg" size={18} />
+              <input
+                type="text"
+                placeholder="Search menu (e.g., Chicken, Spicy)..."
+                className="menu-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            {cart.length > 0 && !isCartOpen && (
+              <button className="top-view-cart-btn" onClick={() => setIsCartOpen(true)}>
+                <Icons.shoppingBag size={18} />
+                <span>View Cart ({cart.reduce((a, b) => a + Number(b.quantity), 0)})</span>
+              </button>
+            )}
           </div>
-
-          {/* Restaurant Status Banner Removed for 24/7 operation */}
 
           {loading ? (
             <MenuSkeleton />
           ) : error && !menuItems.length ? (
             <div className="error-message">{error}</div>
           ) : (
-            <div className="menu-display">
+            <div className="menu-display" style={{ scrollBehavior: 'smooth' }}>
               {categoriesList
                 .filter(category => activeCategory === 'All' || activeCategory === category)
                 .map((category) => {
-                  const filteredItems = (groupedMenu[category] || []).filter(item =>
-                    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+                  const itemsInCategory = category === 'All' ? availableItems : (groupedMenu[category] || []);
+                  
+                  // Final Combined Filter: Search + (Category or All)
+                  const filteredItems = itemsInCategory.filter(item =>
+                    item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+                    (item.description && item.description.toLowerCase().includes(debouncedSearch.toLowerCase()))
                   );
 
                   if (filteredItems.length === 0) return null;
 
                   return (
-                    <div key={category} className="category-block">
+                    <div key={category} className="category-block" id={`section-${category}`}>
                       <h3 className="block-title">{category}</h3>
                       <div className="compact-menu-grid">
                         {filteredItems.map((item) => {
                           const cartItem = cart.find(c => c.id === item.id);
                           return (
-                            <div key={item.id} className="compact-menu-card">
-                              <div className="item-main-info">
-                                <h4 className="item-name">{item.name}</h4>
-                                {item.description && (
-                                  <p className="item-description">{item.description}</p>
-                                )}
-                                <p className="item-price">
-                                  {new Intl.NumberFormat('en-IN', {
-                                    style: 'currency',
-                                    currency: 'INR',
-                                    maximumFractionDigits: 0
-                                  }).format(item.price)}
-                                </p>
-                              </div>
-                              <div className="item-actions">
-                                {cartItem ? (
-                                  <div className="compact-qty-controls">
-                                    <button onClick={() => updateQuantity(item.id, cartItem.quantity - 1)}>−</button>
-                                    <span>{cartItem.quantity}</span>
-                                    <button onClick={() => updateQuantity(item.id, cartItem.quantity + 1)}>+</button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    className="compact-add-btn"
-                                    onClick={() => addToCart(item)}
-                                    disabled={false}
-                                  >
-                                    Add
-                                  </button>
-                                )}
-                              </div>
-                            </div>
+                            <MenuCard 
+                              key={item.id}
+                              item={{
+                                ...item,
+                                name: debouncedSearch ? highlightText(item.name, debouncedSearch) : item.name,
+                                description: debouncedSearch && item.description ? highlightText(item.description, debouncedSearch) : item.description
+                              } as any}
+                              quantityInCart={cartItem ? cartItem.quantity : 0}
+                              isFavourite={favourites.includes(item.id)}
+                              isExpanded={expandedId === item.id}
+                              onToggle={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                              onAddToCart={addToCart}
+                              onUpdateQuantity={updateQuantity}
+                              onToggleFavourite={toggleFavourite}
+                            />
                           );
                         })}
                       </div>
                     </div>
                   );
                 })}
+                
+              {/* Empty state for Favorites */}
+              {activeCategory === 'Favorites' && (!groupedMenu['Favorites'] || groupedMenu['Favorites'].length === 0) && (
+                <div className="empty-cart" style={{marginTop: '40px'}}>
+                  <Icons.heart size={48} color="var(--text-muted)" />
+                  <p>No favorites yet ❤️</p>
+                  <p style={{fontSize: '0.85rem', marginTop: '8px'}}>Tap heart icon to save dishes.</p>
+                </div>
+              )}
+
+              {/* General No Results state */}
+              {availableItems.length > 0 && categoriesList.every(c => {
+                  const items = c === 'All' ? availableItems : (groupedMenu[c] || []);
+                  return items.filter(i => 
+                    i.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+                    (i.description && i.description.toLowerCase().includes(debouncedSearch.toLowerCase()))
+                  ).length === 0;
+              }) && (
+                <div className="no-results-msg" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                  <Icons.search size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                  <h3>No dishes found</h3>
+                  <p>Try searching something else.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        <div className="cart-section">
+        {/* CART SIDE PANEL (Grid Integrated) */}
+        {/* Backdrop removed as we're moving from overlay to grid-integrated sidebar */}
+        <div className={`cart-section ${isCartOpen ? 'open' : ''}`}>
+          <div className="cart-header">
+            <div className="cart-header-left">
+              <h2>Your Order</h2>
+            </div>
+            <div className="cart-header-right">
+              {cart.length > 0 && (
+                <button className="clear-cart-btn" onClick={() => setIsClearCartDialogOpen(true)}>Clear</button>
+              )}
+              <button className="close-cart-btn" onClick={() => setIsCartOpen(false)}>
+                <Icons.close size={20} />
+              </button>
+            </div>
+          </div>
+
+          <ConfirmDialog 
+            open={isClearCartDialogOpen}
+            title="Clear Cart"
+            message="Are you sure you want to remove all items from your cart?"
+            confirmText="Clear All"
+            cancelText="Keep Items"
+            type="danger"
+            onConfirm={() => {
+              setCart([]);
+              toast.success('Cart cleared successfully');
+            }}
+            onCancel={() => setIsClearCartDialogOpen(false)}
+          />
           <div className="table-status-banner compact-banner">
             {assignedTable ? (
               <p><Icons.utensils size={18} className="inline-icon" /> Table {assignedTable} (Dine-In)</p>
@@ -420,54 +459,36 @@ const OrderPage: React.FC = () => {
               <p><Icons.shoppingBag size={18} className="inline-icon" /> Parcel (Table Pending)</p>
             )}
           </div>
-          <h2>Your Order</h2>
+          
           {cart.length === 0 ? (
-            <div className="empty-cart">
-              <Icons.cart className="empty-cart-icon-svg" size={48} />
-              <p>Your cart is empty</p>
-              <p style={{ fontSize: '0.8rem', marginTop: 4 }}>Add items from the menu</p>
+            <div className="empty-cart-container">
+              <div className="empty-cart-illustrations">
+                <Icons.shoppingBag size={64} className="empty-cart-main-icon" />
+              </div>
+              <h3>Your cart is empty</h3>
+              <p>Add delicious items from the menu to get started!</p>
             </div>
           ) : (
             <>
               <div className="cart-items">
                 {cart.map((item) => (
-                  <div key={item.id} className="cart-item">
-                    <div className="cart-item-header">
-                      <div className="item-info">
-                        <h4>{item.name}</h4>
-                      </div>
-                      <div className="item-info">
-                        <p>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price)}</p>
-                      </div>
+                  <div key={item.id} className="cart-item new-item-highlight">
+                    <div className="cart-item-name">
+                      <h4>{item.name}</h4>
                     </div>
-                    <div className="item-controls">
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      >
-                        −
-                      </button>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        readOnly
-                        className="qty-input"
-                      />
-                      <button
-                        className="qty-btn"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      >
-                        +
+                    
+                    <div className="cart-item-controls">
+                      <button className="cart-qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                      <span className="cart-qty-text">{item.quantity}</span>
+                      <button className="cart-qty-btn" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                    </div>
+
+                    <div className="cart-item-price-group">
+                      <span className="cart-price">₹{item.price * item.quantity}</span>
+                      <button className="cart-remove-icon-btn" onClick={() => removeFromCart(item.id)}>
+                        <Icons.close size={14} />
                       </button>
                     </div>
-                    <div className="item-total">
-                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.price * item.quantity)}
-                    </div>
-                    <Icons.close 
-                      className="remove-btn-icon" 
-                      size={18}
-                      onClick={() => removeFromCart(item.id)}
-                    />
                   </div>
                 ))}
               </div>
@@ -497,8 +518,7 @@ const OrderPage: React.FC = () => {
                     >
                       <div className="payment-card-icon"><Icons.card size={24} /></div>
                       <div className="payment-card-info">
-                        <span className="payment-card-title">Online Payment</span>
-                        <span className="payment-card-subtitle">Pay via Razorpay</span>
+                        <span className="payment-card-title">Online</span>
                       </div>
                     </div>
 
@@ -508,16 +528,15 @@ const OrderPage: React.FC = () => {
                     >
                       <div className="payment-card-icon"><Icons.wallet size={24} /></div>
                       <div className="payment-card-info">
-                        <span className="payment-card-title">SmartDine Wallet</span>
+                        <span className="payment-card-title">Wallet</span>
                         <span className="payment-card-subtitle">
-                          {user ? `Balance: ₹${Number(user.walletBalance || 0)}` : 'Login to view'}
+                          {user ? `₹${Number(user.walletBalance || 0)}` : 'Login'}
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Timing Warning Removed for 24/7 operation */}
                  <button 
                    className="checkout-btn" 
                    onClick={handleCheckout} 

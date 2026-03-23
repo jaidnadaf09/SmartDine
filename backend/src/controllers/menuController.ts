@@ -1,12 +1,25 @@
 import { Request, Response } from 'express';
 import MenuItem from '../models/MenuItem';
 
+import { generateDescription } from '../utils/generateDescription';
+
 // @desc    Get all menu items
 // @route   GET /api/menu
 // @access  Public
 export const getMenuItems = async (req: Request, res: Response) => {
     try {
         const menuItems = await MenuItem.findAll();
+        
+        // Backfill descriptions if missing
+        let hasUpdates = false;
+        for (const item of menuItems) {
+            if (!item.description || item.description.trim() === '') {
+                item.description = generateDescription(item.name, item.category);
+                await item.save();
+                hasUpdates = true;
+            }
+        }
+        
         res.json(menuItems);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });

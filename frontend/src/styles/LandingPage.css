@@ -100,7 +100,7 @@
 .menu-section {
   padding: 3rem 2rem;
   background: var(--card-bg);
-  margin: 1.5rem auto;
+  margin: 4rem auto;
   max-width: 1200px;
   border-radius: 20px;
   box-shadow: var(--card-shadow);
@@ -285,7 +285,7 @@
 .book-table-section {
   padding: 4rem 2rem;
   max-width: 1200px;
-  margin: 2rem auto;
+  margin: 4rem auto;
   background: var(--card-bg);
   border-radius: 20px;
   box-shadow: var(--card-shadow);
@@ -325,7 +325,7 @@
 .showcase {
   padding: 3rem 2rem;
   max-width: 1200px;
-  margin: 1.5rem auto;
+  margin: 4rem auto;
   background: var(--bg-section);
   border-radius: 15px;
   box-shadow: var(--card-shadow);
@@ -380,6 +380,68 @@
 }
 
 
+/* Restaurant Info Section (Visit Us) */
+
+.restaurant-info-section {
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 4rem auto;
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  text-align: center;
+}
+
+.restaurant-info-section h2 {
+  font-size: 2.5rem;
+  color: var(--brand-primary);
+  margin-bottom: 2.5rem;
+}
+
+.info-cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.info-card {
+  padding: 2rem;
+  background: var(--card-bg-alt);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--card-border);
+  transition: transform 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.info-icon {
+  margin-bottom: 1rem;
+}
+
+.info-card h3 {
+  margin-bottom: 0.8rem;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.info-card p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .info-cards-container {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Footer */
 
 .footer {
@@ -387,7 +449,10 @@
   color: white;
   text-align: center;
   padding: 4rem 2rem 2rem;
-  margin-top: 4rem;
+  margin: 4rem auto 2rem auto;
+  max-width: 1200px;
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
 }
 
 .footer-content {
@@ -523,3 +588,117 @@ body[data-theme="light"] .footer-btn {
     font-size: 2rem;
   }
 }
+
+/* ═══════════════════════════════════════════
+   MODERN ANIMATIONS & EFFECTS
+   ═══════════════════════════════════════════ */
+
+/* 1. Hero Staggered Entrance */
+.hero-text-content [class^="fade-up-"] {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.hero-loaded .fade-up-1 {
+  animation: fadeUpStagger 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.1s forwards;
+}
+.hero-loaded .fade-up-2 {
+  animation: fadeUpStagger 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.3s forwards;
+}
+.hero-loaded .fade-up-3 {
+  animation: fadeUpStagger 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.5s forwards;
+}
+.hero-loaded .fade-up-4 {
+  animation: fadeUpStagger 0.8s cubic-bezier(0.25, 1, 0.5, 1) 0.7s forwards;
+}
+
+@keyframes fadeUpStagger {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 3. Typewriter Effect */
+.typewriter {
+  display: inline-block;
+  min-height: 1.6em;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s step-end infinite;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* 5. Scroll Reveal Effect */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 6. Button Soft Glow over default */
+.cta-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: skewX(-20deg);
+  transition: unset;
+}
+
+.cta-btn:hover::after {
+  animation: btnSweep 0.6s ease-out;
+}
+
+.cta-btn:hover {
+  transform: scale(1.03) translateY(-2px);
+  box-shadow: 0 8px 25px var(--brand-primary-light);
+}
+
+@keyframes btnSweep {
+  100% { left: 200%; }
+}
+
+/* 7. Icon & Image Micro-animations */
+.mini-feature {
+  cursor: pointer;
+}
+
+.mini-icon {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mini-feature:hover .mini-icon {
+  transform: scale(1.2) rotate(-10deg);
+}
+
+.menu-item-image img, 
+.hero-side-image, 
+.showcase-image img {
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.menu-item:hover .menu-item-image img,
+.hero-image-wrapper:hover .hero-side-image {
+  transform: scale(1.04);
+}
