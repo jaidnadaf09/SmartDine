@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icons } from '../components/icons/IconSystem';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import DotLoader from '../components/shared/DotLoader';
 import '../styles/Auth.css';
 
 const LoginPage: React.FC = () => {
@@ -119,10 +120,10 @@ const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          <button type="submit" className="auth-btn" disabled={loading}>
+          <button type="submit" className="auth-btn" disabled={loading} style={{ height: '44px', display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
             {loading ? (
               <>
-                <Icons.loader className="spinner" size={18} />
+                <DotLoader color="currentColor" />
                 Signing in...
               </>
             ) : (

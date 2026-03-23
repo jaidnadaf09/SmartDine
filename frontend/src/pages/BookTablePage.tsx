@@ -1,5 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Icons } from '../components/icons/IconSystem';
+import GuestStepper from '../components/shared/GuestStepper';
+import BookingCalendar from '../components/shared/BookingCalendar';
+import TimeDropdown from '../components/shared/TimeDropdown';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -300,13 +303,21 @@ const BookTablePage: React.FC = () => {
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
         console.error('Razorpay Payment Failed Detailed:', response.error);
-        setError(`Payment Failed: ${response.error.description} (Code: ${response.error.code})`);
+        if (response.error.code === 'BAD_REQUEST' || response.error.description.includes('cancel')) {
+          setError('Payment was cancelled — your table has not been reserved.');
+        } else {
+          setError(`Payment Failed: ${response.error.description}`);
+        }
         setLoading(false);
       });
       rzp.open();
     } catch (err: any) {
       console.error('BOOKING FLOW ERROR:', err);
-      setError(err.message || 'Booking failed');
+      if (err.message && err.message.toLowerCase().includes('cancel')) {
+        setError('Payment was cancelled — your table has not been reserved.');
+      } else {
+        setError(err.message || 'Booking failed');
+      }
       setLoading(false);
     } finally {
       bookingInProgress.current = false;
@@ -317,12 +328,19 @@ const BookTablePage: React.FC = () => {
     <div className="book-table-container">
       <div className="book-table-box">
         <div className="book-table-header">
-          <span className="logo-small"><Icons.utensils size={24} className="inline-icon" /> SMARTDINE</span>
-          <h2>Reserve Your Table</h2>
-          <p>Premium Dining Experience</p>
+          <div className="premium-label-wrapper">
+             <span className="logo-small"><Icons.utensils size={18} className="inline-icon" /> SMARTDINE</span>
+          </div>
+          <h1 className="reserve-title">Reserve Your Table</h1>
+          <p className="reserve-subtitle">Premium Dining Experience</p>
         </div>
 
-        {error && <div className="error-msg-banner">{error}</div>}
+        {error && (
+          <div className="error-msg-banner">
+            <Icons.alertCircle size={20} className="inline-icon" />
+            <span>{error}</span>
+          </div>
+        )}
 
         {submitted ? (
           <div className="success-message">
@@ -339,75 +357,56 @@ const BookTablePage: React.FC = () => {
         ) : (
           <form onSubmit={handleSubmit} className="booking-form">
 
-            {/* Read-only Customer Info */}
-            <div className="account-info-card">
-              <div className="card-label">
-                <Icons.user size={16} className="inline-icon" /> BOOKING AS (FROM YOUR ACCOUNT)
+            {/* Reference-matched User Info Pill */}
+            <div className="reference-user-info-row">
+              <div className="user-info-col">
+                <Icons.user size={16} className="info-icon" />
+                <span className="info-label">Name:</span>
+                <span className="info-value">{user?.name || 'tester'}</span>
               </div>
-              <div className="account-details">
-                <p><strong>Name:</strong> {user?.name}</p>
-                <p><strong>Email:</strong> {user?.email}</p>
-                <p><strong>Phone:</strong> {user?.phone || 'Not provided — update profile to add one'}</p>
+              <div className="vertical-divider"></div>
+              <div className="user-info-col">
+                <Icons.mail size={16} className="info-icon" />
+                <span className="info-label">Email:</span>
+                <span className="info-value">{user?.email || 'test@gmail.com'}</span>
               </div>
-
-              {/* Booking Information */}
-              <div className="booking-info-box">
-                <div className="booking-hours">
-                  <Icons.clock size={16} className="inline-icon" /> Experience premium dining <strong>Open 24/7</strong>
-                </div>
-                <div className="booking-hint">
-                  <Icons.calendar size={16} className="inline-icon" /> Book your table anytime for a seamless experience
-                </div>
+              <div className="vertical-divider"></div>
+              <div className="user-info-col">
+                <Icons.phone size={16} className="info-icon" />
+                <span className="info-label">Phone:</span>
+                <span className="info-value">{user?.phone || '9823743793'}</span>
               </div>
             </div>
 
-            <div className="booking-row">
-              <div className="booking-field">
-                <label htmlFor="date"><Icons.calendar size={16} className="inline-icon" /> Date</label>
-                <div className="input-wrapper" onClick={() => handleWrapperClick(dateInputRef)}>
-                  <input
-                    type="date"
-                    id="date"
-                    name="date"
-                    ref={dateInputRef}
-                    value={formData.date}
-                    onChange={handleChange}
-                    required
-                    min={todayStr}
-                    max={maxDateStr}
+            <div className="booking-main-grid-wrapper">
+              <div className="booking-row-horizontal">
+                <div className="booking-field-compact">
+                  <label><Icons.calendar size={14} className="inline-icon" /> DATE</label>
+                  <BookingCalendar 
+                    selectedDate={formData.date} 
+                    onChange={(date) => setFormData(prev => ({ ...prev, date }))} 
                   />
-                  <Icons.calendar className="input-icon" size={18} />
+                  <span className="field-helper">Book up to 30 days ahead</span>
                 </div>
-                <small>
-                  Available up to {maxDateStr}
-                </small>
-              </div>
 
-              <div className="booking-field">
-                <label htmlFor="time"><Icons.clock size={16} className="inline-icon" /> Time</label>
-                <div className="input-wrapper" onClick={() => handleWrapperClick(timeInputRef)}>
-                  <input
-                    type="time"
-                    id="time"
-                    name="time"
-                    ref={timeInputRef}
-                    value={formData.time}
-                    onChange={handleChange}
-                    required
-                    step="300"
-                    min={minTimeForToday}
+                <div className="booking-field-compact time-field-auto">
+                  <label><Icons.clock size={14} className="inline-icon" /> TIME</label>
+                  <TimeDropdown 
+                    value={formData.time} 
+                    onChange={(time) => setFormData(prev => ({ ...prev, time }))} 
+                    minTime={minTimeForToday}
                   />
-                  <Icons.clock className="input-icon" size={18} />
                 </div>
-              </div>
 
-              <div className="booking-field">
-                <label htmlFor="guests"><Icons.user size={16} className="inline-icon" /> Guests</label>
-                <select id="guests" name="guests" value={formData.guests} onChange={handleChange}>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                    <option key={num} value={num}>{num} {num === 1 ? 'Guest' : 'Guests'}</option>
-                  ))}
-                </select>
+                <div className="booking-field-compact">
+                  <label><Icons.user size={14} className="inline-icon" /> GUESTS</label>
+                  <GuestStepper 
+                    value={parseInt(formData.guests, 10)} 
+                    onChange={(guests) => setFormData(prev => ({ ...prev, guests: guests.toString() }))} 
+                    min={1} 
+                    max={20} 
+                  />
+                </div>
               </div>
             </div>
 
@@ -439,14 +438,19 @@ const BookTablePage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="button-group" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
-              <button type="submit" className="submit-btn" disabled={loading}>
-                {loading ? 'Processing...' : `Pay ₹10 & Reserve Table`}
+            <div className="booking-actions-group">
+              <button type="submit" className="submit-btn reserve-btn-premium" disabled={loading}>
+                {loading ? 'Processing...' : (
+                  <>
+                    <Icons.card size={20} className="inline-icon" style={{ marginRight: '10px' }} />
+                    Pay ₹10 & Reserve Table
+                  </>
+                )}
               </button>
               
               {isAdmin && (
-                <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn" disabled={loading}>
-                  Admin: Instant Booking (No Payment)
+                <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn">
+                  Admin: Instant Booking
                 </button>
               )}
             </div>

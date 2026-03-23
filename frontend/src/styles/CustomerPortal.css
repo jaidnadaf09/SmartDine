@@ -678,3 +678,29 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
+
+/* ── RESPONSIVE FIXES ── */
+@media (max-width: 768px) {
+  /* Grids */
+  .cp-sections-grid,
+  .cp-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  /* Keep buttons visible / touch friendly */
+  .cp-card-actions,
+  .reminder-action-btn,
+  .cp-detail-item {
+    flex-wrap: wrap;
+  }
+  
+  .profile-container-flex {
+    flex-direction: column;
+  }
+  
+  .cp-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

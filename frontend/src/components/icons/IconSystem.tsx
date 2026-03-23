@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   ShoppingBag,
   Bell,
+  Filter,
   Package,
   User,
   LogOut,
@@ -51,6 +52,10 @@ import {
   Sun,
   Edit,
   Key,
+  Mail,
+  Phone,
+  Heart,
+  ChevronDown
 } from "lucide-react";
 
 export const Icons = {
@@ -99,6 +104,7 @@ export const Icons = {
   circle: Circle,
   ban: Ban,
   search: Search,
+  filter: Filter,
   folderOpen: FolderOpen,
   close: X,
   error: CircleX,
@@ -107,4 +113,8 @@ export const Icons = {
   sun: Sun,
   edit: Edit,
   key: Key,
+  mail: Mail,
+  phone: Phone,
+  heart: Heart,
+  chevronDown: ChevronDown
 };

@@ -38,7 +38,7 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
           <div className="hero-image-wrapper">
-            <img src={restaurantInterior} alt="Rasoi Ghar Interior" className="hero-side-image" />
+            <img src={restaurantInterior} alt="Rasoi Ghar Interior" className="hero-side-image" loading="lazy" />
           </div>
         </div>
       </section>
@@ -69,7 +69,7 @@ const LandingPage: React.FC = () => {
       <section className="book-table-section">
         <div className="book-table-grid">
           <div className="book-table-image">
-            <img src={reservedTable} alt="Reserved Table" className="side-image" />
+            <img src={reservedTable} alt="Reserved Table" className="side-image" loading="lazy" />
           </div>
           <div className="book-table-content">
             <h2>Reserve Your Table Now</h2>
@@ -120,7 +120,7 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
           <div className="showcase-image">
-            <img src={restaurantImage} alt="Rasoi Ghar Vibe" />
+            <img src={restaurantImage} alt="Rasoi Ghar Vibe" loading="lazy" />
           </div>
         </div>
       </section>

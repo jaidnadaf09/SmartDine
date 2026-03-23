@@ -12,22 +12,39 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [theme, setTheme] = useState<Theme>(() => {
         const savedTheme = localStorage.getItem('theme');
-        return (savedTheme as Theme) || 'light';
+        if (savedTheme) {
+            return savedTheme as Theme;
+        }
+        // Auto-detect system preference
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return prefersDark ? 'dark' : 'light';
     });
 
     useEffect(() => {
-        // Keep a body class for backwards compatibility with existing styles
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        const handleChange = (e: MediaQueryListEvent) => {
+            // Only auto-update if user hasn't set a manual preference
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        };
+
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+    }, []);
+
+    useEffect(() => {
         document.body.classList.remove('light', 'dark');
         document.body.classList.add(theme);
-
-        // New: drive theming via data attribute for CSS variables
         document.body.setAttribute('data-theme', theme);
-
-        localStorage.setItem('theme', theme);
+        // Do NOT set localStorage here automatically
     }, [theme]);
 
     const toggleTheme = () => {
-        setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+        const newTheme = theme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+        localStorage.setItem('theme', newTheme); // Manual override
     };
 
     return (

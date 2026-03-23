@@ -29,6 +29,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/orders', label: 'Orders', icon: <Icons.clipboard size={20} /> },
         { path: '/admin/activity-history', label: 'Activity History', icon: <Icons.historyIcon size={20} /> },
         { path: '/admin/payments', label: 'Payments', icon: <Icons.card size={20} /> },
+        { path: '/admin/menu', label: 'Menu Items', icon: <Icons.utensils size={20} /> },
         { path: '/admin/reviews', label: 'Reviews', icon: <Icons.star size={20} /> },
     ];
 

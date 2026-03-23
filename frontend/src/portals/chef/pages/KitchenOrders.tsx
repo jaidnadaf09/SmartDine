@@ -30,6 +30,7 @@ interface Order {
     createdAt: string;
     updatedAt: string;
     customer?: { name: string };
+    specialInstructions?: string;
 }
 
 const KitchenOrders: React.FC = () => {
@@ -190,8 +191,16 @@ const KitchenOrders: React.FC = () => {
                                     </div>
 
                                     <div className="chef-customer-info" style={{ padding: '15px 20px', background: 'rgba(139, 90, 43, 0.04)', fontWeight: 700, fontSize: '1.1rem', color: 'var(--brand-primary)', borderBottom: '1px solid var(--card-border)' }}>
-                                        <Icons.user size={18} style={{ marginRight: '10px' }} />
-                                        {order.customer?.name || 'Guest'}
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            <Icons.user size={18} style={{ marginRight: '10px' }} />
+                                            {order.customer?.name || 'Guest'}
+                                        </div>
+                                        {order.specialInstructions && (
+                                            <div style={{ marginTop: '10px', fontSize: '0.9rem', color: '#d97706', display: 'flex', alignItems: 'flex-start', gap: '8px', background: 'rgba(245, 158, 11, 0.1)', padding: '10px', borderRadius: '8px' }}>
+                                                <Icons.alertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }}/>
+                                                <span style={{ fontWeight: 500 }}><strong>Note:</strong> {order.specialInstructions}</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="chef-card-details" style={{ padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>

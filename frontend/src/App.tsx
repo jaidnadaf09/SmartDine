@@ -1,31 +1,40 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from "react-hot-toast";
-import LandingPage from './pages/LandingPage';
-import SignupPage from './pages/SignupPage';
-import LoginPage from './pages/LoginPage';
-import BookTablePage from './pages/BookTablePage';
-import OrderPage from './pages/OrderPage';
-import CustomerPortal from './portals/customer/CustomerPortal';
-import MyOrders from './portals/customer/pages/MyOrders';
-import WaiterPortal from './portals/waiter/WaiterPortal';
-import ChefPortal from './portals/chef/ChefPortal';
-import AdminPortal from './portals/admin/AdminPortal';
-import ProfilePage from './portals/customer/pages/ProfilePage';
-import EditProfilePage from './portals/customer/pages/EditProfilePage';
-import ChangePasswordPage from './portals/customer/pages/ChangePasswordPage';
-import WalletHistory from './portals/customer/pages/WalletHistory';
 import ProtectedRoute from './components/ProtectedRoute';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import ReturnRefundPolicy from './pages/ReturnRefundPolicy';
-import TermsAndConditions from './pages/TermsAndConditions';
-import AboutUs from './pages/AboutUs';
-import ContactUs from './pages/ContactUs';
 import ThemeToggleButton from './components/ThemeToggleButton';
 import ScrollToTop from './components/ScrollToTop';
 import CustomerLayout from './components/layouts/CustomerLayout';
+import DotLoader from './components/shared/DotLoader';
 import './App.css';
+
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const SignupPage = lazy(() => import('./pages/SignupPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const BookTablePage = lazy(() => import('./pages/BookTablePage'));
+const OrderPage = lazy(() => import('./pages/OrderPage'));
+const CustomerPortal = lazy(() => import('./portals/customer/CustomerPortal'));
+const MyOrders = lazy(() => import('./portals/customer/pages/MyOrders'));
+const WaiterPortal = lazy(() => import('./portals/waiter/WaiterPortal'));
+const ChefPortal = lazy(() => import('./portals/chef/ChefPortal'));
+const AdminPortal = lazy(() => import('./portals/admin/AdminPortal'));
+const ProfilePage = lazy(() => import('./portals/customer/pages/ProfilePage'));
+const EditProfilePage = lazy(() => import('./portals/customer/pages/EditProfilePage'));
+const ChangePasswordPage = lazy(() => import('./portals/customer/pages/ChangePasswordPage'));
+const WalletHistory = lazy(() => import('./portals/customer/pages/WalletHistory'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const ReturnRefundPolicy = lazy(() => import('./pages/ReturnRefundPolicy'));
+const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
+const AboutUs = lazy(() => import('./pages/AboutUs'));
+const ContactUs = lazy(() => import('./pages/ContactUs'));
+
+const PageLoader = () => (
+    <div style={{ height: '70vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <DotLoader size={12} color="var(--brand-primary, #A67B5B)" />
+    </div>
+);
 
 function App() {
   return (
@@ -48,94 +57,96 @@ function App() {
         />
         <Router>
           <ScrollToTop />
-          <Routes>
-            {/* Customer Facing Routes with Persistent Navbar */}
-            <Route element={<CustomerLayout />}>
-              <Route path="/" element={<LandingPage />} />
-              <Route
-                path="/book-table"
-                element={
-                  <ProtectedRoute>
-                    <BookTablePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/order"
-                element={
-                  <ProtectedRoute>
-                    <OrderPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/customer" element={<CustomerPortal />}>
-                <Route index element={<Navigate to="/customer/myorders" replace />} />
-                <Route path="myorders" element={<MyOrders />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* Customer Facing Routes with Persistent Navbar */}
+              <Route element={<CustomerLayout />}>
+                <Route path="/" element={<LandingPage />} />
+                <Route
+                  path="/book-table"
+                  element={
+                    <ProtectedRoute>
+                      <BookTablePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/order"
+                  element={
+                    <ProtectedRoute>
+                      <OrderPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="/customer" element={<CustomerPortal />}>
+                  <Route index element={<Navigate to="/customer/myorders" replace />} />
+                  <Route path="myorders" element={<MyOrders />} />
+                </Route>
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/edit"
+                  element={
+                    <ProtectedRoute>
+                      <EditProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile/password"
+                  element={
+                    <ProtectedRoute>
+                      <ChangePasswordPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/wallet"
+                  element={
+                    <ProtectedRoute>
+                      <WalletHistory />
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Legal Pages */}
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/refund-policy" element={<ReturnRefundPolicy />} />
+                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                <Route path="/about-us" element={<AboutUs />} />
+                <Route path="/contact-us" element={<ContactUs />} />
               </Route>
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <ProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile/edit"
-                element={
-                  <ProtectedRoute>
-                    <EditProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile/password"
-                element={
-                  <ProtectedRoute>
-                    <ChangePasswordPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/wallet"
-                element={
-                  <ProtectedRoute>
-                    <WalletHistory />
-                  </ProtectedRoute>
-                }
-              />
-              {/* Legal Pages */}
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/refund-policy" element={<ReturnRefundPolicy />} />
-              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-              <Route path="/about-us" element={<AboutUs />} />
-              <Route path="/contact-us" element={<ContactUs />} />
-            </Route>
 
-            {/* Auth Pages (without Navbar usually, or maybe they want it?) */}
-            {/* User didn't specify Login/Signup, but let's keep them clean for now or include them if requested */}
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/login" element={<LoginPage />} />
+              {/* Auth Pages (without Navbar usually, or maybe they want it?) */}
+              {/* User didn't specify Login/Signup, but let's keep them clean for now or include them if requested */}
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/login" element={<LoginPage />} />
 
-            {/* Other Portals (Admin, Chef, Waiter) */}
-            <Route path="/waiter" element={<WaiterPortal />} />
-            <Route
-              path="/chef/*"
-              element={
-                <ProtectedRoute allowedRoles={['chef', 'CHEF']}>
-                  <ChefPortal />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/*"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminPortal />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+              {/* Other Portals (Admin, Chef, Waiter) */}
+              <Route path="/waiter" element={<WaiterPortal />} />
+              <Route
+                path="/chef/*"
+                element={
+                  <ProtectedRoute allowedRoles={['chef', 'CHEF']}>
+                    <ChefPortal />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/*"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminPortal />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </Suspense>
           <ThemeToggleButton />
         </Router>
       </AuthProvider>

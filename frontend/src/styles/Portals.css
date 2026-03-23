@@ -3041,6 +3041,7 @@ body.dark .cancel-booking-btn:hover {
 
 .payment-card {
   flex: 1;
+  height: 72px;
   padding: 16px;
   border-radius: 12px;
   border: 1px solid var(--border-color, #e5e7eb);
@@ -3053,6 +3054,7 @@ body.dark .cancel-booking-btn:hover {
   color: var(--text-color, #1f2937);
   font-weight: 500;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
 }
 
 .payment-card.selected {
@@ -3235,4 +3237,65 @@ body.dark .cancel-booking-btn:hover {
   font-size: 1rem;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+/* ── RESPONSIVE FIXES FOR ADMIN PORTAL ── */
+@media (max-width: 1024px) {
+  /* Grids */
+  .admin-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Tables */
+  .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .admin-table {
+    min-width: 600px;
+  }
+  
+  /* Charts Scrollability */
+  .chart-section {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chart-bars-container {
+    min-width: 450px;
+  }
+
+  /* Padding adjustments */
+  .admin-content {
+    padding: 1rem;
+  }
+
+  .admin-card {
+    padding: 1rem;
+  }
+
+  /* Status pills and buttons touch area */
+  .status-pill-modern {
+    padding: 8px 16px;
+  }
+  
+  .btn-primary-premium,
+  .btn-danger-premium {
+    min-height: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Reviews grid */
+  .reviews-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-card {
+    padding: 1rem;
+  }
 }

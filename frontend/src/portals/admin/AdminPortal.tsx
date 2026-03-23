@@ -12,6 +12,7 @@ import AdminBookingHistory from './pages/AdminBookingHistory';
 import Payments from './pages/Payments';
 import ActivityOverview from './pages/ActivityOverview';
 import AdminReviews from './pages/AdminReviews';
+import AdminMenu from './pages/AdminMenu';
 
 const AdminPortal: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const AdminPortal: React.FC = () => {
         <Route path="/payments" element={<Payments />} />
         <Route path="/activity-history" element={<ActivityOverview />} />
         <Route path="/reviews" element={<AdminReviews />} />
+        <Route path="/menu" element={<AdminMenu />} />
       </Routes>
     </AdminLayout>
   );
