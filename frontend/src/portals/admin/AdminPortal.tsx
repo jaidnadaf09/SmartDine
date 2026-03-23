@@ -1,18 +1,18 @@
 import React from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AdminLayout from './components/AdminLayout';
+import Button from '../../components/ui/Button';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
-import Bookings from './pages/Bookings';
-import Tables from './pages/Tables';
-import Orders from './pages/Orders';
-import OrderHistory from './pages/OrderHistory';
 import AdminBookingHistory from './pages/AdminBookingHistory';
+import OrderHistory from './pages/OrderHistory';
+import Orders from './pages/Orders';
 import Payments from './pages/Payments';
 import ActivityOverview from './pages/ActivityOverview';
 import AdminReviews from './pages/AdminReviews';
 import AdminMenu from './pages/AdminMenu';
+import AdminTablesBookings from './pages/AdminTablesBookings';
 
 const AdminPortal: React.FC = () => {
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const AdminPortal: React.FC = () => {
         <div className="unauthorized-access">
           <h2>🔒 Access Denied</h2>
           <p>Only administrators can access the Admin Portal.</p>
-          <button onClick={() => navigate('/')}>Go to Home</button>
+          <Button variant="primary" onClick={() => navigate('/')}>Go to Home</Button>
         </div>
       </div>
     );
@@ -37,9 +37,10 @@ const AdminPortal: React.FC = () => {
         <Route path="/" element={<Dashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/users" element={<Users />} />
-        <Route path="/bookings" element={<Bookings />} />
+        <Route path="/tables-bookings" element={<AdminTablesBookings />} />
+        <Route path="/bookings" element={<Navigate to="/admin/tables-bookings" replace />} />
+        <Route path="/tables" element={<Navigate to="/admin/tables-bookings" replace />} />
         <Route path="/booking-history" element={<AdminBookingHistory />} />
-        <Route path="/tables" element={<Tables />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/orders/history" element={<OrderHistory />} />
         <Route path="/payments" element={<Payments />} />

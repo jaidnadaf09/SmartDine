@@ -6,6 +6,8 @@ import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
 import BookingReminder from '../../../components/BookingReminder';
 import { formatDate, formatTime } from '../../../utils/dateFormatter';
+import Modal from '../../../components/ui/Modal';
+import Button from '../../../components/ui/Button';
 import '../../../styles/Portals.css';
 import '../../../styles/CustomerPortal.css';
 
@@ -488,110 +490,125 @@ const MyOrders: React.FC = () => {
         </div>
 
         {/* ── REVIEW MODAL ── */}
-        {reviewOrder && (
-          <div className="cp-modal-overlay">
-            <div className="cp-modal">
-              <h3 className="cp-modal-title">Rate Order #{String(reviewOrder.id).slice(-6).toUpperCase()}</h3>
-              <div className="cp-star-rating" style={{ display: 'flex', justifyContent: 'center', gap: '10px', margin: '20px 0' }}>
-                {[1, 2, 3, 4, 5].map(s => (
-                  <button
-                    key={s}
-                    onClick={() => setRating(s)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                  >
-                    <Icons.star 
-                      size={32} 
-                      fill={s <= rating ? 'var(--brand-primary)' : 'none'} 
-                      color={s <= rating ? 'var(--brand-primary)' : 'var(--text-dim)'} 
-                      style={{ transition: 'all 0.2s' }}
-                    />
-                  </button>
-                ))}
-              </div>
-              <textarea
-                className="cp-modal-textarea"
-                placeholder="Share your experience (optional)..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'var(--input-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', minHeight: '100px', marginBottom: '20px', resize: 'vertical' }}
-              />
-              <div className="cp-modal-actions">
-                <button
-                  className="cp-modal-keep-btn"
-                  onClick={() => setReviewOrder(null)}
-                  disabled={submittingReview}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="cp-modal-cancel-btn"
-                  onClick={handleSubmitReview}
-                  disabled={submittingReview}
-                  style={{ background: 'var(--brand-primary)' }}
-                >
-                  {submittingReview ? 'Submitting...' : 'Submit Review'}
-                </button>
-              </div>
-            </div>
+        <Modal
+          isOpen={!!reviewOrder}
+          onClose={() => setReviewOrder(null)}
+          title={`Rate Order #${String(reviewOrder?.id || '').slice(-6).toUpperCase()}`}
+          size="md"
+        >
+          <div className="cp-star-rating" style={{ display: 'flex', justifyContent: 'center', gap: '10px', margin: '20px 0' }}>
+            {[1, 2, 3, 4, 5].map(s => (
+              <button
+                key={s}
+                onClick={() => setRating(s)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                <Icons.star 
+                  size={32} 
+                  fill={s <= rating ? 'var(--brand-primary)' : 'none'} 
+                  color={s <= rating ? 'var(--brand-primary)' : 'var(--text-dim)'} 
+                  style={{ transition: 'all 0.2s' }}
+                />
+              </button>
+            ))}
           </div>
-        )}
+          <textarea
+            className="cp-modal-textarea"
+            placeholder="Share your experience (optional)..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '14px', 
+              borderRadius: '14px', 
+              background: 'var(--bg-secondary)', 
+              border: '1px solid var(--border-color)', 
+              color: 'var(--text-primary)', 
+              minHeight: '120px', 
+              marginBottom: '24px', 
+              resize: 'none',
+              outline: 'none',
+              fontSize: '0.95rem'
+            }}
+          />
+          <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <Button
+              variant="ghost"
+              onClick={() => setReviewOrder(null)}
+              disabled={submittingReview}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmitReview}
+              loading={submittingReview}
+            >
+              Submit Review
+            </Button>
+          </div>
+        </Modal>
 
         {/* ── CANCEL ORDER MODAL ── */}
-        {orderToCancel && (
-          <div className="cp-modal-overlay">
-            <div className="cp-modal">
-              <h3 className="cp-modal-title">Cancel Order</h3>
-              <p className="cp-modal-body">
-                If you cancel this order, the full amount will be credited to your SmartDine Wallet.
-              </p>
-              <div className="cp-modal-actions">
-                <button
-                  className="cp-modal-keep-btn"
-                  onClick={() => setOrderToCancel(null)}
-                  disabled={cancellingOrderId !== null}
-                >
-                  Keep Order
-                </button>
-                <button
-                  className="cp-modal-cancel-btn"
-                  onClick={handleCancelOrder}
-                  disabled={cancellingOrderId !== null}
-                >
-                  {cancellingOrderId === orderToCancel.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : 'Cancel Order'}
-                </button>
-              </div>
-            </div>
+        <Modal
+          isOpen={!!orderToCancel}
+          onClose={() => setOrderToCancel(null)}
+          title="Cancel Order"
+          size="sm"
+        >
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
+            If you cancel this order, the full amount will be credited to your SmartDine Wallet.
+          </p>
+          <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <Button
+              variant="ghost"
+              onClick={() => setOrderToCancel(null)}
+              disabled={cancellingOrderId !== null}
+            >
+              Keep Order
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleCancelOrder}
+              loading={cancellingOrderId === orderToCancel?.id}
+            >
+              Cancel Order
+            </Button>
           </div>
-        )}
+        </Modal>
 
         {/* ── CANCEL BOOKING MODAL ── */}
-        {bookingToCancel && (
-          <div className="cp-modal-overlay">
-            <div className="cp-modal">
-              <h3 className="cp-modal-title">Cancel Booking</h3>
-              <p className="cp-modal-body">
-                Are you sure you want to cancel this booking?
-                <small>You can cancel only within 5 minutes of booking. The fee will be credited to your SmartDine Wallet.</small>
-              </p>
-              <div className="cp-modal-actions">
-                <button
-                  className="cp-modal-keep-btn"
-                  onClick={() => setBookingToCancel(null)}
-                  disabled={cancellingId !== null}
-                >
-                  Keep Booking
-                </button>
-                <button
-                  className="cp-modal-cancel-btn"
-                  onClick={handleCancelBooking}
-                  disabled={cancellingId !== null}
-                >
-                  {cancellingId === bookingToCancel.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : 'Cancel Booking'}
-                </button>
-              </div>
+        <Modal
+          isOpen={!!bookingToCancel}
+          onClose={() => setBookingToCancel(null)}
+          title="Cancel Booking"
+          size="sm"
+        >
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: 1.5 }}>
+              Are you sure you want to cancel this booking?
+            </p>
+            <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.1)', fontSize: '0.85rem', color: '#ef4444' }}>
+              <Icons.alertCircle size={14} className="inline-icon" /> You can cancel only within 5 minutes of booking. The fee will be credited to your Wallet.
             </div>
           </div>
-        )}
+          <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+            <Button
+              variant="ghost"
+              onClick={() => setBookingToCancel(null)}
+              disabled={cancellingId !== null}
+            >
+              Keep Booking
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleCancelBooking}
+              loading={cancellingId === bookingToCancel?.id}
+            >
+              Cancel Booking
+            </Button>
+          </div>
+        </Modal>
       </div>
     </div>
   );

@@ -3,9 +3,9 @@ import toast from 'react-hot-toast';
 import ConfirmDialog from '../../../components/shared/ConfirmDialog';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
-
-
-// Using centralized api instance
+import DataTable, { type TableFilterConfig } from '../components/DataTable';
+import Button from '../../../components/ui/Button';
+import Select from '../../../components/ui/Select';
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -13,17 +13,13 @@ const Users: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
     const currentUser = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
 
     const fetchUsers = async () => {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setError('Authentication token missing. Please login again.');
-            setLoading(false);
-            return;
-        }
         try {
             const res = await api.get('/admin/users');
             setUsers(Array.isArray(res.data) ? res.data : []);
@@ -39,19 +35,17 @@ const Users: React.FC = () => {
         fetchUsers();
     }, []);
 
-    const deleteUser = async (userId: number) => {
+    const deleteUser = (userId: number) => {
         if (currentUser.id === userId) {
             toast.error('You cannot delete your own admin account');
             return;
         }
-
         setUserToDelete(userId);
         setConfirmDeleteOpen(true);
     };
 
     const confirmDelete = async () => {
         if (!userToDelete) return;
-        
         try {
             await api.delete(`/admin/users/${userToDelete}`);
             toast.success('User deleted successfully');
@@ -83,6 +77,76 @@ const Users: React.FC = () => {
         }
     };
 
+    const columns = [
+        { header: 'ID', key: 'id', render: (user: any) => <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>#{user.id}</span> },
+        { header: 'User', key: 'name', render: (user: any) => <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{user.name}</span> },
+        { header: 'Email', key: 'email' },
+        { 
+            header: 'Role', 
+            key: 'role',
+            render: (user: any) => (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span className={`status-pill-modern ${getRoleBadgeClass(user.role)}`} style={{ minWidth: '90px', justifyContent: 'center' }}>
+                        {user.role}
+                    </span>
+                    <Select 
+                        value={user.role} 
+                        onChange={(value: string) => handleRoleChange(user.id, value)}
+                        options={[
+                            { label: 'Customer', value: 'customer' },
+                            { label: 'Chef', value: 'chef' },
+                            { label: 'Admin', value: 'admin' }
+                        ]}
+                        className="role-selector"
+                        style={{ width: '130px' }}
+                    />
+                </div>
+            )
+        },
+        { header: 'Joined', key: 'createdAt', render: (user: any) => <span style={{ color: 'var(--text-muted)' }}>{new Date(user.createdAt).toLocaleDateString()}</span> },
+        { 
+            header: 'Action', 
+            key: 'actions',
+            render: (user: any) => (
+                currentUser.id !== user.id && (
+                    <Button 
+                        variant="danger" 
+                        size="sm"
+                        icon={<Icons.trash size={14} />}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            deleteUser(user.id);
+                        }}
+                    >
+                        Delete
+                    </Button>
+                )
+            )
+        }
+    ];
+
+    const filterConfig: TableFilterConfig[] = [
+        {
+            key: 'role',
+            label: 'All Roles',
+            options: [
+                { label: 'Customer', value: 'customer' },
+                { label: 'Chef', value: 'chef' },
+                { label: 'Admin', value: 'admin' }
+            ]
+        }
+    ];
+
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = 
+            user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            user.email.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesRole = !activeFilters.role || user.role === activeFilters.role;
+
+        return matchesSearch && matchesRole;
+    });
+
     return (
         <div className="management-page">
             <header className="admin-page-header">
@@ -92,71 +156,26 @@ const Users: React.FC = () => {
             </header>
 
             {loading ? (
-                <div className="loading-state">
-                    <p>Loading users...</p>
+                <div style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
+                    <p style={{ color: 'var(--text-muted)' }}>Loading users...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
                     <p><Icons.error size={16} className="inline-icon" /> {error}</p>
-                    <button onClick={fetchUsers}>Retry</button>
-                </div>
-            ) : users.length === 0 ? (
-                <div className="empty-state">
-                    <p>No registered users found.</p>
+                    <Button variant="primary" onClick={fetchUsers}>Retry</Button>
                 </div>
             ) : (
-                <div className="admin-table-container">
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>User</th>
-                                <th>Email</th>
-                                <th>Role</th>
-                                <th>Joined</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {users.map(user => (
-                                <tr key={user.id}>
-                                    <td><span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>#{user.id}</span></td>
-                                    <td><strong>{user.name}</strong></td>
-                                    <td>{user.email}</td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <span className={`status-pill-modern ${getRoleBadgeClass(user.role)}`} style={{ minWidth: '90px', justifyContent: 'center' }}>
-                                                {user.role}
-                                            </span>
-                                            <select 
-                                                value={user.role} 
-                                                onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                                                className="admin-select"
-                                                style={{ border: '1px solid var(--border-color)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '6px 10px', borderRadius: '8px', fontSize: '0.85rem' }}
-                                            >
-                                                <option value="customer">Customer</option>
-                                                <option value="chef">Chef</option>
-                                                <option value="admin">Admin</option>
-                                            </select>
-                                        </div>
-                                    </td>
-                                    <td><span style={{ color: 'var(--text-secondary)' }}>{new Date(user.createdAt).toLocaleDateString()}</span></td>
-                                    <td>
-                                        {currentUser.id !== user.id && (
-                                            <button 
-                                                className="btn-danger-premium" 
-                                                onClick={() => deleteUser(user.id)}
-                                                style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-                                            >
-                                                <Icons.trash size={14} /> Delete
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable 
+                    columns={columns} 
+                    data={filteredUsers} 
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    filters={filterConfig}
+                    activeFilters={activeFilters}
+                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    searchPlaceholder="Search by name or email..."
+                />
             )}
 
             <ConfirmDialog

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
-import { Review, Order } from '../models';
+import { Review, Order, User } from '../models';
 
 // @desc    Create a review
 // @route   POST /api/reviews
@@ -55,5 +55,32 @@ export const getMyReviews = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Error fetching reviews:', error);
         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get all reviews (Admin)
+// @route   GET /api/admin/reviews
+// @access  Private/Admin
+export const getAllReviews = async (req: Request, res: Response) => {
+    try {
+        const reviews = await Review.findAll({
+            include: [
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ['id', 'name', 'email']
+                },
+                {
+                    model: Order,
+                    as: 'order',
+                    attributes: ['id', 'totalAmount', 'createdAt']
+                }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+        res.json(reviews);
+    } catch (error: any) {
+        console.error('Error fetching all reviews:', error);
+        res.status(500).json({ message: error.message || 'Server Error' });
     }
 };

@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
 import api from '../../../utils/api';
-import '../../../styles/Portals.css';
-
-
-// Using centralized api instance
+import { Icons } from '../../../components/icons/IconSystem';
+import FormField from '../../admin/components/FormField';
+import { motion } from 'framer-motion';
 
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -23,7 +22,7 @@ const EditProfilePage: React.FC = () => {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            if (file.size > 2 * 1024 * 1024) {
               toast.error('Image size should be less than 2MB');
               return;
             }
@@ -56,19 +55,10 @@ const EditProfilePage: React.FC = () => {
         e.preventDefault();
         if (!validate()) return;
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-            toast.error('Session expired. Please login again.');
-            navigate('/login');
-            return;
-        }
-
         setLoading(true);
         try {
             const res = await api.put('/auth/profile', formData);
-            const data = res.data;
-
-            updateUser(data);
+            updateUser(res.data);
             toast.success('Profile updated successfully');
             navigate('/profile');
         } catch (err: any) {
@@ -79,105 +69,116 @@ const EditProfilePage: React.FC = () => {
     };
 
     return (
-        <div className="portal-container">
-            <div className="portal-content">
-                <div className="profile-card">
-                    <h2>Edit Profile</h2>
+        <div className="management-page">
+            <header className="admin-page-header">
+                <div>
+                    <h1 className="admin-page-title">Edit Account</h1>
+                    <p className="admin-page-subtitle">Keep your information up to date.</p>
+                </div>
+            </header>
 
-                    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
-                        {/* Profile Image Upload */}
-                        <div className="profile-img-upload-container">
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="admin-card" 
+                style={{ maxWidth: '700px', margin: '0 auto', overflow: 'hidden' }}
+            >
+                <form onSubmit={handleSubmit}>
+                    <div style={{ padding: '30px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', textAlign: 'center' }}>
+                        <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 20px' }}>
                             <div 
-                                className="profile-img-preview"
+                                style={{ 
+                                    width: '100%', 
+                                    height: '100%', 
+                                    borderRadius: '50%', 
+                                    border: '4px solid var(--brand-primary)', 
+                                    overflow: 'hidden', 
+                                    background: 'var(--bg-primary)',
+                                    cursor: 'pointer'
+                                }}
                                 onClick={() => document.getElementById('imageUpload')?.click()}
                             >
                                 {formData.profileImage ? (
-                                    <img src={formData.profileImage} alt="Preview" />
+                                    <img src={formData.profileImage} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
-                                    <span className="profile-img-placeholder">Click to Upload</span>
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                        <Icons.camera size={40} />
+                                    </div>
                                 )}
                             </div>
-                            
-                            {formData.profileImage && (
-                                <button 
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, profileImage: '' })}
-                                    className="profile-remove-photo"
-                                >
-                                    Remove Photo
-                                </button>
-                            )}
-
-                            <input 
-                                id="imageUpload"
-                                type="file"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                                style={{ display: 'none' }}
-                            />
-                            <p className="profile-img-hint">JPG, PNG or GIF. Max 2MB.</p>
-                        </div>
-
-                        <div className="form-group">
-                            <label className="profile-detail-label">
-                                FULL NAME
-                            </label>
-                            <input 
-                                type="text" 
-                                name="name"
-                                value={formData.name}
-                                onChange={handleChange}
-                                placeholder="Enter your full name"
-                                required
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="profile-detail-label">
-                                EMAIL ADDRESS (Read-only)
-                            </label>
-                            <input 
-                                type="email" 
-                                value={user.email}
-                                disabled
-                                style={{ background: 'var(--bg-secondary)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label className="profile-detail-label">
-                                PHONE NUMBER
-                            </label>
-                            <input 
-                                type="tel" 
-                                name="phone"
-                                value={formData.phone}
-                                onChange={handleChange}
-                                placeholder="10-digit number"
-                            />
-                        </div>
-
-                        <div className="profile-actions">
-                            <button 
-                                type="submit"
-                                disabled={loading}
-                                className="save-btn"
-                                style={{ flex: 1 }}
-                            >
-                                {loading ? 'Saving Changes...' : 'Save Changes'}
-                            </button>
                             <button 
                                 type="button"
-                                onClick={() => navigate('/')}
-                                className="back-btn"
-                                style={{ flex: 1 }}
+                                onClick={() => document.getElementById('imageUpload')?.click()}
+                                style={{
+                                    position: 'absolute',
+                                    bottom: '5px',
+                                    right: '5px',
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '50%',
+                                    background: 'var(--brand-primary)',
+                                    color: 'white',
+                                    border: '3px solid var(--bg-secondary)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    boxShadow: 'var(--shadow-md)'
+                                }}
+                            >
+                                <Icons.edit size={14} />
+                            </button>
+                        </div>
+                        <input id="imageUpload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
+                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{user.name}</h3>
+                        <p style={{ margin: '5px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{user.email}</p>
+                    </div>
+
+                    <div style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <FormField 
+                            label="Full Name" 
+                            name="name" 
+                            value={formData.name} 
+                            onChange={handleChange} 
+                            placeholder="Your full name"
+                            required
+                        />
+                        
+                        <FormField 
+                            label="Email Address (Locked)" 
+                            value={user.email} 
+                            disabled
+                        />
+
+                        <FormField 
+                            label="Phone Number" 
+                            name="phone" 
+                            value={formData.phone} 
+                            onChange={handleChange} 
+                            placeholder="10-digit mobile number"
+                        />
+
+                        <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+                            <button 
+                                type="button"
+                                onClick={() => navigate('/profile')}
+                                className="btn-primary-premium"
+                                style={{ flex: 1, background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
                             >
                                 Cancel
                             </button>
+                            <button 
+                                type="submit"
+                                disabled={loading}
+                                className="btn-primary-premium"
+                                style={{ flex: 2 }}
+                            >
+                                {loading ? 'Saving Changes...' : 'Save Changes'}
+                            </button>
                         </div>
-                    </form>
-                </div>
-            </div>
+                    </div>
+                </form>
+            </motion.div>
         </div>
     );
 };
