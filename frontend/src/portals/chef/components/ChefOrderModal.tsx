@@ -1,5 +1,6 @@
 import React from 'react';
-import '../../../styles/Portals.css';
+import Modal from '../../../components/ui/Modal';
+import Button from '../../../components/ui/Button';
 
 interface OrderItem {
     itemName: string;
@@ -21,51 +22,86 @@ interface ChefOrderModalProps {
 
 const ChefOrderModal: React.FC<ChefOrderModalProps> = ({ order, onClose }) => {
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content premium-modal" onClick={e => e.stopPropagation()}>
-                <header className="modal-header">
-                    <h2>Order Details #{order.id}</h2>
-                    <button className="close-modal" onClick={onClose}>&times;</button>
-                </header>
-                
-                <div className="modal-body">
-                    <div className="order-meta">
-                        <div className="meta-item">
-                            <strong>Table:</strong> {order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber}`}
-                        </div>
-                        <div className="meta-item">
-                            <strong>Time:</strong> {new Date(order.createdAt).toLocaleTimeString()}
+        <Modal 
+            isOpen={true} 
+            onClose={onClose} 
+            title={`Order Details #${order.id}`}
+            size="md"
+        >
+            <div className="modal-body">
+                <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Location</div>
+                        <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                            {order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber}`}
                         </div>
                     </div>
-
-                    {order.specialInstructions && (
-                        <div className="special-instructions-alert" style={{ margin: '15px 0', padding: '12px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '10px', color: '#d97706', fontSize: '0.95rem' }}>
-                            <strong style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                Special Instructions:
-                            </strong>
-                            <p style={{ margin: 0, paddingLeft: '22px' }}>{order.specialInstructions}</p>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Placed At</div>
+                        <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>
+                            {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </div>
-                    )}
-
-                    <div className="items-list-container">
-                        <h3>Items to Prepare:</h3>
-                        <ul className="chef-items-list">
-                            {order.items.map((item, index) => (
-                                <li key={index} className="chef-item">
-                                    <span className="item-qty">{item.quantity}x</span>
-                                    <span className="item-name">{item.itemName}</span>
-                                </li>
-                            ))}
-                        </ul>
                     </div>
                 </div>
 
-                <footer className="modal-footer">
-                    <button className="btn-primary" onClick={onClose}>Close</button>
-                </footer>
+                {order.specialInstructions && (
+                    <div style={{ 
+                        margin: '0 0 24px 0', 
+                        padding: '16px', 
+                        background: 'rgba(245, 158, 11, 0.08)', 
+                        border: '1px solid rgba(245, 158, 11, 0.2)', 
+                        borderRadius: '16px', 
+                        color: '#d97706', 
+                        fontSize: '0.95rem' 
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontWeight: 800 }}>
+                            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            Special Instructions
+                        </div>
+                        <p style={{ margin: 0, paddingLeft: '26px', fontWeight: 500, lineHeight: 1.5 }}>
+                            {order.specialInstructions}
+                        </p>
+                    </div>
+                )}
+
+                <div className="items-list-container">
+                    <h3 style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '16px', letterSpacing: '0.5px' }}>Items to Prepare</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {order.items.map((item, index) => (
+                            <div key={index} style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '12px', 
+                                padding: '12px 16px', 
+                                background: 'var(--bg-secondary)', 
+                                borderRadius: '12px',
+                                border: '1px solid var(--border-color)'
+                            }}>
+                                <span style={{ 
+                                    minWidth: '36px', 
+                                    height: '24px', 
+                                    background: 'var(--brand-primary)', 
+                                    color: 'white', 
+                                    borderRadius: '6px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    fontSize: '0.85rem',
+                                    fontWeight: 800
+                                }}>
+                                    {item.quantity}x
+                                </span>
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.itemName}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '32px' }}>
+                <Button variant="primary" onClick={onClose} style={{ padding: '12px 32px' }}>Close</Button>
+            </div>
+        </Modal>
     );
 };
 

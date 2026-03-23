@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
-import '../../../styles/Portals.css';
+import FormField from '../../admin/components/FormField';
+import { motion } from 'framer-motion';
 
 const ChangePasswordPage: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +28,6 @@ const ChangePasswordPage: React.FC = () => {
       return;
     }
 
-    setLoading(false); // Wait, should be true
     setLoading(true);
     try {
       await changePassword(formData.currentPassword, formData.newPassword);
@@ -41,57 +41,67 @@ const ChangePasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="portal-container">
-      <div className="portal-content">
+    <div className="management-page">
+      <header className="admin-page-header">
+        <h1 className="admin-page-title">Change Password</h1>
+        <p className="admin-page-subtitle">Security check for your SmartDine account.</p>
+        <div className="admin-header-divider"></div>
+      </header>
 
-        <div className="profile-card" style={{ maxWidth: '500px', margin: '2rem auto' }}>
-          <h2 style={{ color: '#6f4e37', marginBottom: '1.5rem', textAlign: 'center' }}>Change Password</h2>
-          
-          <form onSubmit={handleSubmit} className="edit-profile-form">
-            <div className="form-group">
-              <label>Current Password</label>
-              <input
-                className="form-input"
-                type="password"
-                required
-                value={formData.currentPassword}
-                onChange={(e) => setFormData({ ...formData, currentPassword: e.target.value })}
-                placeholder="Enter current password"
-              />
-            </div>
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="admin-card" 
+        style={{ maxWidth: '550px', margin: '2rem auto', padding: '40px' }}
+      >
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+          <FormField
+            label="Current Password"
+            type="password"
+            required
+            value={formData.currentPassword}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, currentPassword: e.target.value })}
+            placeholder="Verify your identity"
+          />
 
-            <div className="form-group">
-              <label>New Password</label>
-              <input
-                className="form-input"
-                type="password"
-                required
-                value={formData.newPassword}
-                onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-                placeholder="Min 6 characters"
-              />
-            </div>
+          <FormField
+            label="New Password"
+            type="password"
+            required
+            value={formData.newPassword}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, newPassword: e.target.value })}
+            placeholder="At least 6 characters"
+          />
 
-            <div className="form-group">
-              <label>Confirm New Password</label>
-              <input
-                className="form-input"
-                type="password"
-                required
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                placeholder="Repeat new password"
-              />
-            </div>
+          <FormField
+            label="Confirm New Password"
+            type="password"
+            required
+            value={formData.confirmPassword}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, confirmPassword: e.target.value })}
+            placeholder="Type it again"
+          />
 
-            <div className="form-actions" style={{ marginTop: '2rem' }}>
-              <button type="submit" className="save-btn" disabled={loading} style={{ width: '100%' }}>
-                {loading ? 'Updating...' : 'Update Password'}
+          <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+              <button 
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  className="btn-primary-premium"
+                  style={{ flex: 1, background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+              >
+                  Cancel
               </button>
-            </div>
-          </form>
-        </div>
-      </div>
+              <button 
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary-premium"
+                  style={{ flex: 2 }}
+              >
+                  {loading ? 'Updating...' : 'Update Password'}
+              </button>
+          </div>
+        </form>
+      </motion.div>
     </div>
   );
 };

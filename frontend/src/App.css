@@ -130,6 +130,14 @@ body[data-theme='light'] {
   --card-border: var(--border-color);
   --card-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   --card-shadow-hover: 0 12px 32px rgba(0, 0, 0, 0.08);
+  --card-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+  /* ── Z-Index Layering ── */
+  --z-sidebar: 100;
+  --z-header: 200;
+  --z-dropdown: 300;
+  --z-modal: 1000;
+  --z-toast: 9999;
 
   /* Inputs */
   --input-bg: #FFF6ED;
@@ -1150,10 +1158,139 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
   box-shadow: 0 4px 12px rgba(217, 83, 79, 0.3);
 }
 
-@media (max-width: 480px) {
-  .confirm-modal {
-    padding: 24px;
-  }
+/* ═══════════════════════════════════════════
+   PREMIUM MODAL SYSTEM (SaaS Style)
+═══════════════════════════════════════════ */
+.modal-root-wrapper {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Allow clicks to pass through to overlay */
+}
+
+.modal-overlay-new {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  pointer-events: auto; /* Catch clicks to close */
+}
+
+.modal-container-centered {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: fit-content;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.modal-content-premium {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  width: calc(100vw - 48px); /* Responsive fallback */
+  padding: 32px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  pointer-events: auto;
+  overflow-y: auto;
+  max-height: calc(90vh - 48px);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Standardized Widths */
+.modal-sm { max-width: 380px !important; }
+.modal-md { max-width: 440px !important; }
+.modal-lg { max-width: 480px !important; }
+
+body[data-theme='dark'] .modal-content-premium {
+  background: #18181b;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}
+
+.modal-header-premium {
+  margin-bottom: 24px;
+}
+
+.modal-title-premium {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.modal-body-premium {
+  position: relative;
+}
+
+.modal-close-btn-new {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+}
+
+.modal-close-btn-new:hover {
+  background: rgba(255, 0, 0, 0.1);
+  color: var(--error-color);
+  border-color: rgba(217, 83, 79, 0.2);
+  transform: rotate(90deg);
+}
+
+/* ── Dashboard Card Spacing ── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.admin-card {
+  padding: 24px;
+  border-radius: 20px;
+  height: 100%;
+}
+
+/* Standardized Toast UI */
+.hot-toast-premium {
+  background: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-radius: 16px !important;
+  padding: 12px 20px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+  border: 1px solid var(--border-color) !important;
+  font-weight: 600 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+body[data-theme='dark'] .hot-toast-premium {
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
 }
 
 /* ═══════════════════════════════════════════

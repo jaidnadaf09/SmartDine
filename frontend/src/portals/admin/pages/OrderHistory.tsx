@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
 import { formatDate, formatTime } from '../../../utils/dateFormatter';
-
-
-// Using centralized api instance
+import DataTable from '../components/DataTable';
+import Button from '../../../components/ui/Button';
 
 const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -13,12 +13,6 @@ const OrderHistory: React.FC = () => {
     const fetchOrderHistory = async () => {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setError('Auth token missing.');
-            setLoading(false);
-            return;
-        }
         try {
             const res = await api.get('/admin/orders/history');
             setOrders(Array.isArray(res.data) ? res.data : []);
@@ -34,69 +28,95 @@ const OrderHistory: React.FC = () => {
         fetchOrderHistory();
     }, []);
 
+    const columns = [
+        { 
+            header: 'Order ID', 
+            key: 'id',
+            render: (order: any) => <strong style={{ color: 'var(--brand-primary)' }}>#{order.id}</strong>
+        },
+        { 
+            header: 'Customer', 
+            key: 'customer',
+            render: (order: any) => <span>{order.customer?.name || 'Guest User'}</span>
+        },
+        { 
+            header: 'Type', 
+            key: 'orderType',
+            render: (order: any) => (
+                <span className={`status-pill-modern ${order.orderType === 'TAKEAWAY' ? 'status-modern-pending' : 'status-modern-confirmed'}`} style={{ fontSize: '0.75rem' }}>
+                    {order.orderType}
+                </span>
+            )
+        },
+        { 
+            header: 'Items', 
+            key: 'items',
+            render: (order: any) => (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
+                        <span key={idx} style={{ fontSize: '0.75rem', padding: '2px 8px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
+                            {item.quantity}x {item.itemName}
+                        </span>
+                    )) : 'No items'}
+                </div>
+            )
+        },
+        { 
+            header: 'Amount', 
+            key: 'totalAmount',
+            render: (order: any) => (
+                <span style={{ fontWeight: 800, color: 'var(--brand-primary)' }}>
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}
+                </span>
+            )
+        },
+        { 
+            header: 'Completed At', 
+            key: 'updatedAt',
+            render: (order: any) => (
+                <div style={{ fontSize: '0.85rem' }}>
+                    <div style={{ fontWeight: 600 }}>{formatTime(order.updatedAt)}</div>
+                    <div style={{ opacity: 0.6 }}>{formatDate(order.updatedAt)}</div>
+                </div>
+            )
+        },
+        { 
+            header: 'Status', 
+            key: 'status',
+            render: () => (
+                <span className="status-pill-modern status-modern-confirmed">
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', marginRight: '8px' }}></span>
+                    Completed
+                </span>
+            )
+        }
+    ];
+
     return (
         <div className="management-page">
-            <h2 className="dashboard-title">Order History</h2>
-            <p className="section-subtitle">A list of all completed restaurant orders.</p>
+            <header className="admin-page-header">
+                <h1 className="admin-page-title">Order Archives</h1>
+                <p className="admin-page-subtitle">A historical list of all completed restaurant orders.</p>
+                <div className="admin-header-divider"></div>
+            </header>
 
             {loading ? (
-                <div className="loading-state">
-                    <div className="spinner"></div>
-                    <p>Fetching completed orders...</p>
+                <div style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
+                    <p style={{ color: 'var(--text-muted)' }}>Retrieving order history...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p><span>⚠️</span> {error}</p>
-                    <button className="retry-btn" onClick={fetchOrderHistory}>Retry</button>
-                </div>
-            ) : orders.length === 0 ? (
-                <div className="empty-state">
-                    <p>No completed orders in the history.</p>
+                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
+                    <Button variant="primary" onClick={fetchOrderHistory}>Retry</Button>
                 </div>
             ) : (
-                <div className="table-responsive">
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Type</th>
-                                <th>Items</th>
-                                <th>Amount</th>
-                                <th>Date/Time</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders.map(order => (
-                                <tr key={order.id}>
-                                    <td><strong>#{order.id}</strong></td>
-                                    <td>{order.customer?.name || 'Guest User'}</td>
-                                    <td>
-                                        <span className={`status-badge status-${order.orderType === 'TAKEAWAY' ? 'ready' : 'preparing'}`}>
-                                            {order.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-In'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="item-details-list">
-                                            {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
-                                                <div key={idx}>{item.quantity}x {item.itemName}</div>
-                                            )) : 'No items data'}
-                                        </div>
-                                    </td>
-                                    <td><span className="management-amount">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
-                                    <td>
-                                        <div style={{ fontSize: '0.8rem' }}>
-                                            {formatDate(order.updatedAt)}<br/>
-                                            {formatTime(order.updatedAt)}
-                                        </div>
-                                    </td>
-                                    <td><span className="status-badge status-completed">Completed</span></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable 
+                    columns={columns} 
+                    data={orders} 
+                    searchPlaceholder="Search order ID or customer..."
+                    searchKey="id"
+                />
             )}
         </div>
     );

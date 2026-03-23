@@ -19,7 +19,8 @@ import {
     getOrders,
     getOrdersHistory,
     updateOrderStatus,
-    getPayments
+    getPayments,
+    getAllReviews
 } from '../controllers/adminController';
 import { updateRestaurantStatus } from '../controllers/restaurantController';
 import { protect, adminOnly } from '../middleware/authMiddleware';
@@ -57,6 +58,7 @@ router.route('/orders/history').get(getOrdersHistory);
 router.route('/orders/:id/status').put(updateOrderStatus);
 
 router.route('/payments').get(getPayments);
+router.route('/reviews').get(getAllReviews);
 router.route('/restaurant-status').put(updateRestaurantStatus);
 
 export default router;

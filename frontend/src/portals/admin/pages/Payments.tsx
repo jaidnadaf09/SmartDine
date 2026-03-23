@@ -2,24 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
 import { formatDate } from '../../../utils/dateFormatter';
-
-
-// Using centralized api instance
+import DataTable, { type TableFilterConfig } from '../components/DataTable';
+import Button from '../../../components/ui/Button';
 
 const Payments: React.FC = () => {
     const [payments, setPayments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
 
     const fetchPayments = async () => {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setError('Auth token missing.');
-            setLoading(false);
-            return;
-        }
         try {
             const res = await api.get('/admin/payments');
             setPayments(Array.isArray(res.data) ? res.data : []);
@@ -35,6 +30,98 @@ const Payments: React.FC = () => {
         fetchPayments();
     }, []);
 
+    const columns = [
+        { 
+            header: 'Type', 
+            key: 'type',
+            render: (payment: any) => (
+                <span className={`status-pill-modern ${payment.type === 'Booking' ? 'status-modern-pending' : 'status-modern-confirmed'}`} style={{ fontSize: '0.7rem' }}>
+                    {payment.type}
+                </span>
+            )
+        },
+        { 
+            header: 'Customer', 
+            key: 'customerName',
+            render: (payment: any) => <strong style={{ color: 'var(--text-primary)' }}>{payment.customerName}</strong>
+        },
+        { 
+            header: 'Ref ID', 
+            key: 'id',
+            render: (payment: any) => <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>#{payment.id}</span>
+        },
+        { 
+            header: 'Amount', 
+            key: 'amount',
+            render: (payment: any) => (
+                <span style={{ fontWeight: 800, color: 'var(--brand-primary)', fontSize: '1.05rem' }}>
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payment.amount)}
+                </span>
+            )
+        },
+        { 
+            header: 'Payment ID', 
+            key: 'paymentId',
+            render: (payment: any) => (
+                <code style={{ background: 'var(--bg-secondary)', padding: '6px 10px', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-muted)', border: '1px solid var(--border-color)' }}>
+                    {payment.paymentId || 'N/A'}
+                </code>
+            )
+        },
+        { 
+            header: 'Method', 
+            key: 'method',
+            render: (payment: any) => <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{payment.method}</span>
+        },
+        { 
+            header: 'Status', 
+            key: 'paymentStatus',
+            render: (payment: any) => (
+                <span className={`status-pill-modern status-modern-${payment.paymentStatus === 'paid' ? 'confirmed' : 'cancelled'}`} style={{ textTransform: 'capitalize' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', marginRight: '8px' }}></span>
+                    {payment.paymentStatus}
+                </span>
+            )
+        },
+        { 
+            header: 'Date', 
+            key: 'updatedAt',
+            render: (payment: any) => <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>{formatDate(payment.updatedAt)}</span>
+        }
+    ];
+
+    const filterConfig: TableFilterConfig[] = [
+        {
+            key: 'paymentStatus',
+            label: 'All Statuses',
+            options: [
+                { label: 'Paid', value: 'paid' },
+                { label: 'Pending', value: 'pending' },
+                { label: 'Failed', value: 'failed' }
+            ]
+        },
+        {
+            key: 'type',
+            label: 'All Types',
+            options: [
+                { label: 'Order', value: 'Order' },
+                { label: 'Booking', value: 'Booking' }
+            ]
+        }
+    ];
+
+    const filteredPayments = payments.filter(p => {
+        const matchesSearch = 
+            p.customerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (p.paymentId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.id.toString().includes(searchTerm);
+        
+        const matchesStatus = !activeFilters.paymentStatus || p.paymentStatus === activeFilters.paymentStatus;
+        const matchesType = !activeFilters.type || p.type === activeFilters.type;
+
+        return matchesSearch && matchesStatus && matchesType;
+    });
+
     return (
         <div className="management-page">
             <header className="admin-page-header">
@@ -44,47 +131,26 @@ const Payments: React.FC = () => {
             </header>
 
             {loading ? (
-                <div className="loading-state">
-                    <p>Loading payments...</p>
+                <div style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
+                    <p style={{ color: 'var(--text-muted)' }}>Loading payments...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
                     <p><Icons.error size={16} className="inline-icon" /> {error}</p>
-                    <button onClick={fetchPayments}>Retry</button>
-                </div>
-            ) : payments.length === 0 ? (
-                <div className="empty-state">
-                    <p>No payment transactions found.</p>
+                    <Button variant="primary" onClick={fetchPayments}>Retry</Button>
                 </div>
             ) : (
-                <div className="admin-table-container">
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Transaction ID</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {payments.map(payment => (
-                                <tr key={payment.id}>
-                                    <td><strong>{payment.customerName}</strong></td>
-                                    <td style={{ fontWeight: 700, color: 'var(--brand-primary)' }}>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(payment.amount)}</td>
-                                    <td><code style={{ background: 'var(--bg-secondary)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem' }}>{payment.paymentId || 'N/A'}</code></td>
-                                    <td>
-                                        <span className={`status-pill-modern status-modern-${payment.paymentStatus === 'paid' ? 'paid' : 'cancelled'}`}>
-                                            {payment.paymentStatus}
-                                        </span>
-                                    </td>
-                                    <td><span style={{ color: 'var(--text-secondary)' }}>{formatDate(payment.updatedAt)}</span></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable 
+                    columns={columns} 
+                    data={filteredPayments} 
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    filters={filterConfig}
+                    activeFilters={activeFilters}
+                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    searchPlaceholder="Search customer or payment ID..."
+                />
             )}
         </div>
     );

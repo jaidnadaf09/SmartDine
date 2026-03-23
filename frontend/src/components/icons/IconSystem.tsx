@@ -55,7 +55,13 @@ import {
   Mail,
   Phone,
   Heart,
-  ChevronDown
+  ChevronDown,
+  Quote,
+  Activity,
+  Camera,
+  MessageSquare,
+  Settings,
+  Users
 } from "lucide-react";
 
 export const Icons = {
@@ -116,5 +122,11 @@ export const Icons = {
   mail: Mail,
   phone: Phone,
   heart: Heart,
-  chevronDown: ChevronDown
+  chevronDown: ChevronDown,
+  quote: Quote,
+  activity: Activity,
+  camera: Camera,
+  reviews: MessageSquare,
+  settings: Settings,
+  users: Users
 };

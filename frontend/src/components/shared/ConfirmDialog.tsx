@@ -1,6 +1,7 @@
 import React from 'react';
 import { Icons } from '../icons/IconSystem';
-import '../../App.css'; 
+import Modal from '../ui/Modal';
+import Button from '../ui/Button';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -19,42 +20,68 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message,
   onConfirm,
   onCancel,
-  confirmText = 'Delete',
+  confirmText = 'Confirm',
   cancelText = 'Cancel',
   type = 'danger'
 }) => {
-  if (!open) return null;
-
   return (
-    <div className="confirm-overlay" onClick={onCancel}>
-      <div className="confirm-modal fade-up" onClick={(e) => e.stopPropagation()}>
-        <button className="confirm-close" onClick={onCancel}>
-          <Icons.close size={20} />
-        </button>
-        
-        <div className={`confirm-icon-wrapper ${type}`}>
-          <Icons.warning size={32} />
+    <Modal 
+      isOpen={open} 
+      onClose={onCancel} 
+      size="sm" 
+      showClose={false}
+    >
+      <div style={{ textAlign: 'center', padding: '10px 0' }}>
+        <div style={{ 
+          width: '64px', 
+          height: '64px', 
+          borderRadius: '20px', 
+          background: type === 'danger' ? 'rgba(217, 83, 79, 0.1)' : 'rgba(224, 168, 0, 0.1)',
+          color: type === 'danger' ? 'var(--error-color)' : 'var(--warning-color)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 24px'
+        }}>
+          {type === 'danger' ? <Icons.trash size={32} /> : <Icons.alertCircle size={32} />}
         </div>
         
-        <h3 className="confirm-title">{title}</h3>
-        <p className="confirm-message">{message}</p>
+        <h3 style={{ 
+          fontSize: '1.4rem', 
+          fontWeight: 800, 
+          marginBottom: '12px', 
+          color: 'var(--text-primary)',
+          fontFamily: 'Poppins, sans-serif'
+        }}>
+          {title}
+        </h3>
+        
+        <p style={{ 
+          fontSize: '0.95rem', 
+          color: 'var(--text-secondary)', 
+          lineHeight: 1.6, 
+          marginBottom: '32px' 
+        }}>
+          {message}
+        </p>
 
-        <div className="confirm-actions">
-          <button onClick={onCancel} className="confirm-btn-cancel">
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <Button variant="ghost" onClick={onCancel}>
             {cancelText}
-          </button>
-          <button 
+          </Button>
+          <Button 
+            variant={type === 'danger' ? 'danger' : 'primary'}
             onClick={() => {
               onConfirm();
               onCancel();
-            }} 
-            className={`confirm-btn-action ${type}`}
+            }}
+            style={{ padding: '10px 24px' }}
           >
             {confirmText}
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
+    </Modal>
   );
 };
 

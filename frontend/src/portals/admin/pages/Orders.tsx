@@ -3,25 +3,20 @@ import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
 import { formatTime } from '../../../utils/dateFormatter';
-import '../../../App.css';
-
-
-// Using centralized api instance
+import DataTable, { type TableFilterConfig } from '../components/DataTable';
+import Button from '../../../components/ui/Button';
+import Select from '../../../components/ui/Select';
 
 const Orders: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
 
     const fetchOrders = async () => {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setError('Auth token missing.');
-            setLoading(false);
-            return;
-        }
         try {
             const res = await api.get('/orders');
             setOrders(Array.isArray(res.data) ? res.data : []);
@@ -54,6 +49,106 @@ const Orders: React.FC = () => {
         }
     };
 
+    const columns = [
+        { header: 'Order ID', key: 'id', render: (order: any) => <strong style={{ color: 'var(--brand-primary)' }}>#{order.id}</strong> },
+        { 
+            header: 'Customer', 
+            key: 'customer', 
+            render: (order: any) => <span>{order.customer?.name || 'Guest'}</span>
+        },
+        { 
+            header: 'Status', 
+            key: 'status',
+            render: (order: any) => (
+                <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`}>
+                    {order.status}
+                </span>
+            )
+        },
+        { 
+            header: 'Items', 
+            key: 'items',
+            render: (order: any) => (
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
+                        <div key={idx}>{item.quantity}x {item.itemName}</div>
+                    )) : 'No items data'}
+                </div>
+            )
+        },
+        { 
+            header: 'Location', 
+            key: 'tableNumber',
+            render: (order: any) => (
+                <span style={{ fontWeight: 600 }}>
+                    {order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber || order.Table?.tableNumber || 'N/A'}`}
+                </span>
+            )
+        },
+        { 
+            header: 'Amount', 
+            key: 'totalAmount',
+            render: (order: any) => (
+                <span style={{ fontWeight: 700, color: 'var(--brand-primary)' }}>
+                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}
+                </span>
+            )
+        },
+        { 
+            header: 'Time', 
+            key: 'createdAt',
+            render: (order: any) => <span style={{ color: 'var(--text-muted)' }}>{formatTime(order.createdAt)}</span>
+        },
+        { 
+            header: 'Update', 
+            key: 'update',
+            render: (order: any) => (
+                <Select
+                    value={order.status}
+                    onChange={(value: string) => updateStatus(order.id, value)}
+                    options={[
+                        { label: 'Pending', value: 'pending' },
+                        { label: 'Preparing', value: 'preparing' },
+                        { label: 'Completed', value: 'completed' }
+                    ]}
+                    style={{ width: '120px' }}
+                />
+            )
+        }
+    ];
+
+    const filterConfig: TableFilterConfig[] = [
+        {
+            key: 'status',
+            label: 'All Statuses',
+            options: [
+                { label: 'Pending', value: 'pending' },
+                { label: 'Preparing', value: 'preparing' },
+                { label: 'Completed', value: 'completed' },
+                { label: 'Cancelled', value: 'cancelled' }
+            ]
+        },
+        {
+            key: 'orderType',
+            label: 'All Types',
+            options: [
+                { label: 'Dine In', value: 'DINE_IN' },
+                { label: 'Takeaway', value: 'TAKEAWAY' }
+            ]
+        }
+    ];
+
+    const filteredOrders = orders.filter(order => {
+        const matchesSearch = 
+            order.id.toString().includes(searchTerm) || 
+            (order.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesStatus = !activeFilters.status || order.status === activeFilters.status;
+        const matchesType = !activeFilters.orderType || order.orderType === activeFilters.orderType;
+
+        return matchesSearch && matchesStatus && matchesType;
+    });
+
     return (
         <div className="management-page">
             <header className="admin-page-header">
@@ -63,69 +158,26 @@ const Orders: React.FC = () => {
             </header>
 
             {loading ? (
-                <div className="loading-state">
-                    <div className="spinner"></div>
-                    <p>Fetching active orders...</p>
+                <div style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
+                    <p style={{ color: 'var(--text-muted)' }}>Fetching active orders...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
                     <p><span><Icons.alertCircle size={16} className="inline-icon" /></span> {error}</p>
-                    <button className="retry-btn" onClick={fetchOrders}>Retry</button>
-                </div>
-            ) : orders.length === 0 ? (
-                <div className="empty-state">
-                    <p>No customer orders found.</p>
+                    <Button variant="primary" onClick={fetchOrders}>Retry</Button>
                 </div>
             ) : (
-                <div className="admin-table-container">
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Order ID</th>
-                                <th>Status</th>
-                                <th>Items</th>
-                                <th>Table</th>
-                                <th>Amount</th>
-                                <th>Time</th>
-                                <th>Update</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders.map(order => (
-                                <tr key={order.id}>
-                                    <td><strong>#{order.id}</strong></td>
-                                    <td>
-                                        <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`}>
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="item-details-list">
-                                            {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
-                                                <div key={idx}>{item.quantity}x {item.itemName}</div>
-                                            )) : 'No items data'}
-                                        </div>
-                                    </td>
-                                    <td>{order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber || order.Table?.tableNumber || 'N/A'}`}</td>
-                                    <td><span className="management-amount">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span></td>
-                                    <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
-                                    <td>{formatTime(order.createdAt)}</td>
-                                    <td>
-                                        <select
-                                            className="admin-select"
-                                            value={order.status}
-                                            onChange={(e) => updateStatus(order.id, e.target.value)}
-                                        >
-                                            <option value="pending">Pending</option>
-                                            <option value="preparing">Preparing</option>
-                                            <option value="completed">Completed</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable 
+                    columns={columns} 
+                    data={filteredOrders} 
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    filters={filterConfig}
+                    activeFilters={activeFilters}
+                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    searchPlaceholder="Search order ID or customer name..."
+                />
             )}
         </div>
     );

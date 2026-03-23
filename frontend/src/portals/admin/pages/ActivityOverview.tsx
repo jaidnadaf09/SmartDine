@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, AlertCircle, Inbox, Users, Info, Utensils, CreditCard } from 'lucide-react';
+import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
 import { formatDate, formatTime } from '../../../utils/dateFormatter';
-
-
-// Using centralized api instance
+import { motion } from 'framer-motion';
+import Button from '../../../components/ui/Button';
 
 const ActivityOverview: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -17,8 +16,6 @@ const ActivityOverview: React.FC = () => {
     const fetchBookings = async () => {
         setBookingsLoading(true);
         setBookingsError(null);
-        const token = localStorage.getItem('token');
-        if (!token) { setBookingsError('Auth token missing.'); return; }
         try {
             const res = await api.get('/admin/bookings/history');
             setBookings(Array.isArray(res.data) ? res.data : []);
@@ -32,8 +29,6 @@ const ActivityOverview: React.FC = () => {
     const fetchOrders = async () => {
         setOrdersLoading(true);
         setOrdersError(null);
-        const token = localStorage.getItem('token');
-        if (!token) { setOrdersError('Auth token missing.'); return; }
         try {
             const res = await api.get('/admin/orders/history');
             setOrders(Array.isArray(res.data) ? res.data : []);
@@ -49,122 +44,154 @@ const ActivityOverview: React.FC = () => {
         fetchOrders();
     }, []);
 
-
-
     return (
         <div className="management-page">
             <header className="admin-page-header">
-                <h1 className="admin-page-title">Activity History</h1>
-                <p className="admin-page-subtitle">A merged history of all table bookings and food orders.</p>
-                <div className="admin-header-divider"></div>
+                <div>
+                    <h1 className="admin-page-title">Activity Timeline</h1>
+                    <p className="admin-page-subtitle">A comprehensive history of all restaurant interactions.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className="admin-card" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--glass-bg)' }}>
+                        <div style={{ color: 'var(--brand-primary)' }}><Icons.calendar size={20} /></div>
+                        <div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Bookings</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{bookings.length}</div>
+                        </div>
+                    </div>
+                    <div className="admin-card" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--glass-bg)' }}>
+                        <div style={{ color: 'var(--brand-primary)' }}><Icons.utensils size={20} /></div>
+                        <div>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Orders</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{orders.length}</div>
+                        </div>
+                    </div>
+                </div>
             </header>
 
-            <div className="admin-activity-container">
+            <div className="admin-activity-container dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))' }}>
                 {/* ── Bookings History Card ── */}
-                <div className="activity-card">
-                    <div className="activity-card-header">
-                        <div className="activity-card-title">
-                            <span className="activity-icon"><Calendar size={20} /></span>
-                            <h3>Table Bookings</h3>
+                <div className="admin-card" style={{ padding: '0', overflow: 'hidden' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Icons.calendarDays size={20} style={{ color: 'var(--brand-primary)' }} />
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Booking History</h3>
                         </div>
-                        {!bookingsLoading && !bookingsError && (
-                            <span className="activity-count">{bookings.length}</span>
-                        )}
                     </div>
 
-                    {bookingsLoading ? (
-                        <div className="activity-loading"><div className="spinner"></div><p>Loading bookings...</p></div>
-                    ) : bookingsError ? (
-                        <div className="activity-error">
-                            <p><AlertCircle size={16} className="inline-icon" /> {bookingsError}</p>
-                            <button className="retry-btn" onClick={fetchBookings}>Retry</button>
-                        </div>
-                    ) : bookings.length === 0 ? (
-                        <div className="activity-empty">
-                            <span><Inbox size={32} /></span>
-                            <p>No booking history found.</p>
-                        </div>
-                    ) : (
-                        <div className="activity-list">
-                            {bookings.map(booking => (
-                                <div key={booking.id} className="activity-item">
-                                    <div className="activity-item-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                        <strong className="activity-customer" style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{booking.customerName}</strong>
-                                        <span className={`status-pill-modern status-modern-${booking.status?.toLowerCase()}`}>
-                                            {booking.status}
-                                        </span>
-                                    </div>
-                                    <div className="activity-item-meta">
-                                        <span><Users size={14} className="inline-icon" /> {booking.guests} Guest{booking.guests !== 1 ? 's' : ''}</span>
-                                        <span><Calendar size={14} className="inline-icon" /> {formatDate(booking.date)} at {formatTime(booking.time)}</span>
-                                    </div>
-                                    {booking.status === 'cancelled' && booking.cancelReason && (
-                                        <div className="activity-cancel-reason">
-                                            <Info size={14} className="inline-icon" /> {booking.cancelReason}
+                    <div style={{ padding: '24px', maxHeight: '600px', overflowY: 'auto' }}>
+                        {bookingsLoading ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}><div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div><p style={{ color: 'var(--text-muted)' }}>Loading bookings...</p></div>
+                        ) : bookingsError ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
+                                <Icons.error size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                                <p>{bookingsError}</p>
+                                <Button variant="primary" onClick={fetchBookings} style={{ padding: '8px 20px', fontSize: '0.85rem' }}>Retry</Button>
+                            </div>
+                        ) : bookings.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.5 }}>
+                                <Icons.folderOpen size={48} style={{ marginBottom: '1rem' }} />
+                                <p>No booking history found.</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {bookings.map((booking, idx) => (
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.03 }}
+                                        key={booking.id} 
+                                        style={{ padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{booking.customerName}</strong>
+                                            <span className={`status-pill-modern status-modern-${booking.status?.toLowerCase() === 'confirmed' ? 'confirmed' : 'cancelled'}`} style={{ fontSize: '0.7rem', padding: '2px 10px' }}>
+                                                {booking.status}
+                                            </span>
                                         </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icons.user size={14} /> {booking.guests} Guests</span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icons.clock size={14} /> {formatDate(booking.date)} · {formatTime(booking.time)}</span>
+                                            {booking.tableNumber && <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icons.table size={14} /> Table {booking.tableNumber}</span>}
+                                        </div>
+                                        {booking.status === 'cancelled' && booking.cancelReason && (
+                                            <div style={{ marginTop: '12px', padding: '8px 12px', background: '#ef444410', borderRadius: '8px', color: '#ef4444', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Icons.alertCircle size={14} />
+                                                <span>Reason: {booking.cancelReason}</span>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* ── Orders History Card ── */}
-                <div className="activity-card">
-                    <div className="activity-card-header">
-                        <div className="activity-card-title">
-                            <span className="activity-icon"><Utensils size={20} /></span>
-                            <h3>Food Orders</h3>
+                <div className="admin-card" style={{ padding: '0', overflow: 'hidden' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <Icons.utensils size={20} style={{ color: 'var(--brand-primary)' }} />
+                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700 }}>Order History</h3>
                         </div>
-                        {!ordersLoading && !ordersError && (
-                            <span className="activity-count">{orders.length}</span>
-                        )}
                     </div>
 
-                    {ordersLoading ? (
-                        <div className="activity-loading"><div className="spinner"></div><p>Loading orders...</p></div>
-                    ) : ordersError ? (
-                        <div className="activity-error">
-                            <p><AlertCircle size={16} className="inline-icon" /> {ordersError}</p>
-                            <button className="retry-btn" onClick={fetchOrders}>Retry</button>
-                        </div>
-                    ) : orders.length === 0 ? (
-                        <div className="activity-empty">
-                            <span><Inbox size={32} /></span>
-                            <p>No order history found.</p>
-                        </div>
-                    ) : (
-                        <div className="activity-list">
-                            {orders.map(order => (
-                                <div key={order.id} className="activity-item">
-                                    <div className="activity-item-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                        <strong className="activity-customer" style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
-                                            ORD-#{order.id} · {order.customer?.name || 'Guest'}
-                                        </strong>
-                                        <span className={`status-pill-modern status-modern-${order.status === 'completed' ? 'completed' : 'cancelled'}`}>
-                                            {order.status === 'completed' ? 'Completed' : 'Cancelled'}
-                                        </span>
-                                    </div>
-                                    <div className="activity-item-meta">
-                                        <span className={`status-badge status-${order.orderType === 'TAKEAWAY' ? 'ready' : 'preparing'}`} style={{ fontSize: '0.75rem' }}>
-                                            {order.orderType === 'TAKEAWAY' ? 'Takeaway' : 'Dine-In'}
-                                        </span>
-                                        <span><CreditCard size={14} className="inline-icon" /> {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}</span>
-                                    </div>
-                                    <div className="activity-order-items">
-                                        {order.items && Array.isArray(order.items)
-                                            ? order.items.map((item: any, idx: number) => (
-                                                <span key={idx} className="activity-order-chip">
-                                                    {item.quantity}× {item.itemName}
-                                                </span>
-                                            ))
-                                            : <span className="activity-order-chip">No items</span>
-                                        }
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <div style={{ padding: '24px', maxHeight: '600px', overflowY: 'auto' }}>
+                        {ordersLoading ? (
+                            <div style={{ textAlign: 'center', padding: '2rem' }}><div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div><p style={{ color: 'var(--text-muted)' }}>Loading orders...</p></div>
+                        ) : ordersError ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
+                                <Icons.error size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                                <p>{ordersError}</p>
+                                <Button variant="primary" onClick={fetchOrders} style={{ padding: '8px 20px', fontSize: '0.85rem' }}>Retry</Button>
+                            </div>
+                        ) : orders.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '3rem', opacity: 0.5 }}>
+                                <Icons.folderOpen size={48} style={{ marginBottom: '1rem' }} />
+                                <p>No order history found.</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                {orders.map((order, idx) => (
+                                    <motion.div 
+                                        initial={{ opacity: 0, x: 10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.03 }}
+                                        key={order.id} 
+                                        style={{ padding: '16px', borderRadius: '12px', border: '1px solid var(--border-color)', background: 'var(--bg-primary)' }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <strong style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>
+                                                ORD-#{order.id} · {order.customer?.name || 'Guest'}
+                                            </strong>
+                                            <span className={`status-pill-modern status-modern-${order.status === 'completed' ? 'confirmed' : 'cancelled'}`} style={{ fontSize: '0.7rem', padding: '2px 10px' }}>
+                                                {order.status === 'completed' ? 'Completed' : 'Cancelled'}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                                            <span className={`status-pill-modern ${order.orderType === 'TAKEAWAY' ? 'status-modern-pending' : 'status-modern-confirmed'}`} style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
+                                                {order.orderType}
+                                            </span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: 'var(--brand-primary)' }}>
+                                                <Icons.rupee size={14} /> {Number(order.totalAmount).toFixed(2)}
+                                            </span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Icons.clock size={14} /> {formatDate(order.createdAt)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                            {order.items && Array.isArray(order.items)
+                                                ? order.items.map((item: any, i: number) => (
+                                                    <span key={i} style={{ fontSize: '0.75rem', padding: '4px 10px', background: 'var(--bg-secondary)', borderRadius: '20px', color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}>
+                                                        {item.quantity}× {item.itemName}
+                                                    </span>
+                                                ))
+                                                : <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No items</span>
+                                            }
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

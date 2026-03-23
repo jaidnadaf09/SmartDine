@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Toaster } from "react-hot-toast";
@@ -43,16 +43,18 @@ function App() {
         <Toaster
           position="top-right"
           containerStyle={{
-            top: 80,
+            top: 40,
+            right: 20,
           }}
           toastOptions={{
-            duration: 3000,
-            style: {
-              background: "#1f2937",
-              color: "#fff",
-              borderRadius: "8px",
-              fontSize: "14px"
-            }
+            duration: 4000,
+            className: 'hot-toast-premium',
+            success: {
+              iconTheme: {
+                primary: 'var(--brand-primary)',
+                secondary: 'white',
+              },
+            },
           }}
         />
         <Router>

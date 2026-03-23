@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { User, Order, Table, Booking } from '../models';
+import { getAllReviews } from './reviewController';
+
+export { getAllReviews };
 
 // @desc    Get all registered users
 // @route   GET /api/admin/users
@@ -423,25 +426,64 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
     }
 };
 
-// @desc    Get payment history
+// @desc    Get consolidated payment history (Bookings + Orders)
 // @route   GET /api/admin/payments
 // @access  Private/Admin
 export const getPayments = async (req: Request, res: Response) => {
-    console.log("Admin: Fetching all payments/successful bookings");
+    console.log("Admin: Consolidating history from Bookings and Orders");
     try {
-        // Since we store payments in Bookings for now (Razorpay integration)
-        const payments = await Booking.findAll({
+        // 1. Fetch Booking payments
+        const bookingPayments = await Booking.findAll({
             where: {
-                paymentStatus: {
-                    [Op.in]: ['paid', 'failed']
-                }
+                paymentStatus: { [Op.in]: ['paid', 'failed'] }
             },
             attributes: ['id', 'customerName', 'amount', 'paymentId', 'paymentStatus', 'updatedAt'],
-            order: [['updatedAt', 'DESC']]
         });
-        res.json(payments);
-    } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+
+        // 2. Fetch Order payments
+        const orderPayments = await Order.findAll({
+            where: {
+                paymentStatus: { [Op.in]: ['paid', 'failed'] }
+            },
+            include: [{
+                model: User,
+                as: 'customer',
+                attributes: ['name']
+            }],
+            attributes: ['id', 'totalAmount', 'paymentId', 'paymentStatus', 'updatedAt'],
+        });
+
+        // 3. Normalize and Merge
+        const consolidated = [
+            ...bookingPayments.map(b => ({
+                id: b.id,
+                type: 'Booking',
+                customerName: b.customerName,
+                amount: b.amount,
+                paymentId: b.paymentId,
+                paymentStatus: b.paymentStatus,
+                updatedAt: b.updatedAt,
+                method: 'Razorpay / UPI'
+            })),
+            ...orderPayments.map(o => ({
+                id: o.id,
+                type: 'Order',
+                customerName: (o as any).customer?.name || 'Guest',
+                amount: o.totalAmount,
+                paymentId: o.paymentId,
+                paymentStatus: o.paymentStatus,
+                updatedAt: o.updatedAt,
+                method: 'Razorpay / UPI'
+            }))
+        ];
+
+        // 4. Sort by date
+        consolidated.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+        res.json(consolidated);
+    } catch (error: any) {
+        console.error("Error consolidating payments:", error);
+        res.status(500).json({ message: error.message || 'Server Error' });
     }
 };
 

@@ -1,29 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import ConfirmDialog from '../../../components/shared/ConfirmDialog';
-import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
+import { Icons } from '../../../components/icons/IconSystem';
+import DataTable, { type TableFilterConfig } from '../components/DataTable';
+import FormField from '../components/FormField';
+import Button from '../../../components/ui/Button';
+import Modal from '../../../components/ui/Modal';
+import Select from '../../../components/ui/Select';
+import ConfirmDialog from '../../../components/shared/ConfirmDialog';
 
+interface TablesProps {
+    hideHeader?: boolean;
+}
 
-// Using centralized api instance
-
-const Tables: React.FC = () => {
+const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
     const [tables, setTables] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [newTable, setNewTable] = useState({ tableNumber: '', capacity: 2 });
+    const [newTable, setNewTable] = useState({ tableNumber: '', capacity: 2, status: 'available' });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingTable, setEditingTable] = useState<any>(null);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [tableToDelete, setTableToDelete] = useState<number | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
 
     const fetchTables = async () => {
         setLoading(true);
         setError(null);
-        const token = localStorage.getItem('token');
-        if (!token) {
-            setError('Auth token missing.');
-            setLoading(false);
-            return;
-        }
         try {
             const res = await api.get('/admin/tables');
             setTables(Array.isArray(res.data) ? res.data : []);
@@ -39,27 +44,63 @@ const Tables: React.FC = () => {
         fetchTables();
     }, []);
 
-    const addTable = async () => {
+    const handleSaveTable = async () => {
         if (!newTable.tableNumber) return;
+        setIsSubmitting(true);
         try {
-            const res = await api.post('/admin/tables', { ...newTable, status: 'available' });
-            setTables([...tables, res.data]);
-            setNewTable({ tableNumber: '', capacity: 2 });
-            toast.success('Table added!');
+            if (editingTable) {
+                // Update
+                const res = await api.put(`/admin/tables/${editingTable.id}`, { 
+                    tableNumber: newTable.tableNumber,
+                    capacity: newTable.capacity,
+                    status: newTable.status
+                });
+                setTables(tables.map(t => t.id === res.data.id ? res.data : t));
+                toast.success('Table updated successfully');
+            } else {
+                // Create
+                const res = await api.post('/admin/tables', { 
+                    tableNumber: newTable.tableNumber,
+                    capacity: newTable.capacity,
+                    status: 'available' 
+                });
+                setTables([...tables, res.data]);
+                toast.success('Table added successfully');
+            }
+            setIsModalOpen(false);
+            setEditingTable(null);
+            setNewTable({ tableNumber: '', capacity: 2, status: 'available' });
         } catch (err: any) {
-            console.error('Failed to add table:', err);
-            toast.error(err.response?.data?.message || 'Failed to add table');
+            console.error('Failed to save table:', err);
+            toast.error(err.response?.data?.message || 'Failed to save table');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    const deleteTable = async (id: number) => {
+    const openAddModal = () => {
+        setEditingTable(null);
+        setNewTable({ tableNumber: '', capacity: 2, status: 'available' });
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (table: any) => {
+        setEditingTable(table);
+        setNewTable({ 
+            tableNumber: table.tableNumber.toString(), 
+            capacity: table.capacity,
+            status: table.status
+        });
+        setIsModalOpen(true);
+    };
+
+    const deleteTable = (id: number) => {
         setTableToDelete(id);
         setConfirmDeleteOpen(true);
     };
 
     const confirmDelete = async () => {
         if (!tableToDelete) return;
-
         try {
             await api.delete(`/admin/tables/${tableToDelete}`);
             setTables(tables.filter(t => t.id !== tableToDelete));
@@ -83,114 +124,142 @@ const Tables: React.FC = () => {
         }
     };
 
-    return (
-        <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Dining Tables</h1>
-                <p className="admin-page-subtitle">Configure your restaurant floor plan and table capacities.</p>
-                <div className="admin-header-divider"></div>
-            </header>
+    const columns = [
+        { 
+            header: 'Table Number', 
+            key: 'tableNumber',
+            render: (table: any) => <strong style={{ color: 'var(--brand-primary)', fontSize: '1.1rem' }}>Table {table.tableNumber}</strong>
+        },
+        { 
+            header: 'Capacity', 
+            key: 'capacity',
+            render: (table: any) => (
+                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    {table.capacity} Seats
+                </span>
+            )
+        },
+        { 
+            header: 'Status', 
+            key: 'status',
+            render: (table: any) => {
+                const status = table.status.toLowerCase();
+                let badgeClass = 'status-modern-confirmed';
+                if (status === 'reserved') badgeClass = 'status-modern-pending';
+                if (status === 'occupied') badgeClass = 'status-modern-cancelled';
 
-                <div className="admin-card">
-                    <div className="guidance-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                        <span className="icon" style={{ color: 'var(--brand-primary)' }}><Icons.armchair size={24} /></span>
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>Floor Plan Configuration</h3>
-                    </div>
-                    <div className="add-table-form form-container">
-                        <div className="input-group">
-                            <label style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px', display: 'block' }}>TABLE #</label>
-                            <input
-                                type="number"
-                                placeholder="e.g. 10"
-                                value={newTable.tableNumber}
-                                onChange={e => setNewTable({ ...newTable, tableNumber: e.target.value })}
-                                className="admin-input"
-                            />
-                        </div>
-                        <div className="input-group">
-                            <label style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '0.9rem', marginBottom: '6px', display: 'block' }}>CAPACITY</label>
-                            <input
-                                type="number"
-                                placeholder="Seats"
-                                value={newTable.capacity}
-                                onChange={e => setNewTable({ ...newTable, capacity: Number(e.target.value) })}
-                                className="admin-input"
-                            />
-                        </div>
-                        <button className="btn-primary-premium" onClick={addTable}>
-                            <Icons.plus size={18} /> Add New Table
-                        </button>
-                    </div>
+                return (
+                    <span 
+                        className={`status-pill-modern ${badgeClass}`}
+                        style={{ minWidth: '100px', justifyContent: 'center' }}
+                    >
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', marginRight: '8px' }}></span>
+                        {table.status}
+                    </span>
+                );
+            }
+        },
+        { 
+            header: 'Action', 
+            key: 'actions',
+            render: (table: any) => (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <Button 
+                        variant="secondary" 
+                        size="sm"
+                        icon={<Icons.edit size={14} />}
+                        onClick={(e) => { e.stopPropagation(); openEditModal(table); }} 
+                    >
+                        Edit
+                    </Button>
+                    <Button 
+                        variant="danger" 
+                        size="sm"
+                        icon={<Icons.trash size={14} />}
+                        onClick={(e) => { e.stopPropagation(); deleteTable(table.id); }} 
+                    >
+                        Delete
+                    </Button>
                 </div>
+            )
+        }
+    ];
+
+    const filterConfig: TableFilterConfig[] = [
+        {
+            key: 'status',
+            label: 'All Statuses',
+            options: [
+                { label: 'Available', value: 'available' },
+                { label: 'Reserved', value: 'RESERVED' }
+            ]
+        },
+        {
+            key: 'capacityRange',
+            label: 'All Capacities',
+            options: [
+                { label: 'Small (1-2 Seats)', value: 'small' },
+                { label: 'Medium (3-4 Seats)', value: 'medium' },
+                { label: 'Large (6+ Seats)', value: 'large' }
+            ]
+        }
+    ];
+
+    const filteredTables = tables.filter(t => {
+        const matchesSearch = t.tableNumber.toString().includes(searchTerm);
+        
+        const matchesStatus = !activeFilters.status || t.status.toLowerCase() === activeFilters.status.toLowerCase();
+        
+        const matchesCapacity = !activeFilters.capacityRange || (
+            activeFilters.capacityRange === 'small' ? t.capacity <= 2 :
+            activeFilters.capacityRange === 'medium' ? (t.capacity > 2 && t.capacity <= 4) :
+            t.capacity >= 6
+        );
+
+        return matchesSearch && matchesStatus && matchesCapacity;
+    });
+
+    return (
+        <div className={hideHeader ? "" : "management-page"}>
+            {!hideHeader && (
+                <header className="admin-page-header">
+                    <h1 className="admin-page-title">Dining Tables</h1>
+                    <p className="admin-page-subtitle">Configure your restaurant floor plan and table capacities.</p>
+                    <div className="admin-header-divider"></div>
+                </header>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+                <Button 
+                    variant="primary" 
+                    onClick={openAddModal}
+                    icon={<Icons.plus size={18} />}
+                >
+                    Add New Table
+                </Button>
+            </div>
 
             {loading ? (
-                <div className="loading-state">
-                    <div className="spinner"></div>
-                    <p>Loading floor plan...</p>
+                <div style={{ padding: '3rem', textAlign: 'center' }}>
+                    <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
+                    <p style={{ color: 'var(--text-muted)' }}>Loading floor plan...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
-                    <p><span>⚠️</span> {error}</p>
-                    <button className="retry-btn" onClick={fetchTables}>Retry</button>
-                </div>
-            ) : tables.length === 0 ? (
-                <div className="empty-state">
-                    <p>No tables configured yet.</p>
+                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
+                    <Button variant="primary" onClick={fetchTables}>Retry</Button>
                 </div>
             ) : (
-                <div className="admin-table-container">
-                    <table className="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Table</th>
-                                <th>Capacity</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tables.map(table => (
-                                <tr key={table.id}>
-                                    <td><strong>Table {table.tableNumber}</strong></td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <input
-                                                type="number"
-                                                defaultValue={table.capacity}
-                                                onBlur={(e) => {
-                                                    const val = Number(e.target.value);
-                                                    if (val !== table.capacity) updateCapacity(table.id, val);
-                                                }}
-                                                className="capacity-input admin-input"
-                                                style={{ width: '60px', padding: '0.3rem', borderRadius: '5px' }}
-                                            />
-                                            <span>Seats</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span 
-                                                className={`status-pill-modern ${table.status === 'RESERVED' ? 'status-modern-pending' : 'status-modern-confirmed'}`}
-                                                style={{ minWidth: '100px', justifyContent: 'center' }}
-                                            >
-                                                {table.status}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button 
-                                            className="btn-danger-premium" 
-                                            onClick={() => deleteTable(table.id)} 
-                                            style={{ padding: '8px 16px', fontSize: '0.85rem' }}
-                                        >
-                                            <Icons.trash size={14} /> Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable 
+                    columns={columns} 
+                    data={filteredTables} 
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    filters={filterConfig}
+                    activeFilters={activeFilters}
+                    onFilterChange={(key: string, value: string) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    searchPlaceholder="Search table number..."
+                />
             )}
 
             <ConfirmDialog
@@ -204,6 +273,59 @@ const Tables: React.FC = () => {
                 }}
                 confirmText="Delete Table"
             />
+
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={editingTable ? 'Edit Dining Table' : 'Add New Table'}
+                size="md"
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <FormField 
+                        label="Table Number" 
+                        type="number" 
+                        placeholder="e.g. 1" 
+                        value={newTable.tableNumber} 
+                        onChange={(e: any) => setNewTable({ ...newTable, tableNumber: e.target.value })} 
+                    />
+                    <FormField 
+                        label="Seating Capacity" 
+                        type="number" 
+                        placeholder="e.g. 4" 
+                        value={newTable.capacity} 
+                        onChange={(e: any) => setNewTable({ ...newTable, capacity: Number(e.target.value) })} 
+                    />
+
+                    {editingTable && (
+                        <div className="form-group">
+                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                Table Status
+                            </label>
+                            <Select
+                                value={newTable.status}
+                                onChange={(value: string) => setNewTable({ ...newTable, status: value })}
+                                options={[
+                                    { label: 'Available', value: 'available' },
+                                    { label: 'Reserved', value: 'RESERVED' },
+                                    { label: 'Occupied', value: 'occupied' }
+                                ]}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
+                    <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                    <Button 
+                        variant="primary" 
+                        onClick={handleSaveTable}
+                        loading={isSubmitting}
+                        style={{ padding: '10px 24px' }}
+                    >
+                        {editingTable ? 'Save Changes' : 'Create Table'}
+                    </Button>
+                </div>
+            </Modal>
         </div>
     );
 };
