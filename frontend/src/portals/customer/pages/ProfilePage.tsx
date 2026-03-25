@@ -4,6 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { formatDate } from '../../../utils/dateFormatter';
 import { Icons } from '../../../components/icons/IconSystem';
 import { motion } from 'framer-motion';
+import '../../../styles/Profile.css';
 
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -13,122 +14,115 @@ const ProfilePage: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Personal Profile</h1>
-                <p className="admin-page-subtitle">Manage your account details and wallet settings.</p>
-                <div className="admin-header-divider"></div>
-            </header>
+            <div className="page-header">
+                <h1>Personal Profile</h1>
+                <p>Manage your account details and wallet settings.</p>
+            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
-                {/* ── Profile Information ── */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="admin-card" 
-                    style={{ padding: '0', overflow: 'hidden' }}
+            <div className="profile-grid">
+                {/* ── Left Card: Account Information ── */}
+                <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="premium-card"
                 >
-                    <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--brand-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', border: '3px solid var(--border-color)', overflow: 'hidden' }}>
-                            {user.profileImage ? <img src={user.profileImage} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Icons.user size={28} />}
+                    <div className="profile-avatar-header">
+                        <div className="profile-avatar">
+                            <div className="profile-avatar-inner">
+                                {user.profileImage ? (
+                                    <img src={user.profileImage} alt={user.name} />
+                                ) : (
+                                    <Icons.user size={32} color="var(--pf-gold)" />
+                                )}
+                            </div>
                         </div>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Account Info</h3>
-                            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--brand-primary)', fontWeight: 700, textTransform: 'uppercase' }}>{user.role} Account</p>
+                            <h3 className="profile-name">{user.name}</h3>
+                            <p className="profile-role">{user.role}</p>
                         </div>
                     </div>
 
-                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            <div style={{ color: 'var(--brand-primary)', marginTop: '4px' }}><Icons.user size={20} /></div>
-                            <div>
-                                <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Full Name</label>
-                                <div style={{ fontSize: '1rem', fontWeight: 600 }}>{user.name}</div>
-                            </div>
+                    <div className="info-fields">
+                        <div>
+                            <label className="info-group-label">
+                                <Icons.user size={13} /> Full Name
+                            </label>
+                            <div className="info-group-value">{user.name}</div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            <div style={{ color: 'var(--brand-primary)', marginTop: '4px' }}><Icons.mail size={20} /></div>
-                            <div>
-                                <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Email Address</label>
-                                <div style={{ fontSize: '1rem', fontWeight: 600 }}>{user.email}</div>
-                            </div>
+                        <div>
+                            <label className="info-group-label">
+                                <Icons.mail size={13} /> Email Address
+                            </label>
+                            <div className="info-group-value">{user.email}</div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            <div style={{ color: 'var(--brand-primary)', marginTop: '4px' }}><Icons.phone size={20} /></div>
-                            <div>
-                                <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Phone Number</label>
-                                <div style={{ fontSize: '1rem', fontWeight: 600 }}>{user.phone || 'Not provided'}</div>
-                            </div>
+                        <div>
+                            <label className="info-group-label">
+                                <Icons.phone size={13} /> Mobile Number
+                            </label>
+                            <div className="info-group-value">{user.phone || 'Not linked'}</div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            <div style={{ color: 'var(--brand-primary)', marginTop: '4px' }}><Icons.calendar size={20} /></div>
-                            <div>
-                                <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Joined Date</label>
-                                <div style={{ fontSize: '1rem', fontWeight: 600 }}>
-                                    {(user as any).createdAt ? formatDate((user as any).createdAt) : 'March 2026'}
-                                </div>
+                        <div>
+                            <label className="info-group-label">
+                                <Icons.calendar size={13} /> Joined SmartDine
+                            </label>
+                            <div className="info-group-value">
+                                {(user as any).createdAt ? formatDate((user as any).createdAt) : 'March 2026'}
                             </div>
                         </div>
-
-                        <button 
-                            onClick={() => navigate('/profile/edit')}
-                            className="btn-primary-premium"
-                            style={{ marginTop: '10px', width: '100%', padding: '14px' }}
-                        >
-                            <Icons.edit size={18} /> Edit Profile
-                        </button>
                     </div>
+
+                    <button
+                        onClick={() => navigate('/profile/edit')}
+                        className="pf-primary-btn"
+                        style={{ marginTop: '24px' }}
+                    >
+                        <Icons.edit size={18} /> Edit Account Details
+                    </button>
                 </motion.div>
 
-                {/* ── Wallet Card ── */}
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
+                {/* ── Right Card: Wallet Information ── */}
+                <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="admin-card" 
-                    style={{ padding: '0', overflow: 'hidden' }}
+                    className="premium-card"
+                    style={{ display: 'flex', flexDirection: 'column' }}
                 >
-                    <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'var(--success-bg, #ecfdf5)', color: 'var(--success, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Icons.card size={24} />
+                    <div className="wallet-header">
+                        <div className="wallet-icon-box">
+                            <Icons.card size={22} />
                         </div>
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>SmartDine Wallet</h3>
+                        <h3 className="wallet-title">Wallet Balance</h3>
                     </div>
 
-                    <div style={{ padding: '32px 24px', textAlign: 'center' }}>
-                        <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Current Balance</label>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--success)', margin: '10px 0 30px' }}>
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(user.walletBalance || 0))}
+                    <div className="wallet-balance-area">
+                        <span className="wallet-credit-label">Available Credit</span>
+                        <div className="wallet-amount">
+                            <span className="wallet-currency">₹</span>
+                            {Number(user.walletBalance || 0).toLocaleString('en-IN')}
                         </div>
+                        <div className="wallet-badge">
+                            <div className="wallet-badge-dot"></div>
+                            Ready for quick checkout
+                        </div>
+                    </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
-                            <button 
-                                onClick={() => navigate('/wallet')}
-                                className="btn-primary-premium"
-                                style={{ 
-                                    background: 'var(--bg-secondary)', 
-                                    color: 'var(--text-primary)', 
-                                    border: '1px solid var(--border-color)',
-                                    padding: '14px'
-                                }}
-                            >
-                                <Icons.historyIcon size={18} /> View Transaction History
-                            </button>
-                            <button 
-                                onClick={() => navigate('/profile/password')}
-                                className="btn-primary-premium"
-                                style={{ 
-                                    background: 'transparent', 
-                                    color: 'var(--text-secondary)',
-                                    border: '1px solid transparent',
-                                    padding: '10px'
-                                }}
-                            >
-                                <Icons.key size={16} /> Change Account Password
-                            </button>
-                        </div>
+                    <div className="wallet-actions">
+                        <button
+                            onClick={() => navigate('/wallet')}
+                            className="pf-secondary-btn"
+                        >
+                            <Icons.historyIcon size={18} /> View Transactions
+                        </button>
+                        <button
+                            onClick={() => navigate('/profile/password')}
+                            className="pf-ghost-btn"
+                        >
+                            <Icons.key size={14} /> Change Password
+                        </button>
                     </div>
                 </motion.div>
             </div>

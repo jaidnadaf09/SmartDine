@@ -7,11 +7,32 @@ interface TimeDropdownProps {
   minTime?: string;
 }
 
+const RECOMMENDED_SLOTS = ['19:30', '20:00'];
+const FAST_FILLING_SLOTS = ['21:00'];
+
+// Slot sections with 24h internal values
+const SLOT_SECTIONS = [
+  {
+    label: 'Lunch',
+    slots: [
+      '11:00', '11:30', '12:00', '12:30',
+      '13:00', '13:30', '14:00', '14:30',
+    ],
+  },
+  {
+    label: 'Dinner',
+    slots: [
+      '18:00', '18:30', '19:00', '19:30',
+      '20:00', '20:30', '21:00', '21:30',
+      '22:00', '22:30',
+    ],
+  },
+];
+
 const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicked outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -22,22 +43,6 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
     return () => window.removeEventListener('click', handleClick);
   }, [isOpen]);
 
-  // Generate 30 minute intervals
-  const intervals: string[] = [];
-  for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += 30) {
-      const hh = h.toString().padStart(2, '0');
-      const mm = m.toString().padStart(2, '0');
-      intervals.push(`${hh}:${mm}`);
-    }
-  }
-
-  // Filter based on minTime
-  const availableIntervals = minTime 
-    ? intervals.filter(time => time >= minTime)
-    : intervals;
-
-  // Helper to format to 12-hour
   const formatTo12Hr = (time24: string) => {
     if (!time24) return 'Select Time';
     const [h, m] = time24.split(':').map(Number);
@@ -48,45 +53,49 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
 
   return (
     <div className="custom-time-dropdown-container" ref={containerRef} style={{ position: 'relative', width: '100%' }}>
-      <div 
-        className="premium-dropdown-trigger" 
+      <div
+        className="selector-box"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Icons.clock size={18} color="#8d6e63" />
-        <span style={{ flex: 1, fontWeight: 600, fontSize: '0.95rem' }}>{formatTo12Hr(value)}</span>
-        <Icons.chevronDown size={16} color="#a1887f" />
+        <span className="icon-box"><Icons.clock size={18} className="lucide" color="var(--bt-icon-color)" /></span>
+        <span style={{ flex: 1, fontWeight: 600, fontSize: '15px' }}>{formatTo12Hr(value)}</span>
+        <Icons.chevronDown size={16} color="var(--bt-icon-color)" />
       </div>
 
       {isOpen && (
-        <div 
-          className="premium-dropdown-popover" 
-          style={{ 
-            width: '100%', 
-            maxHeight: '280px', 
-            overflowY: 'auto',
-            zIndex: 100
-          }}
-        >
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            {availableIntervals.map(time => {
-              const isSelected = value === time;
-              return (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => { onChange(time); setIsOpen(false); }}
-                  className={`premium-dropdown-item ${isSelected ? 'selected' : ''}`}
-                >
-                  {formatTo12Hr(time)}
-                </button>
-              );
-            })}
-          </div>
-          {availableIntervals.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '20px', color: '#8d6e63', fontSize: '0.85rem' }}>
-              No slots available for this period
-            </div>
-          )}
+        <div className="time-popup popup-animation">
+          {SLOT_SECTIONS.map(section => {
+            const filteredSlots = minTime
+              ? section.slots.filter(t => t >= minTime)
+              : section.slots;
+
+            if (filteredSlots.length === 0) return null;
+
+            return (
+              <div className="time-section" key={section.label}>
+                <p className="time-label">{section.label}</p>
+                <div className="time-grid">
+                  {filteredSlots.map(time => {
+                    const isSelected = value === time;
+                    const isRecommended = RECOMMENDED_SLOTS.includes(time);
+                    const isFastFilling = FAST_FILLING_SLOTS.includes(time);
+                    return (
+                      <button
+                        key={time}
+                        type="button"
+                        className={`time-slot ${isSelected ? 'selected' : ''}`}
+                        onClick={() => { onChange(time); setIsOpen(false); }}
+                      >
+                        <span className="time-slot-text">{formatTo12Hr(time)}</span>
+                        {isRecommended && <span className="recommended-slot">⭐</span>}
+                        {isFastFilling && <span className="fast-filling">• fast</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

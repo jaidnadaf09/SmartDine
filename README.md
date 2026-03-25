@@ -32,3 +32,5 @@ Ensure the following environment variables are set in your Netlify or Render das
 2. Install dependencies: `npm install` (root and backend).
 3. Set up `.env` files based on the structure provided.
 4. Run: `npm run dev`.
+
+npx kill-port 5000

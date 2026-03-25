@@ -4,11 +4,8 @@ import { useAuth } from '../../context/AuthContext';
 import { Icons } from '../icons/IconSystem';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface AvatarDropdownProps {
-  showName?: boolean;
-}
 
-const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ showName = true }) => {
+const AvatarDropdown: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -37,33 +34,33 @@ const AvatarDropdown: React.FC<AvatarDropdownProps> = ({ showName = true }) => {
     <div className="avatar-container" ref={dropdownRef} style={{ position: 'relative' }}>
       <button 
         onClick={() => setDropdownOpen(!dropdownOpen)}
+        className="profile-circle-trigger"
         style={{
+          width: '38px',
+          height: '38px',
+          borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
-          padding: '6px 12px',
-          borderRadius: '20px',
-          border: '1px solid var(--border-color)',
-          background: 'var(--bg-secondary)',
+          justifyContent: 'center',
+          background: 'rgba(255, 255, 255, 0.85)',
+          border: '1px solid rgba(0, 0, 0, 0.08)',
           cursor: 'pointer',
+          padding: 0,
           transition: 'all 0.2s ease',
-          boxShadow: dropdownOpen ? 'var(--shadow-md)' : 'none'
+          overflow: 'hidden',
+          boxShadow: dropdownOpen ? '0 4px 12px rgba(0,0,0,0.12)' : 'none'
         }}
       >
-        {showName && (
-          <div style={{ textAlign: 'right', display: 'block' }}>
-            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>{user.name}</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--brand-primary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{user.role}</div>
-          </div>
+        {user.profileImage ? (
+          <img 
+            src={user.profileImage} 
+            alt={user.name} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            loading="lazy"
+          />
+        ) : (
+          <Icons.user size={18} color="var(--brand-primary)" />
         )}
-        <div className="user-avatar-circle" style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--brand-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '2px solid var(--border-color)' }}>
-          {user.profileImage ? (
-            <img src={user.profileImage} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <Icons.user size={18} />
-          )}
-        </div>
-        <Icons.chevronDown size={14} style={{ transform: dropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
       </button>
 
       <AnimatePresence>
