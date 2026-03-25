@@ -31,6 +31,7 @@ const SLOT_SECTIONS = [
 
 const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,7 +40,17 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
         setIsOpen(false);
       }
     };
-    if (isOpen) window.addEventListener('click', handleClick);
+    if (isOpen) {
+      window.addEventListener('click', handleClick);
+      
+      // Smart Positioning Logic
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        // If less than 320px (max-height) + margin
+        setOpenUpward(spaceBelow < 350);
+      }
+    }
     return () => window.removeEventListener('click', handleClick);
   }, [isOpen]);
 
@@ -63,7 +74,7 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
       </div>
 
       {isOpen && (
-        <div className="time-popup popup-animation">
+        <div className={`time-popup popup-animation ${openUpward ? 'open-upward' : ''}`}>
           {SLOT_SECTIONS.map(section => {
             const filteredSlots = minTime
               ? section.slots.filter(t => t >= minTime)
