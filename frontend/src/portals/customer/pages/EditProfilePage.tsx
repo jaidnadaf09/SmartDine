@@ -6,6 +6,7 @@ import api from '../../../utils/api';
 import { Icons } from '../../../components/icons/IconSystem';
 import FormField from '../../admin/components/FormField';
 import { motion } from 'framer-motion';
+import '../../../styles/Profile.css';
 
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();
@@ -70,110 +71,88 @@ const EditProfilePage: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">Edit Account</h1>
-                    <p className="admin-page-subtitle">Keep your information up to date.</p>
-                </div>
-            </header>
+            <div className="page-header">
+                <h1>Edit Account</h1>
+                <p>Keep your information up to date.</p>
+            </div>
 
-            <motion.div 
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="admin-card" 
-                style={{ maxWidth: '700px', margin: '0 auto', overflow: 'hidden' }}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="premium-card premium-card-centered"
             >
                 <form onSubmit={handleSubmit}>
-                    <div style={{ padding: '30px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-secondary)', textAlign: 'center' }}>
-                        <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 20px' }}>
-                            <div 
-                                style={{ 
-                                    width: '100%', 
-                                    height: '100%', 
-                                    borderRadius: '50%', 
-                                    border: '4px solid var(--brand-primary)', 
-                                    overflow: 'hidden', 
-                                    background: 'var(--bg-primary)',
-                                    cursor: 'pointer'
-                                }}
-                                onClick={() => document.getElementById('imageUpload')?.click()}
-                            >
+                    {/* ── Avatar Edit Section ── */}
+                    <div className="edit-avatar-container">
+                        <div
+                            className="edit-avatar-ring"
+                            onClick={() => document.getElementById('imageUpload')?.click()}
+                        >
+                            <div className="edit-avatar-inner">
                                 {formData.profileImage ? (
-                                    <img src={formData.profileImage} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={formData.profileImage} alt="Preview" />
                                 ) : (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                                        <Icons.camera size={40} />
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
+                                        <Icons.camera size={32} />
                                     </div>
                                 )}
                             </div>
-                            <button 
-                                type="button"
-                                onClick={() => document.getElementById('imageUpload')?.click()}
-                                style={{
-                                    position: 'absolute',
-                                    bottom: '5px',
-                                    right: '5px',
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '50%',
-                                    background: 'var(--brand-primary)',
-                                    color: 'white',
-                                    border: '3px solid var(--bg-secondary)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    boxShadow: 'var(--shadow-md)'
-                                }}
-                            >
-                                <Icons.edit size={14} />
-                            </button>
                         </div>
+                        <button
+                            type="button"
+                            onClick={() => document.getElementById('imageUpload')?.click()}
+                            className="upload-icon"
+                        >
+                            <Icons.camera size={14} />
+                        </button>
                         <input id="imageUpload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
-                        <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{user.name}</h3>
-                        <p style={{ margin: '5px 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{user.email}</p>
                     </div>
 
-                    <div style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        <FormField 
-                            label="Full Name" 
-                            name="name" 
-                            value={formData.name} 
-                            onChange={handleChange} 
+                    <div className="pf-form-fields">
+                        <FormField
+                            label="Full Name"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
                             placeholder="Your full name"
                             required
+                            style={{ marginBottom: '16px' }}
+                            className="premium-input-field"
                         />
-                        
-                        <FormField 
-                            label="Email Address (Locked)" 
-                            value={user.email} 
+
+                        <FormField
+                            label="Email Address"
+                            value={user.email}
                             disabled
+                            helperText="Email cannot be changed for security"
+                            style={{ marginBottom: '16px', opacity: 0.7 }}
+                            className="premium-input-field"
                         />
 
-                        <FormField 
-                            label="Phone Number" 
-                            name="phone" 
-                            value={formData.phone} 
-                            onChange={handleChange} 
+                        <FormField
+                            label="Phone Number"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
                             placeholder="10-digit mobile number"
+                            style={{ marginBottom: '20px' }}
+                            className="premium-input-field"
                         />
 
-                        <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-                            <button 
-                                type="button"
-                                onClick={() => navigate('/profile')}
-                                className="btn-primary-premium"
-                                style={{ flex: 1, background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
-                            >
-                                Cancel
-                            </button>
-                            <button 
+                        <div className="pf-form-actions">
+                            <button
                                 type="submit"
                                 disabled={loading}
-                                className="btn-primary-premium"
-                                style={{ flex: 2 }}
+                                className="pf-primary-btn"
                             >
-                                {loading ? 'Saving Changes...' : 'Save Changes'}
+                                {loading ? 'Saving Updates...' : 'Update Profile'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => navigate('/profile')}
+                                className="pf-ghost-btn"
+                            >
+                                Cancel and Go Back
                             </button>
                         </div>
                     </div>

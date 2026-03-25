@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import { formatDate, formatTime } from '../utils/dateFormatter';
 import '../styles/BookTable.css';
+import '../styles/Profile.css';
 
 
 // Using centralized api instance
@@ -46,12 +47,7 @@ const BookTablePage: React.FC = () => {
   const todayStr = getLocalTodayStr();
   const maxDateObj = new Date();
   maxDateObj.setDate(maxDateObj.getDate() + 30);
-  const maxDateStr = (() => {
-    const year = maxDateObj.getFullYear();
-    const month = String(maxDateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(maxDateObj.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  })();
+  // maxDate is used by BookingCalendar internally (30 days ahead)
 
   const [formData, setFormData] = useState({
     date: todayStr, // Default to today
@@ -62,6 +58,8 @@ const BookTablePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Calculate min time if date is today (rounded to next 5 mins)
   const minTimeForToday = (() => {
@@ -74,31 +72,26 @@ const BookTablePage: React.FC = () => {
     return tempDate.getHours().toString().padStart(2, '0') + ':' + tempDate.getMinutes().toString().padStart(2, '0');
   })();
 
-
+  // Skeleton loader: triggered when user changes date
+  const handleDateChange = (date: string) => {
+    setFormData(prev => ({ ...prev, date, time: '' }));
+    setIsLoadingSlots(true);
+    setTimeout(() => setIsLoadingSlots(false), 400);
+  };
 
   const bookingInProgress = useRef(false);
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
-  const dateInputRef = useRef<HTMLInputElement>(null);
-  const timeInputRef = useRef<HTMLInputElement>(null);
 
-  const handleWrapperClick = (ref: React.RefObject<HTMLInputElement | null>) => {
-    if (ref.current) {
-      const el = ref.current as any;
-      if ('showPicker' in el) {
-        el.showPicker();
-      } else {
-        el.focus();
-      }
-    }
-  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+  // Success micro-interaction helper
+  const showSuccessAndFinish = (details: any) => {
+    setBookingDetails(details);
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      setSubmitted(true);
+    }, 800);
   };
 
   const handleAdminBook = async () => {
@@ -119,13 +112,12 @@ const BookTablePage: React.FC = () => {
       });
 
       const data = res.data;
-      setBookingDetails(data);
-      setSubmitted(true);
       if (data.tableNumber) {
         toast.success(`Admin Booking Confirmed! Assigned Table: ${data.tableNumber}`);
       } else {
         toast.success('Admin Booking Confirmed! (Table pending assignment)');
       }
+      showSuccessAndFinish(data);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Admin booking failed');
       toast.error(err.response?.data?.message || err.message || 'Admin booking failed');
@@ -207,8 +199,6 @@ const BookTablePage: React.FC = () => {
         }
 
         console.log('Wallet Payment verified and booking created:', walletData.booking);
-        setBookingDetails(walletData.booking);
-        setSubmitted(true);
         
         if (walletData.booking?.tableNumber) {
           toast.success(`Booking Confirmed! Assigned Table: ${walletData.booking.tableNumber}`);
@@ -216,6 +206,7 @@ const BookTablePage: React.FC = () => {
           toast.success('Booking Confirmed! (Table pending assignment)');
         }
         
+        showSuccessAndFinish(walletData.booking);
         setLoading(false);
         bookingInProgress.current = false;
         return;
@@ -269,13 +260,12 @@ const BookTablePage: React.FC = () => {
 
             const result = verifyRes.data;
             console.log('Payment verified and booking created:', result.booking);
-            setBookingDetails(result.booking);
-            setSubmitted(true);
             if (result.booking.tableNumber) {
               toast.success(`Booking Confirmed! Assigned Table: ${result.booking.tableNumber}`);
             } else {
               toast.success('Booking Confirmed! (Table pending assignment)');
             }
+            showSuccessAndFinish(result.booking);
           } catch (err: any) {
             console.error('VERIFICATION ERROR:', err);
             setError(err.message);
@@ -329,7 +319,7 @@ const BookTablePage: React.FC = () => {
       <div className="book-table-box">
         <div className="book-table-header">
           <div className="premium-label-wrapper">
-             <span className="logo-small"><Icons.utensils size={18} className="inline-icon" /> SMARTDINE</span>
+             <span className="logo-small"><span className="icon-box"><Icons.utensils size={18} className="lucide" /></span> SMARTDINE</span>
           </div>
           <h1 className="reserve-title">Reserve Your Table</h1>
           <p className="reserve-subtitle">Premium Dining Experience</p>
@@ -337,87 +327,123 @@ const BookTablePage: React.FC = () => {
 
         {error && (
           <div className="error-msg-banner">
-            <Icons.alertCircle size={20} className="inline-icon" />
+            <span className="icon-box"><Icons.alertCircle size={20} className="lucide" /></span>
             <span>{error}</span>
           </div>
         )}
 
-        {submitted ? (
-          <div className="success-message">
-            <h3 className="success-banner">✓ Booking Confirmed</h3>
-            <div className="success-card">
-              <p><strong>Table:</strong> {bookingDetails?.tableNumber || 'Pending Assignment'}</p>
-              <p><strong>Date:</strong> {formatDate(bookingDetails?.date)}</p>
-              <p><strong>Time:</strong> {formatTime(bookingDetails?.time)}</p>
-              {bookingDetails?.paymentId && <p className="booking-id-tag"><strong>Ref:</strong> {bookingDetails.paymentId}</p>}
+        {/* Success micro-interaction overlay */}
+        {showSuccess && (
+          <div className="bt-success-overlay">
+            <div className="bt-success-icon">
+              <span style={{ fontSize: 26, color: '#fff' }}>✓</span>
             </div>
-            <p style={{ color: 'var(--booking-text-muted)', fontWeight: 500 }}>We look forward to serving you.</p>
-            <button onClick={() => navigate('/')} className="submit-btn" style={{ width: '100%', marginTop: '20px' }}>Go Home</button>
+            <span className="bt-success-text">Table reserved successfully</span>
+          </div>
+        )}
+
+        {submitted ? (
+          <div className="booking-success-card">
+            <div className="success-icon">
+              <Icons.check size={28} />
+            </div>
+            <h3 className="success-title">Booking Confirmed</h3>
+            <p className="success-subtitle">We look forward to serving you.</p>
+            <div className="success-details">
+              <div className="success-detail-row">
+                <span className="success-detail-label">Table</span>
+                <span className="success-detail-value">{bookingDetails?.tableNumber || 'Pending'}</span>
+              </div>
+              <div className="success-detail-row">
+                <span className="success-detail-label">Date</span>
+                <span className="success-detail-value">{formatDate(bookingDetails?.date)}</span>
+              </div>
+              <div className="success-detail-row">
+                <span className="success-detail-label">Time</span>
+                <span className="success-detail-value">{formatTime(bookingDetails?.time)}</span>
+              </div>
+              <div className="success-detail-row">
+                <span className="success-detail-label">Guests</span>
+                <span className="success-detail-value">{bookingDetails?.guests || formData.guests}</span>
+              </div>
+            </div>
+            {bookingDetails?.paymentId && (
+              <div className="success-ref">Ref: {bookingDetails.paymentId}</div>
+            )}
+            <button onClick={() => navigate('/')} className="pf-primary-btn">Go Home</button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="booking-form">
 
-            {/* Reference-matched User Info Pill */}
-            <div className="reference-user-info-row">
+            {/* User Info Pill */}
+            <div className="user-info-pill">
               <div className="user-info-col">
-                <Icons.user size={16} className="info-icon" />
+                <span className="icon-box"><Icons.user size={16} className="lucide info-icon" /></span>
                 <span className="info-label">Name:</span>
                 <span className="info-value">{user?.name || 'tester'}</span>
               </div>
-              <div className="vertical-divider"></div>
+              <div className="info-divider"></div>
               <div className="user-info-col">
-                <Icons.mail size={16} className="info-icon" />
+                <span className="icon-box"><Icons.mail size={16} className="lucide info-icon" /></span>
                 <span className="info-label">Email:</span>
                 <span className="info-value">{user?.email || 'test@gmail.com'}</span>
               </div>
-              <div className="vertical-divider"></div>
+              <div className="info-divider"></div>
               <div className="user-info-col">
-                <Icons.phone size={16} className="info-icon" />
+                <span className="icon-box"><Icons.phone size={16} className="lucide info-icon" /></span>
                 <span className="info-label">Phone:</span>
                 <span className="info-value">{user?.phone || '9823743793'}</span>
               </div>
             </div>
 
-            <div className="booking-main-grid-wrapper">
+            <div className="booking-card">
               <div className="booking-row-horizontal">
                 <div className="booking-field-compact">
-                  <label><Icons.calendar size={14} className="inline-icon" /> DATE</label>
+                  <label><span className="icon-box"><Icons.calendar size={14} className="lucide" /></span> DATE</label>
                   <BookingCalendar 
                     selectedDate={formData.date} 
-                    onChange={(date) => setFormData(prev => ({ ...prev, date }))} 
+                    onChange={handleDateChange} 
                   />
                   <span className="field-helper">Book up to 30 days ahead</span>
                 </div>
 
                 <div className="booking-field-compact time-field-auto">
-                  <label><Icons.clock size={14} className="inline-icon" /> TIME</label>
-                  <TimeDropdown 
-                    value={formData.time} 
-                    onChange={(time) => setFormData(prev => ({ ...prev, time }))} 
-                    minTime={minTimeForToday}
-                  />
+                  <label><span className="icon-box"><Icons.clock size={14} className="lucide" /></span> TIME</label>
+                  {isLoadingSlots ? (
+                    <div className="skeleton"></div>
+                  ) : (
+                    <TimeDropdown 
+                      value={formData.time} 
+                      onChange={(time) => setFormData(prev => ({ ...prev, time }))} 
+                      minTime={minTimeForToday}
+                    />
+                  )}
                 </div>
 
                 <div className="booking-field-compact">
-                  <label><Icons.user size={14} className="inline-icon" /> GUESTS</label>
-                  <GuestStepper 
-                    value={parseInt(formData.guests, 10)} 
-                    onChange={(guests) => setFormData(prev => ({ ...prev, guests: guests.toString() }))} 
-                    min={1} 
-                    max={20} 
-                  />
+                  <label><span className="icon-box"><Icons.user size={14} className="lucide" /></span> GUESTS</label>
+                  {isLoadingSlots ? (
+                    <div className="skeleton"></div>
+                  ) : (
+                    <GuestStepper 
+                      value={parseInt(formData.guests, 10)} 
+                      onChange={(guests) => setFormData(prev => ({ ...prev, guests: guests.toString() }))} 
+                      min={1} 
+                      max={20} 
+                    />
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="form-group" style={{ marginBottom: '15px' }}>
-              <label>Payment Method</label>
+            <div className="form-group">
+              <span className="bt-section-label">Payment Method</span>
               <div className="payment-methods">
                 <div 
-                  className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
+                  className={`payment-option ${paymentMethod === 'online' ? 'active' : ''}`}
                   onClick={() => setPaymentMethod('online')}
                 >
-                  <div className="payment-card-icon"><Icons.card size={24} /></div>
+                  <div className="payment-card-icon"><span className="icon-box"><Icons.card size={24} className="lucide" /></span></div>
                   <div className="payment-card-info">
                     <span className="payment-card-title">Online Payment</span>
                     <span className="payment-card-subtitle">Pay via Razorpay</span>
@@ -425,10 +451,10 @@ const BookTablePage: React.FC = () => {
                 </div>
 
                 <div 
-                  className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
+                  className={`payment-option ${paymentMethod === 'wallet' ? 'active' : ''}`}
                   onClick={() => setPaymentMethod('wallet')}
                 >
-                  <div className="payment-card-icon"><Icons.wallet size={24} /></div>
+                  <div className="payment-card-icon"><span className="icon-box"><Icons.wallet size={24} className="lucide" /></span></div>
                   <div className="payment-card-info">
                     <span className="payment-card-title">SmartDine Wallet</span>
                     <span className="payment-card-subtitle">
@@ -439,10 +465,21 @@ const BookTablePage: React.FC = () => {
               </div>
             </div>
             <div className="booking-actions-group">
-              <button type="submit" className="submit-btn reserve-btn-premium" disabled={loading}>
-                {loading ? 'Processing...' : (
+              <button type="submit" className={`reserve-btn ${loading ? 'loading' : ''}`} disabled={loading}>
+                {loading ? (
                   <>
-                    <Icons.card size={20} className="inline-icon" style={{ marginRight: '10px' }} />
+                    <span className="icon-box" style={{ marginRight: 10 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                        <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="10" />
+                      </svg>
+                    </span>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <span className="icon-box" style={{ marginRight: 10 }}>
+                      <Icons.card size={20} className="lucide" />
+                    </span>
                     Pay ₹10 & Reserve Table
                   </>
                 )}

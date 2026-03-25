@@ -10,7 +10,6 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChang
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close when clicked outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -22,8 +21,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChang
   }, [isOpen]);
 
   const today = new Date();
-  
-  // Generate next 30 days
+
   const upcomingDays = Array.from({ length: 30 }).map((_, i) => {
     const d = new Date();
     d.setDate(today.getDate() + i);
@@ -50,48 +48,49 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChang
 
   return (
     <div className="custom-calendar-container" ref={containerRef} style={{ position: 'relative', width: '100%' }}>
-      <div 
-        className="premium-dropdown-trigger" 
+      <div
+        className="selector-box"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <Icons.calendar size={18} color="#8d6e63" />
-        <span style={{flex: 1, fontWeight: 600, fontSize: '0.95rem'}}>{formatFullDate(selectedDate)}</span>
-        <Icons.chevronDown size={16} color="#a1887f" />
+        <span className="icon-box"><Icons.calendar size={18} className="lucide" color="var(--bt-icon-color)" /></span>
+        <span style={{ flex: 1, fontWeight: 600, fontSize: '15px' }}>{formatFullDate(selectedDate)}</span>
+        <Icons.chevronDown size={16} color="var(--bt-icon-color)" />
       </div>
 
       {isOpen && (
-        <div className="premium-dropdown-popover" style={{ width: '320px', zIndex: 100 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>Select Date</h4>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}><Icons.close size={18}/></button>
+        <div className="calendar-popup popup-animation">
+          <div className="calendar-popup-header">
+            <span className="calendar-popup-title">Select Date</span>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="calendar-close-btn"
+            >
+              <Icons.close size={16} />
+            </button>
           </div>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', textAlign: 'center', marginBottom: '8px' }}>
-            {['S','M','T','W','T','F','S'].map((day, i) => (
-              <div key={i} style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>{day}</div>
+
+          <div className="calendar-weekdays">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={i} className="calendar-weekday">{day}</div>
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px', maxHeight: '180px', overflowY: 'auto' }}>
-            {/* Empty slots for starting day offset */}
-            {Array.from({ length: upcomingDays[0].getDay() }).map((_, i) => <div key={`empty-${i}`} />)}
-            
+          <div className="calendar-grid">
+            {Array.from({ length: upcomingDays[0].getDay() }).map((_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+
             {upcomingDays.map((date) => {
               const dateStr = getStr(date);
               const isSelected = selectedDate === dateStr;
+              const isToday = dateStr === todayStr;
               return (
                 <button
                   key={dateStr}
                   type="button"
                   onClick={() => { onChange(dateStr); setIsOpen(false); }}
-                  className={`premium-dropdown-item ${isSelected ? 'selected' : ''}`}
-                  style={{
-                    padding: '8px 0',
-                    borderRadius: '8px',
-                    fontSize: '0.9rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
+                  className={`calendar-day ${isSelected ? 'selected' : ''} ${isToday && !isSelected ? 'today' : ''}`}
                 >
                   {date.getDate()}
                 </button>
@@ -99,20 +98,18 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChang
             })}
           </div>
 
-          <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-            <button 
-              type="button" 
+          <div className="calendar-actions">
+            <button
+              type="button"
               onClick={() => { onChange(todayStr); setIsOpen(false); }}
-              className="premium-dropdown-item"
-              style={{ flex: 2, background: 'var(--brand-primary-light)', color: 'var(--brand-primary)', fontWeight: 'bold' }}
+              className="calendar-action-btn primary"
             >
               Today
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => { onChange(''); setIsOpen(false); }}
-              className="premium-dropdown-item"
-              style={{ flex: 1, background: 'rgba(0,0,0,0.05)', color: 'var(--text-muted)', fontWeight: 'bold' }}
+              className="calendar-action-btn"
             >
               Clear
             </button>
