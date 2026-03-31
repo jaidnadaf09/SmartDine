@@ -2,11 +2,15 @@
   "name": "smartdine-monorepo",
   "private": true,
   "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
     "build:frontend": "npm run build --prefix frontend",
     "build:backend": "npm run build --prefix backend",
     "build": "npm run build:frontend && npm run build:backend",
     "start": "npm run start --prefix backend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

@@ -1,0 +1,141 @@
+.image-crop-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  z-index: 1100;
+}
+
+.image-crop-modal-wrapper {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1101;
+  padding: 16px;
+}
+
+.image-crop-modal-content {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 28px;
+  padding: 28px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+body[data-theme="dark"] .image-crop-modal-content {
+  background: rgba(28, 28, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+}
+
+.cropper-container {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #111;
+  margin-bottom: 24px;
+}
+
+.zoom-slider-container {
+  margin-bottom: 24px;
+  padding: 0 4px;
+}
+
+.zoom-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Premium Zoom Slider */
+.zoom-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  outline: none;
+  transition: opacity 0.2s;
+}
+
+body[data-theme="dark"] .zoom-slider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #D6B37A, #C49A5A);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(214, 179, 122, 0.3);
+  border: 4px solid #fff;
+  transition: transform 0.15s ease;
+}
+
+body[data-theme="dark"] .zoom-slider::-webkit-slider-thumb {
+  border: 4px solid #333;
+}
+
+.zoom-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.image-crop-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.image-crop-btn {
+  flex: 1;
+  height: 50px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  border: none;
+}
+
+.image-crop-btn.secondary {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+body[data-theme="dark"] .image-crop-btn.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #E0E0E0;
+}
+
+.image-crop-btn.primary {
+  background: linear-gradient(135deg, #D6B37A, #C49A5A);
+  color: #1a1210;
+  box-shadow: 0 6px 16px rgba(214, 179, 122, 0.25);
+}
+
+.image-crop-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.image-crop-btn:active {
+  transform: scale(0.97);
+}

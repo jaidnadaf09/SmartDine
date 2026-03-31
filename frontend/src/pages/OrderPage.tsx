@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
@@ -35,6 +35,7 @@ interface OrderItem {
   name: string;
   price: number;
   quantity: number;
+  specialInstructions?: string;
 }
 
 const loadRazorpayScript = () => {
@@ -70,8 +71,39 @@ const OrderPage: React.FC = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [isClearCartDialogOpen, setIsClearCartDialogOpen] = useState(false);
+  const [cartPulse, setCartPulse] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
+  const prevCartLength = useRef(0);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 600);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (
+      isMobile &&
+      prevCartLength.current === 0 &&
+      cart.length === 1
+    ) {
+      setIsCartOpen(true);
+    }
+    prevCartLength.current = cart.length;
+  }, [cart.length, isMobile]);
+
+  useEffect(() => {
+    if (cart.length === 0) {
+      setIsCartOpen(false);
+    }
+  }, [cart.length]);
+
+  // Special instructions popup state
+  const [activeInstructionItem, setActiveInstructionItem] = useState<number | null>(null);
+  const [tempInstruction, setTempInstruction] = useState("");
 
   useEffect(() => {
     localStorage.setItem('smartdine_favourites', JSON.stringify(favourites));
@@ -115,7 +147,16 @@ const OrderPage: React.FC = () => {
     fetchUserBooking();
   }, [user]);
 
-  const addToCart = useCallback((item: any) => {
+  const triggerCartPulse = useCallback(() => {
+    setCartPulse(false);
+    requestAnimationFrame(() => {
+      setCartPulse(true);
+    });
+    setTimeout(() => setCartPulse(false), 350);
+  }, []);
+
+
+  const addToCart = useCallback(async (item: any) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(c => c.id === item.id);
       if (existingItem) {
@@ -123,8 +164,13 @@ const OrderPage: React.FC = () => {
       }
       return [...prevCart, { ...item, quantity: 1 }];
     });
-    setIsCartOpen(true);
-  }, []);
+
+    if (navigator.vibrate) {
+      navigator.vibrate(40);
+    }
+
+    triggerCartPulse();
+  }, [triggerCartPulse]);
 
   const removeFromCart = useCallback((id: number) => {
     setCart(prev => prev.filter(c => c.id !== id));
@@ -134,9 +180,32 @@ const OrderPage: React.FC = () => {
     if (quantity <= 0) {
       removeFromCart(id);
     } else {
-      setCart(prev => prev.map(c => c.id === id ? { ...c, quantity } : c));
+      setCart(prev => {
+        const item = prev.find(c => c.id === id);
+        if (item && quantity > item.quantity) {
+          triggerCartPulse();
+        }
+        return prev.map(c => c.id === id ? { ...c, quantity } : c);
+      });
     }
-  }, [removeFromCart]);
+  }, [removeFromCart, triggerCartPulse]);
+
+  const updateInstruction = useCallback((id: number, instruction: string) => {
+    setCart(prev => prev.map(item => 
+      item.id === id ? { ...item, specialInstructions: instruction } : item
+    ));
+  }, []);
+
+  const openInstructionModal = (item: OrderItem) => {
+    setActiveInstructionItem(item.id);
+    setTempInstruction(item.specialInstructions || "");
+  };
+
+  const saveInstruction = (id: number) => {
+    updateInstruction(id, tempInstruction);
+    setActiveInstructionItem(null);
+    setTempInstruction("");
+  };
 
   const toggleFavourite = useCallback((id: number) => {
     setFavourites(prev => 
@@ -170,7 +239,11 @@ const OrderPage: React.FC = () => {
         const walletRes = await api.post('/payment/wallet-pay', {
           amount: totalAmountFloat,
           orderData: {
-            items: cart.map(item => ({ itemName: item.name, quantity: item.quantity }))
+            items: cart.map(item => ({ 
+              itemName: item.name, 
+              quantity: item.quantity,
+              specialInstructions: item.specialInstructions || ''
+            }))
           }
         });
 
@@ -211,7 +284,11 @@ const OrderPage: React.FC = () => {
                 totalAmount: totalAmountFloat,
                 paymentId: response.razorpay_payment_id,
                 paymentStatus: 'paid',
-                items: cart.map(item => ({ itemName: item.name, quantity: item.quantity }))
+                items: cart.map(item => ({ 
+                  itemName: item.name, 
+                  quantity: item.quantity,
+                  specialInstructions: item.specialInstructions || ''
+                }))
               });
 
               toast.success(`Payment successful! Order placed.`);
@@ -304,6 +381,16 @@ const OrderPage: React.FC = () => {
 
       <div className={`order-layout ${isCartOpen ? 'cart-open' : ''}`}>
         <aside className="categories-sidebar">
+          <div className="menu-search">
+            <Icons.search size={16} className="search-icon-svg" />
+            <input
+              type="text"
+              placeholder="Search menu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
           <h3><Icons.folderOpen size={20} className="inline-icon" /> Categories</h3>
           <div className="sidebar-filters">
             <button
@@ -328,19 +415,12 @@ const OrderPage: React.FC = () => {
 
         <div className="menu-content-area">
           <div className="menu-top-row">
-            <div className="menu-search-container">
-              <Icons.search className="search-icon-svg" size={18} />
-              <input
-                type="text"
-                placeholder="Search menu (e.g., Chicken, Spicy)..."
-                className="menu-search-input"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <div className="menu-title-area">
+              <h2 className="page-title">Menu</h2>
             </div>
             
             {cart.length > 0 && !isCartOpen && (
-              <button className="top-view-cart-btn" onClick={() => setIsCartOpen(true)}>
+              <button className={`top-view-cart-btn ${cartPulse ? 'pulse' : ''}`} onClick={() => setIsCartOpen(true)}>
                 <Icons.shoppingBag size={18} />
                 <span>View Cart ({cart.reduce((a, b) => a + Number(b.quantity), 0)})</span>
               </button>
@@ -382,8 +462,6 @@ const OrderPage: React.FC = () => {
                               } as any}
                               quantityInCart={cartItem ? cartItem.quantity : 0}
                               isFavourite={favourites.includes(item.id)}
-                              isExpanded={expandedId === item.id}
-                              onToggle={() => setExpandedId(expandedId === item.id ? null : item.id)}
                               onAddToCart={addToCart}
                               onUpdateQuantity={updateQuantity}
                               onToggleFavourite={toggleFavourite}
@@ -472,26 +550,67 @@ const OrderPage: React.FC = () => {
             <>
               <div className="cart-items">
                 {cart.map((item) => (
-                  <div key={item.id} className="cart-item new-item-highlight">
-                    <div className="cart-item-name">
-                      <h4>{item.name}</h4>
-                    </div>
-                    
-                    <div className="cart-item-controls">
-                      <button className="cart-qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
-                      <span className="cart-qty-text">{item.quantity}</span>
-                      <button className="cart-qty-btn" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
-                    </div>
+                  <div key={item.id} className="cart-item-container">
+                    <div className="cart-item">
+                      {/* Row 1: Name & Price */}
+                      <div className="cart-item-main-row">
+                        <div className="cart-item-info">
+                          <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600 }}>{item.name}</h4>
+                          <span className="cart-item-price">₹{item.price * item.quantity}</span>
+                        </div>
+                        <button className="cart-remove-icon-btn" onClick={() => removeFromCart(item.id)}>
+                          <Icons.close size={14} />
+                        </button>
+                      </div>
 
-                    <div className="cart-item-price-group">
-                      <span className="cart-price">₹{item.price * item.quantity}</span>
-                      <button className="cart-remove-icon-btn" onClick={() => removeFromCart(item.id)}>
-                        <Icons.close size={14} />
-                      </button>
+                      {/* Row 2: Actions (Qty & Instruction) */}
+                      <div className="cart-item-actions-row">
+                        <div className="qty-control">
+                          <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                          <span className="qty-text">{item.quantity}</span>
+                          <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                        </div>
+
+                        <div className="instruction-container">
+                          {activeInstructionItem === item.id ? (
+                            <div className="instruction-expand">
+                              <textarea
+                                className="instruction-inline-input"
+                                value={tempInstruction}
+                                onChange={(e) => setTempInstruction(e.target.value)}
+                                placeholder="Less spicy, no onion, extra cheese..."
+                                autoFocus
+                                rows={2}
+                              />
+                              <button 
+                                className="instruction-save-btn"
+                                onClick={() => saveInstruction(item.id)}
+                              >
+                                Save
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              className={`instruction-toggle ${item.specialInstructions ? 'filled' : ''}`}
+                              onClick={() => openInstructionModal(item)}
+                            >
+                              <Icons.edit size={12} />
+                              <span>
+                                {item.specialInstructions 
+                                  ? (item.specialInstructions.length > 20 
+                                      ? item.specialInstructions.substring(0, 18) + "..." 
+                                      : item.specialInstructions) 
+                                  : "Add instruction"}
+                              </span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
+
 
               <div className="cart-summary">
                 <div className="summary-row">
@@ -550,6 +669,22 @@ const OrderPage: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {cart.length > 0 && isMobile && !isCartOpen && (
+        <div className="floating-mini-cart" onClick={() => setIsCartOpen(true)}>
+          <div className="mini-cart-left">
+            <span className="mini-cart-count">
+              {cart.length} item{cart.length > 1 ? 's' : ''}
+            </span>
+            <span className="mini-cart-total" style={{ marginLeft: '12px' }}>
+              ₹{total}
+            </span>
+          </div>
+          <button className="mini-cart-btn">
+            View Cart &rarr;
+          </button>
+        </div>
+      )}
     </div>
   );
 };

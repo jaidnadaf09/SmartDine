@@ -71,7 +71,14 @@ const Orders: React.FC = () => {
             render: (order: any) => (
                 <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
                     {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
-                        <div key={idx}>{item.quantity}x {item.itemName}</div>
+                        <div key={idx} style={{ marginBottom: '4px' }}>
+                            <div>{item.quantity}x {item.itemName}</div>
+                            {item.specialInstructions && (
+                                <div style={{ fontSize: '0.75rem', color: '#d97706', fontStyle: 'italic', marginLeft: '12px' }}>
+                                    ↳ "{item.specialInstructions}"
+                                </div>
+                            )}
+                        </div>
                     )) : 'No items data'}
                 </div>
             )

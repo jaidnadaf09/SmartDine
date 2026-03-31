@@ -188,3 +188,23 @@ export const getMe = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: error.message || "Server Error" });
     }
 };
+
+export const removeProfilePhoto = async (req: AuthRequest, res: Response) => {
+    try {
+        const user = await User.findByPk(req.user!.id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.profileImage = ""; // Using empty string as per user request
+        await user.save();
+
+        res.json({
+            message: "Profile photo removed",
+            profileImage: ""
+        });
+    } catch (error: any) {
+        console.error("Remove profile photo error:", error);
+        res.status(500).json({ message: error.message || "Failed to remove photo" });
+    }
+};

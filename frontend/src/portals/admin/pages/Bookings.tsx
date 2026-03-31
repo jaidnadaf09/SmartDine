@@ -145,9 +145,17 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
             render: (booking: any) => <strong style={{ color: 'var(--text-primary)' }}>{booking.customerName}</strong>
         },
         { 
-            header: 'Guests', 
-            key: 'guests',
-            render: (booking: any) => <span style={{ fontWeight: 600, color: 'var(--brand-primary)' }}>{booking.guests} Guests</span>
+            render: (booking: any) => (
+                <div>
+                    <div style={{ fontWeight: 600, color: 'var(--brand-primary)' }}>{booking.guests} Guests</div>
+                    {(booking.preference || booking.occasion) && (
+                        <div style={{ fontSize: '0.75rem', marginTop: '4px', opacity: 0.8 }}>
+                            {booking.preference && <div style={{ color: 'var(--text-primary)' }}>🪑 {booking.preference}</div>}
+                            {booking.occasion && <div style={{ color: '#d946ef' }}>🎉 {booking.occasion}</div>}
+                        </div>
+                    )}
+                </div>
+            )
         },
         { 
             header: 'Table', 

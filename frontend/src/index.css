@@ -1,3 +1,7 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
 :root {
   font-family: 'Inter', 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
@@ -109,3 +113,8 @@ body {
 .status-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); }
 .status-failed { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); } /* Failed uses cancelled red */
 .status-deleted { background: var(--status-deleted-bg); color: var(--status-deleted-text); }
+
+/* Global Toast Layering */
+.react-hot-toast {
+  z-index: 9999 !important;
+}

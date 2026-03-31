@@ -17,14 +17,26 @@
 }
 
 body[data-theme="dark"] {
-  --pf-card-bg: rgba(30, 26, 22, 0.85);
-  --pf-card-border: rgba(215, 180, 122, 0.08);
-  --pf-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --pf-gold: #d7b47a;
-  --pf-gold-end: #e8c98f;
-  --pf-input-bg: rgba(255, 255, 255, 0.04);
+  --pf-card-bg: #1A1A1A;
+  --pf-card-border: rgba(255, 255, 255, 0.06);
+  --pf-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --pf-gold: #D6B37A;
+  --pf-gold-end: #C49A5A;
+  --pf-input-bg: #121212;
   --pf-input-border: rgba(255, 255, 255, 0.08);
-  --pf-input-focus-ring: rgba(215, 180, 122, 0.12);
+  --pf-input-focus-ring: rgba(214, 179, 122, 0.15);
+  --pf-hover-bg: #222222;
+}
+
+body[data-theme="dark"] .management-page {
+  background: #0F0F0F;
+}
+
+body[data-theme="dark"] input,
+body[data-theme="dark"] textarea {
+  background: #121212 !important;
+  color: #EAEAEA;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* ── Page Header (Centered) ── */
@@ -63,12 +75,12 @@ body[data-theme="dark"] {
 .premium-card {
   border-radius: 20px;
   background: var(--pf-card-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid var(--pf-card-border);
   box-shadow: var(--pf-card-shadow);
   padding: 28px;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .premium-card-centered {
@@ -553,4 +565,33 @@ body[data-theme="dark"] {
   .pw-actions {
     flex-direction: column;
   }
+}
+
+.remove-photo-btn {
+  margin-top: 12px;
+  background: transparent;
+  border: 1px solid rgba(140, 100, 60, 0.25);
+  color: #8B5E3C;
+  padding: 6px 14px;
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.remove-photo-btn:hover {
+  background: rgba(140, 100, 60, 0.08);
+}
+
+body[data-theme="dark"] .remove-photo-btn {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #D6B37A;
+}
+
+body[data-theme="dark"] .remove-photo-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
 }

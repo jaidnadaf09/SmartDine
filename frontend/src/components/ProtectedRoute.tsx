@@ -1,6 +1,7 @@
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useAuthModal } from '../context/AuthModalContext';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,6 +10,13 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
+  const { openAuthModal } = useAuthModal();
+
+  useEffect(() => {
+    if (!loading && !isAuthenticated) {
+      openAuthModal('login');
+    }
+  }, [loading, isAuthenticated, openAuthModal]);
 
   if (loading) {
     return (
@@ -20,7 +28,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Return null while modal handles login, or Navigate to home if preferred
+    // For premium feel, we stay on current page and show modal
+    return null;
   }
 
   if (allowedRoles && user && user.role && !allowedRoles.includes(user.role.toLowerCase())) {

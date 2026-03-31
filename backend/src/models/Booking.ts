@@ -13,6 +13,8 @@ export interface BookingAttributes {
     tableId?: number | null;
     status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     specialRequests?: string;
+    occasion?: string;
+    preference?: string;
     userId?: number;
     amount?: number;
     paymentId?: string;
@@ -34,6 +36,8 @@ export class Booking extends Model<BookingAttributes> implements BookingAttribut
     public tableId!: number | null;
     public status!: 'pending' | 'confirmed' | 'cancelled' | 'completed';
     public specialRequests!: string;
+    public occasion!: string;
+    public preference!: string;
     public userId!: number;
     public amount!: number;
     public paymentId!: string;
@@ -93,6 +97,14 @@ Booking.init(
         },
         specialRequests: {
             type: DataTypes.TEXT,
+            allowNull: true,
+        },
+        occasion: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        preference: {
+            type: DataTypes.STRING,
             allowNull: true,
         },
         userId: {

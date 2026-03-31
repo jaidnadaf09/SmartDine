@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import { useAuthModal } from '../context/AuthModalContext';
 import { formatDate, formatTime } from '../utils/dateFormatter';
 import '../styles/BookTable.css';
 import '../styles/Profile.css';
@@ -33,6 +34,7 @@ const loadRazorpayScript = () => {
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'wallet'>('online');
 
   // Compute date boundaries (Local Time)
@@ -61,6 +63,13 @@ const BookTablePage: React.FC = () => {
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  // ── New booking extras state ──
+  const [preference, setPreference] = useState('');
+  const [occasion, setOccasion] = useState('');
+
+  const seatPreferences = ['Window Seat', 'Outdoor', 'Family Table', 'Quiet Corner', 'AC', 'Non-AC'];
+  const occasionOptions = ['Birthday', 'Anniversary', 'Date Night', 'Business Meeting', 'Casual Dining'];
+
   // Calculate min time if date is today (rounded to next 5 mins)
   const minTimeForToday = (() => {
     if (formData.date !== todayStr) return undefined;
@@ -83,6 +92,12 @@ const BookTablePage: React.FC = () => {
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
 
+  // Helper: build booking extras payload
+  const getBookingExtras = () => ({
+    ...(preference ? { preference } : {}),
+    ...(occasion ? { occasion } : {}),
+  });
+
 
   // Success micro-interaction helper
   const showSuccessAndFinish = (details: any) => {
@@ -99,7 +114,8 @@ const BookTablePage: React.FC = () => {
     const token = localStorage.getItem('token');
     if (!token) {
         toast.error('Session expired. Please login again.');
-        navigate('/login');
+        navigate('/');
+        openAuthModal('login');
         return;
     }
     setLoading(true);
@@ -108,7 +124,8 @@ const BookTablePage: React.FC = () => {
         date: formData.date,
         time: formData.time,
         guests: parseInt(formData.guests, 10),
-        status: 'confirmed'
+        status: 'confirmed',
+        ...getBookingExtras(),
       });
 
       const data = res.data;
@@ -189,6 +206,7 @@ const BookTablePage: React.FC = () => {
             date: formData.date,
             time: formData.time,
             guests: parseInt(formData.guests, 10),
+            ...getBookingExtras(),
           }
         });
 
@@ -255,6 +273,7 @@ const BookTablePage: React.FC = () => {
                 date: formData.date,
                 time: formData.time,
                 guests: parseInt(formData.guests, 10),
+                ...getBookingExtras(),
               }
             });
 
@@ -366,6 +385,18 @@ const BookTablePage: React.FC = () => {
                 <span className="success-detail-label">Guests</span>
                 <span className="success-detail-value">{bookingDetails?.guests || formData.guests}</span>
               </div>
+              {formData.preference && (
+                <div className="success-detail-row">
+                  <span className="success-detail-label">Preference</span>
+                  <span className="success-detail-value">{formData.preference}</span>
+                </div>
+              )}
+              {formData.occasion && (
+                <div className="success-detail-row">
+                  <span className="success-detail-label">Occasion</span>
+                  <span className="success-detail-value">{formData.occasion}</span>
+                </div>
+              )}
             </div>
             {bookingDetails?.paymentId && (
               <div className="success-ref">Ref: {bookingDetails.paymentId}</div>
@@ -432,6 +463,49 @@ const BookTablePage: React.FC = () => {
                       max={20} 
                     />
                   )}
+                </div>
+              </div>
+            </div>
+
+            {/* ── BOOKING EXTRAS ── */}
+            <div className="bt-extras-section">
+              {/* Seating Preference */}
+              <div className="bt-extras-field">
+                <span className="bt-section-header">
+                  <Icons.armchair size={16} className="bt-section-icon" />
+                  Seating Preference
+                </span>
+                <div className="bt-chip-group">
+                  {seatPreferences.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      className={`bt-chip ${preference === opt ? 'selected' : ''}`}
+                      onClick={() => setPreference(preference === opt ? '' : opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Occasion */}
+              <div className="bt-extras-field">
+                <span className="bt-section-header">
+                  <Icons.star size={16} className="bt-section-icon" />
+                  Occasion
+                </span>
+                <div className="bt-chip-group">
+                  {occasionOptions.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      className={`bt-chip ${occasion === opt ? 'selected' : ''}`}
+                      onClick={() => setOccasion(occasion === opt ? '' : opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

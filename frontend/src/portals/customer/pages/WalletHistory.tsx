@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { useAuthModal } from '../../../context/AuthModalContext';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
 import { formatDate, formatTime } from '../../../utils/dateFormatter';
@@ -21,6 +22,7 @@ interface WalletTransaction {
 const WalletHistory: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,7 +56,15 @@ const WalletHistory: React.FC = () => {
   if (!user) return (
     <div className="cp-loading">
       <p>Please log in first</p>
-      <button onClick={() => navigate('/login')} className="cp-retry-btn">Go to Login</button>
+      <button 
+        onClick={() => {
+          navigate('/');
+          openAuthModal('login');
+        }} 
+        className="cp-retry-btn"
+      >
+        Go to Login
+      </button>
     </div>
   );
 

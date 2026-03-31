@@ -32,5 +32,6 @@ router.route('/orders').get(adminController_1.getOrders);
 router.route('/orders/history').get(adminController_1.getOrdersHistory);
 router.route('/orders/:id/status').put(adminController_1.updateOrderStatus);
 router.route('/payments').get(adminController_1.getPayments);
+router.route('/reviews').get(adminController_1.getAllReviews);
 router.route('/restaurant-status').put(restaurantController_1.updateRestaurantStatus);
 exports.default = router;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { useAuthModal } from '../../../context/AuthModalContext';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import api from '../../../utils/api';
@@ -24,6 +25,9 @@ interface Booking {
   time: string;
   guests: string;
   status: string;
+  preference?: string;
+  occasion?: string;
+  specialRequests?: string;
   tableId: number | null;
   tableNumber: number | null;
   createdAt: any;
@@ -35,6 +39,7 @@ interface OrderItem {
   itemName?: string;
   price?: number;
   quantity: number;
+  specialInstructions?: string;
 }
 
 interface Order {
@@ -68,6 +73,7 @@ const SkeletonCard: React.FC = () => (
 const MyOrders: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [upcomingBooking, setUpcomingBooking] = useState<any>(null);
@@ -254,7 +260,15 @@ const MyOrders: React.FC = () => {
   if (!user) return (
     <div className="cp-loading">
       <p>Please log in first</p>
-      <button onClick={() => navigate('/login')} className="cp-retry-btn">Go to Login</button>
+      <button 
+        onClick={() => {
+          navigate('/');
+          openAuthModal('login');
+        }} 
+        className="cp-retry-btn"
+      >
+        Go to Login
+      </button>
     </div>
   );
 
@@ -339,18 +353,30 @@ const MyOrders: React.FC = () => {
                           <div className="cp-detail-value">{booking.guests}</div>
                         </div>
                       </div>
-                      <div className="cp-detail-item">
-                        <Icons.utensilsCrossed className="cp-detail-icon" size={16} />
-                        <div>
-                          <div className="cp-detail-label">Table</div>
-                          <div className="cp-detail-value">
-                            {booking.tableNumber
-                              ? `Table ${booking.tableNumber}`
-                              : <span className="cp-pending-text">Pending</span>}
-                          </div>
-                        </div>
-                      </div>
                     </div>
+
+                    {(booking.preference || booking.occasion) && (
+                      <div className="cp-extra-info" style={{ marginTop: '12px', padding: '12px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                        {booking.preference && (
+                          <div style={{ fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Preference: </span>
+                            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{booking.preference}</span>
+                          </div>
+                        )}
+                        {booking.occasion && (
+                          <div style={{ fontSize: '0.85rem' }}>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Occasion: </span>
+                            <span style={{ color: 'var(--brand-primary)', fontWeight: 700 }}>{booking.occasion}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {booking.specialRequests && (
+                      <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(198, 167, 105, 0.08)', borderRadius: '10px', fontSize: '0.85rem', color: 'var(--text-primary)', borderLeft: '3px solid var(--brand-primary)' }}>
+                        <strong>Note:</strong> {booking.specialRequests}
+                      </div>
+                    )}
 
                     {isCancellable(booking) && (
                       <button
@@ -427,15 +453,23 @@ const MyOrders: React.FC = () => {
                       </div>
                       {order.items && Array.isArray(order.items)
                         ? order.items.map((item: any, idx: number) => (
-                          <div key={idx} className="cp-item-row">
-                            <span className="cp-item-name">{item.itemName || item.name}</span>
-                            <span className="cp-item-qty">× {item.quantity}</span>
-                            {item.price && (
-                              <span className="cp-item-price">
-                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
-                              </span>
+                          <React.Fragment key={idx}>
+                            <div className="cp-item-row">
+                              <span className="cp-item-name">{item.itemName || item.name}</span>
+                              <span className="cp-item-qty">× {item.quantity}</span>
+                              {item.price && (
+                                <span className="cp-item-price">
+                                  {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
+                                </span>
+                              )}
+                            </div>
+                            {item.specialInstructions && (
+                              <div className="cp-item-instruction" style={{ marginTop: '4px', marginLeft: '0', padding: '6px 10px', borderRadius: '8px', background: 'rgba(198, 167, 105, 0.08)', fontSize: '0.8rem', color: '#8b5a2b', borderLeft: '2px solid var(--brand-primary)' }}>
+                                <span style={{ fontWeight: 700, fontSize: '0.7rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px', opacity: 0.7 }}>Special Instruction</span>
+                                {item.specialInstructions}
+                              </div>
                             )}
-                          </div>
+                          </React.Fragment>
                         ))
                         : <p className="cp-pending-text" style={{ fontSize: '0.85rem', padding: '4px 0' }}>No item details available</p>
                       }

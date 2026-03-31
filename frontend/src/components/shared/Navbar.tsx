@@ -1,6 +1,7 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useAuthModal } from '../../context/AuthModalContext';
 import AvatarDropdown from './AvatarDropdown';
 import NotificationPanel from './NotificationPanel';
 import { Icons } from '../icons/IconSystem';
@@ -35,9 +36,10 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
-  const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
+  const { openAuthModal } = useAuthModal();
+
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isChef  = user?.role?.toLowerCase() === 'chef';
 
@@ -68,12 +70,24 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
     return location.pathname.startsWith(path);
   };
 
+  const handleProtectedNavigation = (e: React.MouseEvent, path: string) => {
+    // Only intercept for certain paths that require auth
+    const protectedPaths = ['/order', '/book-table', '/customer', '/profile'];
+    const isProtected = protectedPaths.some(p => path.startsWith(p));
+
+    if (isProtected && !isAuthenticated) {
+      e.preventDefault();
+      openAuthModal('login');
+      return;
+    }
+  };
+
   return (
     <header className="header">
       <div className="header-content">
         {/* Logo */}
         <Link to="/" className="logo-link">
-          <Icons.utensilsCrossed className="logo-icon-svg" size={24} />
+          <img src="/spoon-fork-transparent.png" alt="SmartDine logo" className="navbar-logo-img" />
           SmartDine
           {roleTag && <span className="role-tag-badge">{roleTag}</span>}
         </Link>
@@ -85,6 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
               <Link
                 key={link.path}
                 to={link.path}
+                onClick={(e) => handleProtectedNavigation(e, link.path)}
                 className={`nav-btn${isActive(link.path) ? ' active' : ''} navbar-item`}
               >
                 {link.icon}
@@ -93,24 +108,22 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
             ))}
           </nav>
 
-
-
           {/* Auth */}
           {isAuthenticated ? (
             <div className="navbar-user-welcome header-actions">
               <span className="welcome-text">Welcome, {user?.name}</span>
               
               <NotificationPanel />
-              <AvatarDropdown showName={false} />
+              <AvatarDropdown />
             </div>
           ) : (
             <>
-              <button className="nav-btn login-btn" onClick={() => navigate('/login')}>
+              <button className="nav-btn login-btn" onClick={() => openAuthModal('login')}>
                 Login
               </button>
               <button
                 className="nav-btn signup-btn"
-                onClick={() => navigate('/signup')}
+                onClick={() => openAuthModal('signup')}
               >
                 Sign Up
               </button>

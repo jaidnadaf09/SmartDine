@@ -5,13 +5,19 @@ import toast from 'react-hot-toast';
 import api from '../../../utils/api';
 import { Icons } from '../../../components/icons/IconSystem';
 import FormField from '../../admin/components/FormField';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import ConfirmModal from '../../../components/ui/ConfirmModal';
+import ImageCropModal from '../../../components/profile/ImageCropModal';
 import '../../../styles/Profile.css';
 
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();
     const { user, updateUser } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [isRemovingPhoto, setIsRemovingPhoto] = useState(false);
+    const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+    const [imageToCrop, setImageToCrop] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone: user?.phone || '',
@@ -23,16 +29,26 @@ const EditProfilePage: React.FC = () => {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 2 * 1024 * 1024) {
-              toast.error('Image size should be less than 2MB');
+            if (file.size > 20 * 1024 * 1024) { // Increased to 20MB as requested
+              toast.error('Image too large. Max 20MB');
               return;
             }
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFormData({ ...formData, profileImage: reader.result as string });
+                setImageToCrop(reader.result as string);
+                setIsCropModalOpen(true);
             };
             reader.readAsDataURL(file);
+            
+            // Reset input so same file can be selected again
+            e.target.value = '';
         }
+    };
+
+    const handleCropComplete = (croppedImage: string) => {
+        setFormData({ ...formData, profileImage: croppedImage });
+        setIsCropModalOpen(false);
+        setImageToCrop(null);
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +85,26 @@ const EditProfilePage: React.FC = () => {
         }
     };
 
+    const handleRemovePhoto = async () => {
+        setIsRemovingPhoto(true);
+        setLoading(true);
+        
+        // Wait for exit animation to complete (250ms)
+        setTimeout(async () => {
+            try {
+                await api.delete('/auth/remove-profile-photo');
+                setFormData({ ...formData, profileImage: '' });
+                updateUser({ ...user, profileImage: '' });
+                toast.success('Profile photo removed');
+            } catch (err: any) {
+                toast.error(err.message || 'Failed to remove photo');
+            } finally {
+                setLoading(false);
+                setIsRemovingPhoto(false);
+            }
+        }, 250);
+    };
+
     return (
         <div className="management-page">
             <div className="page-header">
@@ -89,13 +125,28 @@ const EditProfilePage: React.FC = () => {
                             onClick={() => document.getElementById('imageUpload')?.click()}
                         >
                             <div className="edit-avatar-inner">
-                                {formData.profileImage ? (
-                                    <img src={formData.profileImage} alt="Preview" />
-                                ) : (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}>
-                                        <Icons.camera size={32} />
-                                    </div>
-                                )}
+                                <AnimatePresence mode="wait">
+                                    {formData.profileImage && !isRemovingPhoto ? (
+                                        <motion.img 
+                                            key="avatar-image"
+                                            src={formData.profileImage} 
+                                            alt="Preview"
+                                            initial={{ opacity: 0, scale: 0.92 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.25 } }}
+                                        />
+                                    ) : (
+                                        <motion.div 
+                                            key="avatar-placeholder"
+                                            initial={{ opacity: 0, scale: 0.92 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', color: 'var(--text-muted)' }}
+                                        >
+                                            <Icons.camera size={32} />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                         </div>
                         <button
@@ -107,6 +158,17 @@ const EditProfilePage: React.FC = () => {
                         </button>
                         <input id="imageUpload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
                     </div>
+
+                    {formData.profileImage && (
+                        <button
+                            type="button"
+                            className="remove-photo-btn"
+                            onClick={() => setIsConfirmOpen(true)}
+                            disabled={loading}
+                        >
+                            Remove Photo
+                        </button>
+                    )}
 
                     <div className="pf-form-fields">
                         <FormField
@@ -158,6 +220,27 @@ const EditProfilePage: React.FC = () => {
                     </div>
                 </form>
             </motion.div>
+
+            <ConfirmModal 
+                isOpen={isConfirmOpen}
+                title="Remove profile photo?"
+                message="Your profile picture will be deleted permanently. You can upload a new one anytime."
+                confirmText="Remove Photo"
+                cancelText="Keep Photo"
+                isDanger
+                onCancel={() => setIsConfirmOpen(false)}
+                onConfirm={() => {
+                    setIsConfirmOpen(false);
+                    handleRemovePhoto();
+                }}
+            />
+
+            <ImageCropModal 
+                image={imageToCrop}
+                isOpen={isCropModalOpen}
+                onClose={() => setIsCropModalOpen(false)}
+                onCropComplete={handleCropComplete}
+            />
         </div>
     );
 };

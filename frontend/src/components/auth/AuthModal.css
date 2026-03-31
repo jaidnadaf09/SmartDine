@@ -1,0 +1,152 @@
+/* ── Authentication Modal (Premium Glass Refinement) ── */
+
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    rgba(20, 16, 12, 0.55),
+    rgba(20, 16, 12, 0.65)
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 1000;
+}
+
+.auth-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 30% 20%,
+    rgba(198, 167, 105, 0.08),
+    transparent 40%
+  );
+  pointer-events: none;
+}
+
+.auth-modal {
+  width: 380px;
+  max-width: 92vw;
+  padding: 28px 26px;
+  border-radius: 20px;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.04)
+  );
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.45);
+  position: relative;
+  z-index: 1001;
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+  animation: modalEnter 0.35s cubic-bezier(0.21, 0.98, 0.6, 0.99);
+}
+
+.auth-modal::-webkit-scrollbar {
+  width: 0px; /* Hide scrollbar Chrome/Safari */
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Close button - sleek refinement */
+.modal-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.25s ease;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+}
+
+.modal-close-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg) scale(1.1);
+}
+
+body.modal-open {
+  overflow: hidden;
+}
+
+/* Modal Content Reset for existing styles */
+.auth-modal h1 {
+    margin-bottom: 8px;
+    font-size: 26px !important;
+    text-align: center;
+}
+
+.auth-modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+.auth-modal h2, .auth-modal-title {
+    margin-bottom: 20px;
+    font-size: 1.15rem !important;
+    color: #E7D3A3 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+}
+
+/* Form labels contrast improvement */
+.auth-modal label {
+    color: rgba(255, 255, 255, 0.78) !important;
+    font-size: 13px !important;
+    letter-spacing: 0.4px;
+}
+
+/* Input field visibility */
+.auth-modal input {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.14) !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+
+.auth-modal input::placeholder {
+    color: rgba(255, 255, 255, 0.45) !important;
+}
+
+/* Link contrast */
+.auth-modal .auth-link, .auth-modal .auth-link a {
+    color: #E7D3A3 !important;
+    font-weight: 500;
+}
+
+/* Password toggle eye icon */
+.auth-modal .password-toggle {
+    color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* Helper text */
+.auth-modal small {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.auth-modal .auth-back-btn {
+    display: none;
+}

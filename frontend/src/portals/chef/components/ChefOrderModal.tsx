@@ -2,10 +2,9 @@ import React from 'react';
 import Modal from '../../../components/ui/Modal';
 import Button from '../../../components/ui/Button';
 
-interface OrderItem {
-    itemName: string;
     quantity: number;
     price: number;
+    specialInstructions?: string;
 }
 
 interface ChefOrderModalProps {
@@ -92,6 +91,11 @@ const ChefOrderModal: React.FC<ChefOrderModalProps> = ({ order, onClose }) => {
                                     {item.quantity}x
                                 </span>
                                 <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.itemName}</span>
+                                {item.specialInstructions && (
+                                    <div style={{ marginLeft: 'auto', fontSize: '0.85rem', color: '#d97706', background: 'rgba(245, 158, 11, 0.08)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)', fontWeight: 600 }}>
+                                        {item.specialInstructions}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>

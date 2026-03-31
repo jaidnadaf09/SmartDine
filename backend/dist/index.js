@@ -24,6 +24,7 @@ const walletRoutes_1 = __importDefault(require("./routes/walletRoutes"));
 const notificationRoutes_1 = __importDefault(require("./routes/notificationRoutes"));
 const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 const restaurantRoutes_1 = __importDefault(require("./routes/restaurantRoutes"));
+const suggestionRoutes_1 = __importDefault(require("./routes/suggestionRoutes"));
 const scheduler_1 = require("./utils/scheduler");
 // Load environment variables
 dotenv_1.default.config();
@@ -70,6 +71,7 @@ app.use("/api/wallet", walletRoutes_1.default);
 app.use("/api/notifications", notificationRoutes_1.default);
 app.use("/api/reviews", reviewRoutes_1.default);
 app.use("/api/restaurant", restaurantRoutes_1.default);
+app.use("/api/suggestions", suggestionRoutes_1.default);
 // Test route
 app.get("/", (req, res) => {
     res.send("SmartDine API is running");

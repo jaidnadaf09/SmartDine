@@ -20,6 +20,7 @@ import walletRoutes from "./routes/walletRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
 import reviewRoutes from "./routes/reviewRoutes";
 import restaurantRoutes from "./routes/restaurantRoutes";
+import suggestionRoutes from "./routes/suggestionRoutes";
 import { initScheduler } from "./utils/scheduler";
 
 // Load environment variables
@@ -55,7 +56,8 @@ app.use(
     })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Request logger
 app.use((req, res, next) => {
@@ -77,6 +79,7 @@ app.use("/api/wallet", walletRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/restaurant", restaurantRoutes);
+app.use("/api/suggestions", suggestionRoutes);
 
 // Test route
 app.get("/", (req, res) => {

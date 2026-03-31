@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMyReviews = exports.createReview = void 0;
+exports.getAllReviews = exports.getMyReviews = exports.createReview = void 0;
 const models_1 = require("../models");
 // @desc    Create a review
 // @route   POST /api/reviews
@@ -54,3 +54,31 @@ const getMyReviews = async (req, res) => {
     }
 };
 exports.getMyReviews = getMyReviews;
+// @desc    Get all reviews (Admin)
+// @route   GET /api/admin/reviews
+// @access  Private/Admin
+const getAllReviews = async (req, res) => {
+    try {
+        const reviews = await models_1.Review.findAll({
+            include: [
+                {
+                    model: models_1.User,
+                    as: 'user',
+                    attributes: ['id', 'name', 'email']
+                },
+                {
+                    model: models_1.Order,
+                    as: 'order',
+                    attributes: ['id', 'totalAmount', 'createdAt']
+                }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+        res.json(reviews);
+    }
+    catch (error) {
+        console.error('Error fetching all reviews:', error);
+        res.status(500).json({ message: error.message || 'Server Error' });
+    }
+};
+exports.getAllReviews = getAllReviews;

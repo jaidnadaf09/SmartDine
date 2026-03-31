@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '../../components/icons/IconSystem';
 import { useAuth } from '../../context/AuthContext';
+import { useAuthModal } from '../../context/AuthModalContext';
 import WaiterLayout from './components/WaiterLayout';
 import '../../styles/Portals.css';
 
@@ -16,6 +17,7 @@ interface Table {
 const WaiterPortal: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [tables] = useState<Table[]>([
     { id: 1, tableNumber: 1, capacity: 2, status: 'occupied', orders: 1 },
     { id: 2, tableNumber: 2, capacity: 4, status: 'available', orders: 0 },
@@ -34,7 +36,14 @@ const WaiterPortal: React.FC = () => {
     return (
       <div className="portal-container">
         <p>Please log in first</p>
-        <button onClick={() => navigate('/login')}>Go to Login</button>
+        <button 
+          onClick={() => {
+            navigate('/');
+            openAuthModal('login');
+          }}
+        >
+          Go to Login
+        </button>
       </div>
     );
   }

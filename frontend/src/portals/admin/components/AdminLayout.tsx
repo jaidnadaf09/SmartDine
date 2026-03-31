@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { useAuthModal } from '../../../context/AuthModalContext';
 import '../../../styles/Portals.css';
 
 import AvatarDropdown from '../../../components/shared/AvatarDropdown';
@@ -15,11 +16,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { logout } = useAuth();
+    const { openAuthModal } = useAuthModal();
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const handleLogout = () => {
         logout();
-        navigate('/login');
+        navigate('/');
+        // Optionally trigger modal after logout
+        setTimeout(() => {
+            openAuthModal('login');
+        }, 200);
     };
 
     const navItems = [
@@ -107,7 +113,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                             </span>
                         </div>
                         <div className="navbar-right">
-                            <AvatarDropdown showName={true} />
+                            <AvatarDropdown />
                         </div>
                     </div>
                 </header>

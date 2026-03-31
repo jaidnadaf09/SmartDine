@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useAuthModal } from '../../context/AuthModalContext';
 import { Icons } from '../icons/IconSystem';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,9 +24,15 @@ const AvatarDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [dropdownOpen]);
 
+  const { openAuthModal } = useAuthModal();
+
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
+    // Optional: Auto-open modal after redirect for a smooth flow
+    setTimeout(() => {
+      openAuthModal('login');
+    }, 200);
   };
 
   if (!user) return null;

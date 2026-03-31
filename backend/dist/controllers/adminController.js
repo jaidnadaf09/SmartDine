@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDashboardStats = exports.getStaffMembers = exports.getPayments = exports.updateOrderStatus = exports.getOrdersHistory = exports.getOrders = exports.deleteTable = exports.updateTable = exports.addTable = exports.getAvailableTables = exports.getTables = exports.updateBookingTable = exports.completeBooking = exports.cancelBooking = exports.updateBookingStatus = exports.getBookingsHistory = exports.getBookings = exports.deleteUser = exports.updateUserRole = exports.getUsers = void 0;
+exports.getDashboardStats = exports.getStaffMembers = exports.getPayments = exports.updateOrderStatus = exports.getOrdersHistory = exports.getOrders = exports.deleteTable = exports.updateTable = exports.addTable = exports.getAvailableTables = exports.getTables = exports.updateBookingTable = exports.completeBooking = exports.cancelBooking = exports.updateBookingStatus = exports.getBookingsHistory = exports.getBookings = exports.deleteUser = exports.updateUserRole = exports.getUsers = exports.getAllReviews = void 0;
 const sequelize_1 = require("sequelize");
 const models_1 = require("../models");
+const reviewController_1 = require("./reviewController");
+Object.defineProperty(exports, "getAllReviews", { enumerable: true, get: function () { return reviewController_1.getAllReviews; } });
 // @desc    Get all registered users
 // @route   GET /api/admin/users
 // @access  Private/Admin
@@ -408,26 +410,61 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 exports.updateOrderStatus = updateOrderStatus;
-// @desc    Get payment history
+// @desc    Get consolidated payment history (Bookings + Orders)
 // @route   GET /api/admin/payments
 // @access  Private/Admin
 const getPayments = async (req, res) => {
-    console.log("Admin: Fetching all payments/successful bookings");
+    console.log("Admin: Consolidating history from Bookings and Orders");
     try {
-        // Since we store payments in Bookings for now (Razorpay integration)
-        const payments = await models_1.Booking.findAll({
+        // 1. Fetch Booking payments
+        const bookingPayments = await models_1.Booking.findAll({
             where: {
-                paymentStatus: {
-                    [sequelize_1.Op.in]: ['paid', 'failed']
-                }
+                paymentStatus: { [sequelize_1.Op.in]: ['paid', 'failed'] }
             },
             attributes: ['id', 'customerName', 'amount', 'paymentId', 'paymentStatus', 'updatedAt'],
-            order: [['updatedAt', 'DESC']]
         });
-        res.json(payments);
+        // 2. Fetch Order payments
+        const orderPayments = await models_1.Order.findAll({
+            where: {
+                paymentStatus: { [sequelize_1.Op.in]: ['paid', 'failed'] }
+            },
+            include: [{
+                    model: models_1.User,
+                    as: 'customer',
+                    attributes: ['name']
+                }],
+            attributes: ['id', 'totalAmount', 'paymentId', 'paymentStatus', 'updatedAt'],
+        });
+        // 3. Normalize and Merge
+        const consolidated = [
+            ...bookingPayments.map(b => ({
+                id: b.id,
+                type: 'Booking',
+                customerName: b.customerName,
+                amount: b.amount,
+                paymentId: b.paymentId,
+                paymentStatus: b.paymentStatus,
+                updatedAt: b.updatedAt,
+                method: 'Razorpay / UPI'
+            })),
+            ...orderPayments.map(o => ({
+                id: o.id,
+                type: 'Order',
+                customerName: o.customer?.name || 'Guest',
+                amount: o.totalAmount,
+                paymentId: o.paymentId,
+                paymentStatus: o.paymentStatus,
+                updatedAt: o.updatedAt,
+                method: 'Razorpay / UPI'
+            }))
+        ];
+        // 4. Sort by date
+        consolidated.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+        res.json(consolidated);
     }
     catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Error consolidating payments:", error);
+        res.status(500).json({ message: error.message || 'Server Error' });
     }
 };
 exports.getPayments = getPayments;

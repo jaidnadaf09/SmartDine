@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { Icons } from '../icons/IconSystem';
 
 interface MenuItemType {
@@ -13,8 +13,6 @@ interface MenuCardProps {
   item: MenuItemType;
   quantityInCart: number;
   isFavourite: boolean;
-  isExpanded: boolean;
-  onToggle: () => void;
   onAddToCart: (item: MenuItemType) => void;
   onUpdateQuantity: (id: number, quantity: number) => void;
   onToggleFavourite: (id: number) => void;
@@ -24,67 +22,86 @@ const MenuCard: React.FC<MenuCardProps> = ({
   item,
   quantityInCart,
   isFavourite,
-  isExpanded,
-  onToggle,
   onAddToCart,
   onUpdateQuantity,
   onToggleFavourite,
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showAddAnimation, setShowAddAnimation] = useState(false);
+  const [isFlying, setIsFlying] = useState(false);
+
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(prev => !prev);
+  };
+
   return (
-    <div 
-      className={`compact-menu-card ${quantityInCart > 0 ? 'in-cart-glow' : ''} ${isExpanded ? 'expanded' : ''}`}
-      onClick={onToggle}
-    >
-      {/* Expand Chevron restored */}
-      <div className="expand-chevron">
-        <Icons.chevronDown size={14} className={isExpanded ? 'rotate-180' : ''} />
-      </div>
-
-      {/* Favourite Button relocated to bottom actions row */}
-
-      <div className="item-main-info">
-        <h4 className="item-name">{item.name}</h4>
-        {item.description && (
-          <div className={`description-area ${isExpanded ? 'expanded' : 'collapsed'}`}>
-             <p className="item-description">{item.description}</p>
-          </div>
-        )}
-        <p className="item-price">
-          {new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-          }).format(item.price)}
-        </p>
-      </div>
-      <div className="item-actions">
+    <div className={`compact-menu-card ${quantityInCart > 0 ? 'in-cart-glow' : ''} ${isExpanded ? 'expanded' : ''} ${isFlying ? 'fly' : ''}`}>
+      
+      {/* Header: Name + Expand Arrow */}
+      <div className="menu-card-header">
+        <h4 className="dish-name">{item.name}</h4>
         <button 
-          className="favourite-btn-inline" 
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavourite(item.id);
-          }}
-          aria-label="Toggle favourite"
+          className="expand-btn" 
+          onClick={toggleExpand}
+          type="button"
+          aria-label={isExpanded ? "Collapse" : "Expand"}
         >
-          <Icons.heart 
-            size={18} 
-            fill={isFavourite ? '#f59e0b' : 'transparent'} 
-            color={isFavourite ? '#f59e0b' : 'var(--text-muted)'} 
-            className="favourite-icon"
-          />
+          <Icons.chevronDown size={18} className={isExpanded ? 'rotate' : ''} />
         </button>
+      </div>
+
+      {/* Description: Clamped or Expanded */}
+      {item.description && (
+        <p className={`dish-desc ${isExpanded ? 'expanded' : ''}`}>
+          {item.description}
+        </p>
+      )}
+
+      {/* Footer: Price + Actions */}
+      <div className="menu-card-footer">
+        
+        {showAddAnimation && (
+          <span className="add-one-animation">+1</span>
+        )}
+
+        <div className="price-row">
+          <span className="dish-price">
+            {new Intl.NumberFormat('en-IN', {
+              style: 'currency',
+              currency: 'INR',
+              maximumFractionDigits: 0
+            }).format(item.price)}
+          </span>
+
+          <button 
+            className={`wishlist-btn ${isFavourite ? 'active' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavourite(item.id);
+            }}
+            aria-label="Toggle favourite"
+          >
+            <Icons.heart 
+              size={16} 
+              fill={isFavourite ? '#f59e0b' : 'transparent'} 
+              color={isFavourite ? '#f59e0b' : 'var(--text-muted)'} 
+              className="favourite-icon"
+            />
+          </button>
+        </div>
 
         {quantityInCart > 0 ? (
-          <div className="premium-qty-controls">
+          <div className="qty-stepper-full">
             <button 
-              className="qty-btn-minus"
+              className="qty-step-btn-full"
               onClick={(e) => {
                 e.stopPropagation();
                 onUpdateQuantity(item.id, quantityInCart - 1);
             }}>−</button>
-            <span className="qty-number qty-pop-anim">{quantityInCart}</span>
+            <span className="qty-count-full">{quantityInCart}</span>
             <button 
-              className="qty-btn-plus"
+              className="qty-step-btn-full"
               onClick={(e) => {
                 e.stopPropagation();
                 onUpdateQuantity(item.id, quantityInCart + 1);
@@ -92,16 +109,21 @@ const MenuCard: React.FC<MenuCardProps> = ({
           </div>
         ) : (
           <button
-            className="compact-add-btn"
+            className="add-btn-full"
             onClick={(e) => {
               e.stopPropagation();
               onAddToCart(item);
+              setShowAddAnimation(true);
+              setIsFlying(true);
+              setTimeout(() => setShowAddAnimation(false), 700);
+              setTimeout(() => setIsFlying(false), 600);
             }}
-            disabled={false}
           >
             Add
           </button>
         )}
+        
+        {isFlying && <div className="fly-particle" />}
       </div>
     </div>
   );
@@ -111,7 +133,6 @@ export default memo(MenuCard, (prevProps, nextProps) => {
   return (
     prevProps.item.id === nextProps.item.id &&
     prevProps.quantityInCart === nextProps.quantityInCart &&
-    prevProps.isFavourite === nextProps.isFavourite &&
-    prevProps.isExpanded === nextProps.isExpanded
+    prevProps.isFavourite === nextProps.isFavourite
   );
 });

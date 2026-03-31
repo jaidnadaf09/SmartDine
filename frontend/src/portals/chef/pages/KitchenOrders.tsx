@@ -18,6 +18,7 @@ interface OrderItem {
     itemName: string;
     quantity: number;
     price: number;
+    specialInstructions?: string;
 }
 
 interface Order {
@@ -229,9 +230,14 @@ const KitchenOrders: React.FC = () => {
                                         {order.items.map((item, idx) => (
                                             <div key={idx} className="chef-item-row">
                                                 <div className="chef-item-info">
-                                                    <span className="chef-item-qty">{item.quantity}x</span>
                                                     <span className="chef-item-name">{item.itemName}</span>
                                                 </div>
+                                                {item.specialInstructions && (
+                                                    <div className="chef-item-instruction-inline" style={{ marginTop: '4px', marginLeft: '32px', fontSize: '0.8rem', color: '#d97706', background: 'rgba(245, 158, 11, 0.08)', padding: '4px 8px', borderRadius: '4px', borderLeft: '2px solid #d97706' }}>
+                                                        <Icons.alertCircle size={12} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                                                        <strong>Note:</strong> {item.specialInstructions}
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -316,9 +322,13 @@ const KitchenOrders: React.FC = () => {
                                     {order.items.map((item, idx) => (
                                         <div key={idx} className="chef-item-row">
                                             <div className="chef-item-info">
-                                                <span className="chef-item-qty">{item.quantity}x</span>
                                                 <span className="chef-item-name">{item.itemName}</span>
                                             </div>
+                                            {item.specialInstructions && (
+                                                <div className="chef-item-instruction-inline" style={{ marginTop: '4px', marginLeft: '32px', fontSize: '0.75rem', color: '#6b7280', fontStyle: 'italic' }}>
+                                                    ↳ "{item.specialInstructions}"
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

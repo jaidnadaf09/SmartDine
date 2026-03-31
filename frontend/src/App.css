@@ -371,6 +371,13 @@ body.dark {
   flex-shrink: 0;
 }
 
+.navbar-logo-img {
+  height: 28px;
+  width: 28px;
+  object-fit: contain;
+  margin-right: 4px;
+}
+
 .logo-icon {
   font-size: 1.5rem;
 }
@@ -1277,16 +1284,29 @@ body[data-theme='dark'] .modal-content-premium {
   height: 100%;
 }
 
-/* Standardized Toast UI */
+/* Standardized Toast UI — Premium Glass Style */
 .hot-toast-premium {
-  background: var(--card-bg) !important;
-  color: var(--text-primary) !important;
-  border-radius: 16px !important;
+  backdrop-filter: blur(12px) !important;
+  background: rgba(28, 28, 28, 0.75) !important;
+  border: 1px solid rgba(212, 163, 115, 0.25) !important;
+  border-radius: 12px !important;
   padding: 12px 20px !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-  border: 1px solid var(--border-color) !important;
+  color: #fff !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25) !important;
   font-weight: 600 !important;
   font-family: 'Inter', sans-serif !important;
+  animation: toastSlide 0.25s ease !important;
+}
+
+@keyframes toastSlide {
+  from {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 body[data-theme='dark'] .hot-toast-premium {

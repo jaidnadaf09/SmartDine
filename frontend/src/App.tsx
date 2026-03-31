@@ -2,12 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
 import { Toaster } from "react-hot-toast";
 import ProtectedRoute from './components/ProtectedRoute';
 import ThemeToggleButton from './components/ThemeToggleButton';
 import ScrollToTop from './components/ScrollToTop';
 import CustomerLayout from './components/layouts/CustomerLayout';
 import DotLoader from './components/shared/DotLoader';
+import AuthModal from './components/auth/AuthModal';
 import './App.css';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -36,121 +38,143 @@ const PageLoader = () => (
     </div>
 );
 
+const AppContent = () => {
+  const { authType, setAuthType, closeAuthModal } = useAuthModal();
+
+  return (
+    <>
+      <ScrollToTop />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Customer Facing Routes with Persistent Navbar */}
+          <Route element={<CustomerLayout />}>
+            <Route path="/" element={<LandingPage />} />
+            <Route
+              path="/book-table"
+              element={
+                <ProtectedRoute>
+                  <BookTablePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order"
+              element={
+                <ProtectedRoute>
+                  <OrderPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/customer" element={<CustomerPortal />}>
+              <Route index element={<Navigate to="/customer/myorders" replace />} />
+              <Route path="myorders" element={<MyOrders />} />
+            </Route>
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/edit"
+              element={
+                <ProtectedRoute>
+                  <EditProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile/password"
+              element={
+                <ProtectedRoute>
+                  <ChangePasswordPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wallet"
+              element={
+                <ProtectedRoute>
+                  <WalletHistory />
+                </ProtectedRoute>
+              }
+            />
+            {/* Legal Pages */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/refund-policy" element={<ReturnRefundPolicy />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+          </Route>
+
+          {/* Auth Pages */}
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Other Portals */}
+          <Route path="/waiter" element={<WaiterPortal />} />
+          <Route
+            path="/chef/*"
+            element={
+              <ProtectedRoute allowedRoles={['chef', 'CHEF']}>
+                <ChefPortal />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminPortal />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </Suspense>
+      <ThemeToggleButton />
+      
+      <AuthModal
+        isOpen={!!authType}
+        type={authType || 'login'}
+        setType={(type) => setAuthType(type)}
+        onClose={closeAuthModal}
+      />
+    </>
+  );
+};
+
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <Toaster
-          position="top-right"
-          containerStyle={{
-            top: 40,
-            right: 20,
-          }}
-          toastOptions={{
-            duration: 4000,
-            className: 'hot-toast-premium',
-            success: {
-              iconTheme: {
-                primary: 'var(--brand-primary)',
-                secondary: 'white',
+        <AuthModalProvider>
+          <Toaster
+            position="top-right"
+            containerStyle={{
+              top: 72,
+              right: 24,
+              zIndex: 9999,
+            }}
+            toastOptions={{
+              duration: 4000,
+              style: {
+                zIndex: 9999,
               },
-            },
-          }}
-        />
-        <Router>
-          <ScrollToTop />
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Customer Facing Routes with Persistent Navbar */}
-              <Route element={<CustomerLayout />}>
-                <Route path="/" element={<LandingPage />} />
-                <Route
-                  path="/book-table"
-                  element={
-                    <ProtectedRoute>
-                      <BookTablePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/order"
-                  element={
-                    <ProtectedRoute>
-                      <OrderPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route path="/customer" element={<CustomerPortal />}>
-                  <Route index element={<Navigate to="/customer/myorders" replace />} />
-                  <Route path="myorders" element={<MyOrders />} />
-                </Route>
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <ProfilePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile/edit"
-                  element={
-                    <ProtectedRoute>
-                      <EditProfilePage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile/password"
-                  element={
-                    <ProtectedRoute>
-                      <ChangePasswordPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/wallet"
-                  element={
-                    <ProtectedRoute>
-                      <WalletHistory />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Legal Pages */}
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/refund-policy" element={<ReturnRefundPolicy />} />
-                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-                <Route path="/about-us" element={<AboutUs />} />
-                <Route path="/contact-us" element={<ContactUs />} />
-              </Route>
-
-              {/* Auth Pages (without Navbar usually, or maybe they want it?) */}
-              {/* User didn't specify Login/Signup, but let's keep them clean for now or include them if requested */}
-              <Route path="/signup" element={<SignupPage />} />
-              <Route path="/login" element={<LoginPage />} />
-
-              {/* Other Portals (Admin, Chef, Waiter) */}
-              <Route path="/waiter" element={<WaiterPortal />} />
-              <Route
-                path="/chef/*"
-                element={
-                  <ProtectedRoute allowedRoles={['chef', 'CHEF']}>
-                    <ChefPortal />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/*"
-                element={
-                  <ProtectedRoute allowedRoles={['admin']}>
-                    <AdminPortal />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </Suspense>
-          <ThemeToggleButton />
-        </Router>
+              className: 'hot-toast-premium',
+              success: {
+                iconTheme: {
+                  primary: 'var(--brand-primary)',
+                  secondary: 'white',
+                },
+              },
+            }}
+          />
+          <Router>
+            <AppContent />
+          </Router>
+        </AuthModalProvider>
       </AuthProvider>
     </ThemeProvider>
   );

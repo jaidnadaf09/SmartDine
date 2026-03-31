@@ -5,12 +5,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteMenuItem = exports.updateMenuItem = exports.createMenuItem = exports.getMenuItems = void 0;
 const MenuItem_1 = __importDefault(require("../models/MenuItem"));
+const generateDescription_1 = require("../utils/generateDescription");
 // @desc    Get all menu items
 // @route   GET /api/menu
 // @access  Public
 const getMenuItems = async (req, res) => {
     try {
         const menuItems = await MenuItem_1.default.findAll();
+        // Backfill descriptions if missing
+        let hasUpdates = false;
+        for (const item of menuItems) {
+            if (!item.description || item.description.trim() === '') {
+                item.description = (0, generateDescription_1.generateDescription)(item.name, item.category);
+                await item.save();
+                hasUpdates = true;
+            }
+        }
         res.json(menuItems);
     }
     catch (error) {

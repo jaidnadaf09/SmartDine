@@ -3,7 +3,7 @@
 /* ΓöÇΓöÇ Container ΓöÇΓöÇ */
 .auth-container {
   min-height: 100vh;
-  background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('../assets/Restaurant_business_plan_main.jpg');
+  background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('../assets/Restaurant_business_plan_main.jpg');
   background-size: cover;
   background-position: center;
   display: flex;
@@ -11,6 +11,30 @@
   align-items: center;
   padding: 2rem;
   transition: background 0.3s ease;
+  position: relative;
+}
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-container {
+  width: 420px;
+  max-width: 92vw;
+  padding: 32px;
+  border-radius: 18px;
+  backdrop-filter: blur(18px);
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+}
+
+.auth-container * {
+  text-align: left;
 }
 
 /* ΓöÇΓöÇ Card Box ΓöÇΓöÇ */

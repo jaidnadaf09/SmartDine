@@ -60,6 +60,14 @@ Booking.init({
         type: sequelize_1.DataTypes.TEXT,
         allowNull: true,
     },
+    occasion: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
+    preference: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
     userId: {
         type: sequelize_1.DataTypes.INTEGER,
         allowNull: true,
