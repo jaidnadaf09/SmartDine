@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { Icons } from '../../../components/icons/IconSystem';
 import AvatarDropdown from '../../../components/shared/AvatarDropdown';
@@ -14,6 +14,16 @@ interface ChefLayoutProps {
 const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
     const { logout } = useAuth();
     const [isSidebarOpen, setSidebarOpen] = useState(true);
+    const location = useLocation();
+
+    useEffect(() => {
+        window.scrollTo(0,0);
+        // Also ensure internal scroller is reset
+        const adminContent = document.querySelector(".admin-content");
+        if (adminContent) {
+           adminContent.scrollTop = 0;
+        }
+    }, [location.pathname]);
 
     const navLinks = [
         { path: '/chef', label: 'Dashboard', icon: <Icons.dashboard size={20} /> },

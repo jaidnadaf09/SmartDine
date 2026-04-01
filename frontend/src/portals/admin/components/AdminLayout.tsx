@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useAuthModal } from '../../../context/AuthModalContext';
@@ -18,6 +18,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const { logout } = useAuth();
     const { openAuthModal } = useAuthModal();
     const [sidebarOpen, setSidebarOpen] = useState(true);
+
+    useEffect(() => {
+        window.scrollTo(0,0);
+        // Also ensure internal scroller is reset
+        const adminContent = document.querySelector(".admin-content");
+        if (adminContent) {
+           adminContent.scrollTop = 0;
+        }
+    }, [location.pathname]);
 
     const handleLogout = () => {
         logout();

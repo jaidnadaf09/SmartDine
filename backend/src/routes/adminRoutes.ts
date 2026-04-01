@@ -10,6 +10,7 @@ import {
     completeBooking,
     updateBookingStatus,
     cancelBooking,
+    unassignTable,
     updateBookingTable,
     getTables,
     getAvailableTables,
@@ -47,6 +48,7 @@ router.route('/bookings/history').get(getBookingsHistory);
 router.route('/bookings/:id/status').put(updateBookingStatus);
 router.route('/bookings/:id/cancel').put(cancelBooking);
 router.route('/bookings/:id/complete').patch(completeBooking);
+router.route('/bookings/:id/unassign-table').patch(unassignTable);
 router.route('/bookings/:id/table').put(updateBookingTable);
 
 router.route('/tables').get(getTables).post(addTable);

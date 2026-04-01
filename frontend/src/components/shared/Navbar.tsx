@@ -86,7 +86,18 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
     <header className="header">
       <div className="header-content">
         {/* Logo */}
-        <Link to="/" className="logo-link">
+        <Link 
+          to="/" 
+          className="logo-link"
+          onClick={() => {
+            setTimeout(() => {
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+              });
+            }, 0);
+          }}
+        >
           <img src="/spoon-fork-transparent.png" alt="SmartDine logo" className="navbar-logo-img" />
           SmartDine
           {roleTag && <span className="role-tag-badge">{roleTag}</span>}
@@ -99,7 +110,16 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
               <Link
                 key={link.path}
                 to={link.path}
-                onClick={(e) => handleProtectedNavigation(e, link.path)}
+                onClick={(e) => {
+                  handleProtectedNavigation(e, link.path);
+
+                  setTimeout(() => {
+                    window.scrollTo({
+                      top: 0,
+                      behavior: "smooth"
+                    });
+                  }, 0);
+                }}
                 className={`nav-btn${isActive(link.path) ? ' active' : ''} navbar-item`}
               >
                 {link.icon}

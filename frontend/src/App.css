@@ -744,6 +744,7 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 .page-content {
   padding-top: 0;
   min-height: calc(100vh - 68px);
+  scroll-behavior: auto;
 }
 
 /* ═══════════════════════════════════════════

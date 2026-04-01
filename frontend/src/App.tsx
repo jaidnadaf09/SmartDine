@@ -6,7 +6,7 @@ import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
 import { Toaster } from "react-hot-toast";
 import ProtectedRoute from './components/ProtectedRoute';
 import ThemeToggleButton from './components/ThemeToggleButton';
-import ScrollToTop from './components/ScrollToTop';
+import ScrollToTop from './components/utils/ScrollToTop';
 import CustomerLayout from './components/layouts/CustomerLayout';
 import DotLoader from './components/shared/DotLoader';
 import AuthModal from './components/auth/AuthModal';

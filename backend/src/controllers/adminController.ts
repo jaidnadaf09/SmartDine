@@ -72,6 +72,13 @@ export const getBookings = async (req: Request, res: Response) => {
             where: {
                 status: 'confirmed'
             },
+            include: [
+                {
+                    model: Table,
+                    as: 'table',
+                    attributes: ['id', 'tableNumber', 'capacity']
+                }
+            ],
             order: [['createdAt', 'DESC']]
         });
         res.json(bookings);
@@ -90,6 +97,13 @@ export const getBookingsHistory = async (req: Request, res: Response) => {
             where: {
                 status: { [Op.in]: ['completed', 'cancelled'] }
             },
+            include: [
+                {
+                    model: Table,
+                    as: 'table',
+                    attributes: ['id', 'tableNumber', 'capacity']
+                }
+            ],
             order: [['createdAt', 'DESC']]
         });
         res.json(bookings);
@@ -182,6 +196,30 @@ export const completeBooking = async (req: Request, res: Response) => {
         res.json({ message: "Booking completed and table released successfully", booking });
     } catch (error) {
         console.error("Error completing booking:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Unassign table from a booking
+// @route   PATCH /api/admin/bookings/:id/unassign-table
+// @access  Private/Admin
+export const unassignTable = async (req: Request, res: Response) => {
+    console.log(`Admin: Unassigning table from booking ${req.params.id}`);
+    try {
+        const booking = await Booking.findByPk(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        booking.tableId = null;
+        booking.tableNumber = null as any;
+
+        await booking.save();
+
+        res.json({ message: "Table unassigned successfully", booking });
+    } catch (error) {
+        console.error("Error unassigning table:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };

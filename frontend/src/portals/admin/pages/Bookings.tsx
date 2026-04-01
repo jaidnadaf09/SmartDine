@@ -119,6 +119,17 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
         }
     };
 
+    const handleUnassign = async (id: number) => {
+        try {
+            await api.patch(`/admin/bookings/${id}/unassign-table`);
+            toast.success('Table unassigned successfully');
+            fetchData();
+        } catch (err: any) {
+            console.error('Failed to unassign table:', err);
+            toast.error(err.response?.data?.message || 'Failed to unassign');
+        }
+    };
+
     const handleStatusUpdate = async (id: number, status: string) => {
         if (status === 'CANCELLED') {
             setSelectedBookingId(id);
@@ -145,6 +156,8 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
             render: (booking: any) => <strong style={{ color: 'var(--text-primary)' }}>{booking.customerName}</strong>
         },
         { 
+            header: 'Details',
+            key: 'guests',
             render: (booking: any) => (
                 <div>
                     <div style={{ fontWeight: 600, color: 'var(--brand-primary)' }}>{booking.guests} Guests</div>
@@ -161,37 +174,95 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
             header: 'Table', 
             key: 'tableId',
             render: (booking: any) => (
-                (booking.tableId || booking.tableNumber) ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <span style={{ color: 'var(--brand-primary)', fontWeight: 700, fontSize: '0.9rem' }}>Table {booking.tableId || booking.tableNumber}</span>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                            <Button 
-                                variant="secondary" 
-                                size="sm" 
-                                onClick={(e) => { e.stopPropagation(); handleOpenModal(booking.id); }}
-                                style={{ padding: '4px 8px', fontSize: '0.7rem' }}
-                            >
-                                Change
-                            </Button>
-                            <Button 
-                                variant="danger" 
-                                size="sm" 
-                                onClick={(e) => { e.stopPropagation(); updateTableAPI(booking.id, null); }}
-                                style={{ padding: '4px 8px', fontSize: '0.7rem', background: 'transparent', border: '1px solid #ef4444', color: '#ef4444' }}
-                            >
-                                Unassign
-                            </Button>
-                        </div>
+                booking.table ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ 
+                            padding: '5px 12px', 
+                            borderRadius: '10px', 
+                            background: 'rgba(16, 185, 129, 0.1)', 
+                            border: '1px solid rgba(16, 185, 129, 0.2)', 
+                            fontSize: '0.75rem', 
+                            fontWeight: 700, 
+                            color: '#10b981',
+                            letterSpacing: '0.5px'
+                        }}>
+                            Table {booking.table.tableNumber}
+                        </span>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleOpenModal(booking.id); }}
+                            style={{ 
+                                fontSize: '0.75rem', 
+                                color: '#f59e0b', 
+                                fontWeight: 600,
+                                background: 'transparent', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.color = '#d97706';
+                                e.currentTarget.style.background = 'rgba(245, 158, 11, 0.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.color = '#f59e0b';
+                                e.currentTarget.style.background = 'transparent';
+                            }}
+                        >
+                            Change
+                        </button>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); handleUnassign(booking.id); }}
+                            style={{ 
+                                fontSize: '0.75rem', 
+                                color: '#ef4444', 
+                                fontWeight: 600,
+                                background: 'transparent', 
+                                border: 'none', 
+                                cursor: 'pointer',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.color = '#dc2626';
+                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.color = '#ef4444';
+                                e.currentTarget.style.background = 'transparent';
+                            }}
+                        >
+                            Unassign
+                        </button>
                     </div>
                 ) : (
-                    <Button 
-                        variant="primary" 
-                        size="sm"
+                    <button 
                         onClick={(e) => { e.stopPropagation(); handleOpenModal(booking.id); }}
-                        style={{ padding: '8px 12px', fontSize: '0.8rem', width: 'auto' }}
+                        style={{ 
+                            padding: '8px 16px', 
+                            borderRadius: '10px', 
+                            background: 'linear-gradient(to right, #d97706, #eab308)', 
+                            color: 'white', 
+                            fontSize: '0.75rem', 
+                            fontWeight: 700,
+                            border: 'none',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 10px rgba(217, 119, 6, 0.2)',
+                            transition: 'transform 0.2s, opacity 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.opacity = '0.9';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.opacity = '1';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                        }}
                     >
                         Assign Table
-                    </Button>
+                    </button>
                 )
             )
         },
