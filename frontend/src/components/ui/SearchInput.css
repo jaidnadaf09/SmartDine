@@ -1,0 +1,71 @@
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    opacity: 0.65;
+    pointer-events: none;
+    transition: all 0.22s ease;
+}
+
+.search-input-field {
+    width: 100%;
+    padding: 12px 14px 12px 42px; /* Extra left padding for icon */
+    border-radius: 12px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 0.925rem;
+    font-weight: 500;
+    transition: all 0.22s ease;
+    outline: none;
+}
+
+.search-input-field::placeholder {
+    color: var(--text-muted);
+}
+
+.search-input-field:focus {
+    border-color: var(--accent);
+    background: var(--bg-primary); /* Slight pop when focused */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.search-input-field:focus + .search-icon {
+    color: var(--accent);
+    opacity: 1;
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--border);
+    color: var(--text-secondary);
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-clear-btn:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}

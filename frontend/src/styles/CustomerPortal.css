@@ -6,15 +6,16 @@
 /* ── Page Wrapper ── */
 /* ── Booking Reminder Card ── */
 .booking-reminder-card {
-  background: rgba(111, 78, 55, 0.08);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(111, 78, 55, 0.2);
-  border-radius: 16px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
   margin-bottom: 2rem;
   overflow: hidden;
   display: flex;
   position: relative;
-  box-shadow: 0 8px 32px rgba(111, 78, 55, 0.1);
+  box-shadow: var(--card-shadow);
   animation: fadeUpIn 0.5s ease-out;
 }
 
@@ -160,7 +161,7 @@
 }
 
 .cp-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--text-primary);
@@ -205,7 +206,7 @@
 }
 
 .cp-section-title {
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -264,7 +265,7 @@
 .cp-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 18px 20px;
   box-shadow: var(--card-shadow);
   transition: all 0.25s ease;

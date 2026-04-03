@@ -6,6 +6,8 @@ import { formatDate } from '../../../utils/dateFormatter';
 import { motion } from 'framer-motion';
 import Button from '../../../components/ui/Button';
 import Select from '../../../components/ui/Select';
+import Card from '../../../components/ui/Card';
+import SearchInput from '../../../components/ui/SearchInput';
 
 interface Review {
     id: number;
@@ -95,14 +97,14 @@ const AdminReviews: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
+            <header className="admin-page-header" style={{ overflow: 'visible' }}>
                 <div>
                     <h1 className="admin-page-title">Customer Feedback</h1>
                     <p className="admin-page-subtitle">Monitor customer satisfaction and reviews.</p>
                 </div>
                 
-                <div className="admin-card" style={{ padding: '1.5rem', minWidth: '250px', background: 'var(--glass-bg)', display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ padding: '12px', background: 'var(--brand-primary)20', color: 'var(--brand-primary)', borderRadius: '12px' }}>
+                <Card variant="glass" padding="md" className="admin-card" style={{ minWidth: '250px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ padding: '12px', background: 'rgba(139, 90, 43, 0.1)', color: 'var(--brand-primary)', borderRadius: '12px' }}>
                         <Icons.star size={28} />
                     </div>
                     <div>
@@ -112,7 +114,7 @@ const AdminReviews: React.FC = () => {
                         </div>
                         <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Based on {reviews.length} reviews</p>
                     </div>
-                </div>
+                </Card>
             </header>
 
             <div className="admin-table-container" style={{ marginBottom: '20px', borderRadius: '16px', overflow: 'hidden' }}>
@@ -125,33 +127,12 @@ const AdminReviews: React.FC = () => {
                     alignItems: 'center',
                     background: 'var(--bg-card)'
                 }}>
-                    <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-                        <Icons.search 
-                            size={18} 
-                            style={{ 
-                                position: 'absolute', 
-                                left: '12px', 
-                                top: '50%', 
-                                transform: 'translateY(-50%)',
-                                color: 'var(--text-muted)'
-                            }} 
-                        />
-                        <input 
-                            type="text" 
+                    <div className="dropdown-container" style={{ flex: '1', minWidth: '250px' }}>
+                        <SearchInput 
                             placeholder="Search customer, comment or order ID..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ 
-                                width: '100%',
-                                padding: '10px 12px 10px 40px',
-                                borderRadius: '12px',
-                                border: '1px solid var(--border-color)',
-                                background: 'var(--bg-secondary)',
-                                color: 'var(--text-primary)',
-                                fontSize: '0.9rem',
-                                outline: 'none',
-                                transition: 'all 0.2s ease'
-                            }}
+                            onClear={() => setSearchTerm('')}
                         />
                     </div>
                     

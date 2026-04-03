@@ -1,0 +1,49 @@
+.card-premium {
+    position: relative;
+    border-radius: var(--radius-card, 18px);
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-md);
+    overflow: visible; /* Safe default for ModernSelect */
+}
+
+/* Glass Variant */
+.card-glass {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+}
+
+.dark .card-glass {
+    background: rgba(15, 23, 42, 0.8);
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Outline Variant */
+.card-outline {
+    background: transparent;
+    border: 1.5px solid var(--border-default);
+    box-shadow: none;
+}
+
+/* Flat Variant */
+.card-flat {
+    background: var(--card-muted);
+    border: none;
+    box-shadow: none;
+}
+
+/* Padding Sizes */
+.card-padding-none { padding: 0; }
+.card-padding-sm { padding: 12px; }
+.card-padding-md { padding: 20px; }
+.card-padding-lg { padding: 32px; }
+.card-padding-xl { padding: 48px; }
+
+/* Interactions */
+.card-hoverable:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}

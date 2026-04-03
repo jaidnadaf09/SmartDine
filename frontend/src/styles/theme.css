@@ -1,0 +1,93 @@
+/* ═══════════════════════════════════════════
+   SmartDine Modern Theme Tokens (v5.0)
+   Standardized variables for Light & Dark modes
+   ═══════════════════════════════════════════ */
+
+:root {
+    /* Base surfaces */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+
+    /* Card surfaces */
+    --card-bg: #ffffff;
+    --card-muted: #f8fafc;
+
+    /* Borders */
+    --border-subtle: #e2e8f0;
+    --border-default: #cbd5e1;
+    --border: var(--border-subtle);
+
+    /* Text hierarchy */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    /* Brand/Accent */
+    --accent: #2563eb;
+    --accent-soft: #dbeafe;
+
+    /* Status Colors */
+    --success: #059669;
+    --success-soft: #d1fae5;
+    --warning: #d97706;
+    --warning-soft: #fef3c7;
+    --danger: #dc2626;
+    --danger-soft: #fee2e2;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
+    --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.12);
+    
+    /* Global Radius */
+    --radius-card: 18px;
+    --radius-input: 12px;
+    --radius-btn: 12px;
+    --radius-modal: 20px;
+    
+    /* Spacing Scale */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+}
+
+.dark {
+    /* Base surfaces */
+    --bg-primary: #020617;
+    --bg-secondary: #020617;
+    --bg-tertiary: #0b1220;
+
+    /* Card surfaces */
+    --card-bg: #0f172a;
+    --card-muted: #111827;
+
+    /* Borders */
+    --border-subtle: #1e293b;
+    --border-default: #334155;
+    --border: var(--border-subtle);
+
+    /* Text hierarchy */
+    --text-primary: #e5e7eb;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+
+    /* Brand/Accent */
+    --accent: #3b82f6;
+    --accent-soft: rgba(59, 130, 246, 0.15);
+
+    /* Status Colors */
+    --success: #10b981;
+    --success-soft: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-soft: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-soft: rgba(239, 68, 68, 0.15);
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 30px 60px rgba(0, 0, 0, 0.55);
+}

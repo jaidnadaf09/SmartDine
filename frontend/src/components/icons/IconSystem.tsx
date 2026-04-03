@@ -61,6 +61,7 @@ import {
   Camera,
   MessageSquare,
   Settings,
+  CheckSquare,
   Users,
   Minus
 } from "lucide-react";
@@ -130,5 +131,7 @@ export const Icons = {
   reviews: MessageSquare,
   settings: Settings,
   users: Users,
-  minus: Minus
+  minus: Minus,
+  x: X,
+  checkSquare: CheckSquare,
 };

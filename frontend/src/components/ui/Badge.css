@@ -1,0 +1,80 @@
+.badge-premium {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.65rem;
+    padding: 4px 12px;
+    border: 1px solid transparent;
+}
+
+/* Variants */
+.badge-default {
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-color: var(--border);
+}
+
+.badge-primary {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.badge-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.badge-info {
+    background: rgba(139, 90, 43, 0.1);
+    color: var(--brand-primary);
+    border-color: rgba(139, 90, 43, 0.2);
+}
+
+/* Sizes */
+.badge-sm {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+}
+
+.badge-lg {
+    font-size: 0.75rem;
+    padding: 6px 16px;
+}
+
+/* ── Dark Mode Refinements ─────────────────────────── */
+.dark .badge-success {
+    background: rgba(16, 185, 129, 0.18);
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.25);
+}
+
+.dark .badge-primary, .dark .badge-info {
+    background: rgba(96, 165, 250, 0.18);
+    color: #93c5fd;
+    border-color: rgba(147, 197, 253, 0.25);
+}
+
+/* Specific for Admin Booking Cards if used */
+.dark .badge-table {
+    background: rgba(96, 165, 250, 0.2);
+    color: #93c5fd;
+    border-color: rgba(147, 197, 253, 0.3);
+}

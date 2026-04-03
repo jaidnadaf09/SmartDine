@@ -133,7 +133,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
                 tableId: null,
                 paymentId: razorpay_payment_id,
                 paymentStatus: "paid",
-                status: "confirmed"
+                status: "pending"   // ✅ pending until admin assigns a table
             });
 
             console.log('Backend: Booking created successfully. ID:', newBooking.id);
@@ -206,7 +206,7 @@ export const processWalletPayment = async (req: AuthRequest, res: Response) => {
                 amount: totalAmount,
                 paymentId: transactionRef,
                 paymentStatus: "paid",
-                status: "confirmed"
+                status: "pending"   // ✅ pending until admin assigns a table
             });
             console.log('Backend: Booking created via Wallet:', newBooking.id);
         }

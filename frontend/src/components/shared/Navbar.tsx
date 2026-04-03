@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useAuthModal } from '../../context/AuthModalContext';
 import AvatarDropdown from './AvatarDropdown';
@@ -37,6 +37,7 @@ const iconMap: Record<string, React.ReactNode> = {
 
 const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { openAuthModal } = useAuthModal();
 
@@ -82,26 +83,20 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
     }
   };
 
+  const handleBrandClick = () => {
+    navigate("/");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <header className="header">
       <div className="header-content">
         {/* Logo */}
-        <Link 
-          to="/" 
-          className="logo-link"
-          onClick={() => {
-            setTimeout(() => {
-              window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-              });
-            }, 0);
-          }}
-        >
-          <img src="/spoon-fork-transparent.png" alt="SmartDine logo" className="navbar-logo-img" />
-          SmartDine
+        <div className="brand" onClick={handleBrandClick}>
+          <Icons.utensils className="brand-icon" />
+          <span className="brand-text">SmartDine</span>
           {roleTag && <span className="role-tag-badge">{roleTag}</span>}
-        </Link>
+        </div>
 
         {/* Nav Links + Right controls */}
         <div className="navbar-right">

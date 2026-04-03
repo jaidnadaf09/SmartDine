@@ -94,13 +94,7 @@ const AdminBookingHistory: React.FC = () => {
     ];
 
     return (
-        <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Booking Archives</h1>
-                <p className="admin-page-subtitle">Historical records of all restaurant table reservations.</p>
-                <div className="admin-header-divider"></div>
-            </header>
-
+        <div>
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>
                     <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>

@@ -6,7 +6,9 @@ import { Icons } from '../components/icons/IconSystem';
 import api from '../utils/api';
 import MenuCard from '../components/shared/MenuCard';
 import ConfirmDialog from '../components/shared/ConfirmDialog';
+import SearchInput from '../components/ui/SearchInput';
 import '../styles/Order.css';
+import type { ChangeEvent } from 'react';
 
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
@@ -381,13 +383,12 @@ const OrderPage: React.FC = () => {
 
       <div className={`order-layout ${isCartOpen ? 'cart-open' : ''}`}>
         <aside className="categories-sidebar">
-          <div className="menu-search">
-            <Icons.search size={16} className="search-icon-svg" />
-            <input
-              type="text"
+          <div className="menu-search-container" style={{ marginBottom: '1.5rem' }}>
+            <SearchInput
               placeholder="Search menu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onClear={() => setSearchQuery('')}
             />
           </div>
 

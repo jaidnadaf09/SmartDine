@@ -10,6 +10,7 @@ import ScrollToTop from './components/utils/ScrollToTop';
 import CustomerLayout from './components/layouts/CustomerLayout';
 import DotLoader from './components/shared/DotLoader';
 import AuthModal from './components/auth/AuthModal';
+import ScrollProgress from './components/utils/ScrollProgress';
 import './App.css';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
@@ -43,6 +44,7 @@ const AppContent = () => {
 
   return (
     <>
+      <ScrollProgress />
       <ScrollToTop />
       <Suspense fallback={<PageLoader />}>
         <Routes>

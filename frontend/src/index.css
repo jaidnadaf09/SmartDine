@@ -1,3 +1,5 @@
+@import './styles/theme.css';
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -11,82 +13,52 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Premium Color Palette - Light Mode */
+  /* Legacy Brand Support (will be phased out for theme tokens) */
   --brand-primary: #8B5A2B;
   --brand-primary-light: #C89B6D;
   --brand-primary-dark: #6F4E37;
   --brand-accent: #D4AF37;
   
-  --bg-primary: #f8fafc;
-  --bg-secondary: #f1f5f9;
-  --bg-card: #ffffff;
-  
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
-  
-  --border-color: #e2e8f0;
-  --card-border: #f1f5f9;
-  
-  /* Status Colors */
-  --status-pending-bg: #fef3c7;
+  /* Status Colors (Standardized) */
+  --status-pending-bg: rgba(245, 158, 11, 0.15);
   --status-pending-text: #92400e;
-  --status-preparing-bg: #e0f2fe;
+  --status-preparing-bg: rgba(59, 130, 246, 0.15);
   --status-preparing-text: #075985;
-  --status-ready-bg: #f3e8ff;
+  --status-ready-bg: rgba(168, 85, 247, 0.15);
   --status-ready-text: #6b21a8;
-  --status-completed-bg: #dcfce7;
+  --status-completed-bg: rgba(34, 197, 94, 0.15);
   --status-completed-text: #166534;
-  --status-cancelled-bg: #fee2e2;
+  --status-cancelled-bg: rgba(239, 68, 68, 0.15);
   --status-cancelled-text: #991b1b;
   
-  /* Shadows & Effects */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --shadow-premium: 0 10px 30px -10px rgba(139, 90, 43, 0.2);
-  
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.3);
+  /* Standardized Layering */
+  --z-dropdown: 9999;
+  --z-modal: 10000;
+  --z-toast: 11000;
   
   /* Border Radius */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 24px;
-  --radius-full: 9999px;
-
-  /* Transition */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-[data-theme='dark'] {
-  --bg-primary: #020617;
-  --bg-secondary: #0f172a;
-  --bg-card: #1e293b;
-  
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  
-  --border-color: #334155;
-  --card-border: #1e293b;
-  
-  --brand-primary-light: #D2691E;
-  
-  --glass-bg: rgba(30, 41, 59, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  
-  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  
-  --status-pending-bg: rgba(245, 158, 11, 0.2);
-  --status-preparing-bg: rgba(59, 130, 246, 0.2);
-  --status-ready-bg: rgba(168, 85, 247, 0.2);
-  --status-completed-bg: rgba(34, 197, 94, 0.2);
-  --status-cancelled-bg: rgba(239, 68, 68, 0.2);
+/* Global Accessibility Focus States */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
 }
+
+/* Safe Dropdown Containers (Anti-Clipping) */
+.dropdown-container {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Standard Layering Helpers */
+.layer-dropdown { z-index: var(--z-dropdown); }
+.layer-modal { z-index: var(--z-modal); }
+.layer-toast { z-index: var(--z-toast); }
 
 body {
   margin: 0;
@@ -95,24 +67,39 @@ body {
 }
 
 /* Reusable Status Badge Classes */
+/* Global Status Badges */
 .status-badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  display: inline-block;
-  text-transform: capitalize;
+  padding: 5px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
 }
 
-.status-pending { background: var(--status-pending-bg); color: var(--status-pending-text); }
-.status-preparing { background: var(--status-preparing-bg); color: var(--status-preparing-text); }
-.status-confirmed { background: var(--status-preparing-bg); color: var(--status-preparing-text); } /* Confirmed uses preparing blue */
-.status-ready { background: var(--status-ready-bg); color: var(--status-ready-text); }
-.status-completed { background: var(--status-completed-bg); color: var(--status-completed-text); }
-.status-paid { background: var(--status-completed-bg); color: var(--status-completed-text); } /* Paid uses completed green */
-.status-cancelled { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); }
-.status-failed { background: var(--status-cancelled-bg); color: var(--status-cancelled-text); } /* Failed uses cancelled red */
-.status-deleted { background: var(--status-deleted-bg); color: var(--status-deleted-text); }
+.status-completed, .status-paid, .status-ready, .badge-success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.status-pending, .status-preparing, .status-confirmed, .badge-warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.status-cancelled, .status-failed, .status-deleted, .badge-danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.badge-accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
 
 /* Global Toast Layering */
 .react-hot-toast {

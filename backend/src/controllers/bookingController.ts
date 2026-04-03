@@ -5,7 +5,7 @@ import { AuthRequest } from '../middleware/authMiddleware';
 import { findAvailableTable } from '../utils/bookingUtils';
 import WalletTransaction from '../models/WalletTransaction';
 import { isRestaurantOpen, isValidWorkingHour } from '../utils/workingHours';
-import { Notification, RestaurantSetting } from '../models';
+import { Notification, RestaurantSetting, Table } from '../models';
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
@@ -106,14 +106,14 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 
         const booking = await Booking.create({
             ...req.body,
-            // Override customer details with verified user data – ignore any body values
+            // Override with verified server-side values — client cannot influence these
             customerName: user.name,
             email: user.email,
             phone: user.phone || 'Not provided',
             userId: user.id,
-            tableId: null,
-            tableNumber: null,
-            status: req.body.status || 'pending',
+            tableId: null,        // no table assigned at creation
+            tableNumber: null,    // no table number at creation
+            status: 'pending',    // ✅ always start as pending — admin assigns table to confirm
         });
 
         // Create notification for new booking
@@ -290,11 +290,18 @@ export const getUpcomingBooking = async (req: AuthRequest, res: Response) => {
 };
 // @desc    Get user bookings
 // @route   GET /api/bookings/user/:userId
-// @access  Public (for now, based on frontend implementation)
+// @access  Public
 export const getUserBookings = async (req: AuthRequest, res: Response) => {
     try {
-        const bookings = await Booking.findAll({ 
+        const bookings = await Booking.findAll({
             where: { userId: req.params.userId },
+            include: [
+                {
+                    model: Table,
+                    as: 'table',
+                    attributes: ['id', 'tableNumber', 'capacity'],
+                }
+            ],
             order: [['id', 'DESC']]
         });
         res.json(bookings);

@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Icons } from '../../../components/icons/IconSystem';
 import ChefOrderModal from '../components/ChefOrderModal';
+import Select from '../../../components/ui/Select';
 import { 
     Clock, 
     Utensils, 
@@ -259,17 +260,18 @@ const KitchenOrders: React.FC = () => {
                                             </button>
                                         )}
                                         
-                                        <select 
-                                            className="admin-select"
-                                            style={{ padding: '10px' }}
-                                            value={order.status}
-                                            onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                                        >
-                                            <option value="pending">Pending</option>
-                                            <option value="preparing">Preparing</option>
-                                            <option value="ready">Ready</option>
-                                            <option value="completed">Completed</option>
-                                        </select>
+                                        <div style={{ minWidth: '140px' }}>
+                                            <Select 
+                                                value={order.status}
+                                                onChange={(value) => handleUpdateStatus(order.id, value)}
+                                                options={[
+                                                    { label: 'Pending', value: 'pending' },
+                                                    { label: 'Preparing', value: 'preparing' },
+                                                    { label: 'Ready', value: 'ready' },
+                                                    { label: 'Completed', value: 'completed' }
+                                                ]}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             );

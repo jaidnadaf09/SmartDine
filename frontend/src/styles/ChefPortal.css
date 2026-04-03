@@ -212,7 +212,7 @@
 }
 
 .chef-stat-card {
-  background: var(--card-bg, #ffffff);
+  background: var(--card-bg);
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 18px;
   padding: 22px 24px;
@@ -279,7 +279,7 @@
   align-items: center;
   gap: 10px;
   padding: 14px 22px;
-  background: var(--card-bg, #ffffff);
+  background: var(--card-bg);
   border: 1.5px solid var(--card-border, #e8d4c0);
   border-radius: 11px;
   font-size: 0.9rem;
@@ -309,7 +309,7 @@
 }
 
 .chef-card {
-  background: var(--card-bg, #ffffff);
+  background: var(--card-bg);
   border: 1px solid rgba(0, 0, 0, 0.05);
   border-radius: 20px;
   padding: 24px;

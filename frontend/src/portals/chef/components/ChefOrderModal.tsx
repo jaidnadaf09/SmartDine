@@ -2,6 +2,8 @@ import React from 'react';
 import Modal from '../../../components/ui/Modal';
 import Button from '../../../components/ui/Button';
 
+interface OrderItem {
+    itemName: string;
     quantity: number;
     price: number;
     specialInstructions?: string;

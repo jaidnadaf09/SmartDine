@@ -29,9 +29,9 @@ const EditProfilePage: React.FC = () => {
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            if (file.size > 20 * 1024 * 1024) { // Increased to 20MB as requested
-              toast.error('Image too large. Max 20MB');
-              return;
+            if (file.size > 5 * 1024 * 1024) { // Increased to 5MB for better crop source quality
+                toast.error('Image size should be less than 5MB');
+                return;
             }
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -39,7 +39,7 @@ const EditProfilePage: React.FC = () => {
                 setIsCropModalOpen(true);
             };
             reader.readAsDataURL(file);
-            
+
             // Reset input so same file can be selected again
             e.target.value = '';
         }
@@ -88,7 +88,7 @@ const EditProfilePage: React.FC = () => {
     const handleRemovePhoto = async () => {
         setIsRemovingPhoto(true);
         setLoading(true);
-        
+
         // Wait for exit animation to complete (250ms)
         setTimeout(async () => {
             try {
@@ -127,16 +127,16 @@ const EditProfilePage: React.FC = () => {
                             <div className="edit-avatar-inner">
                                 <AnimatePresence mode="wait">
                                     {formData.profileImage && !isRemovingPhoto ? (
-                                        <motion.img 
+                                        <motion.img
                                             key="avatar-image"
-                                            src={formData.profileImage} 
+                                            src={formData.profileImage}
                                             alt="Preview"
                                             initial={{ opacity: 0, scale: 0.92 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.25 } }}
                                         />
                                     ) : (
-                                        <motion.div 
+                                        <motion.div
                                             key="avatar-placeholder"
                                             initial={{ opacity: 0, scale: 0.92 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -221,7 +221,7 @@ const EditProfilePage: React.FC = () => {
                 </form>
             </motion.div>
 
-            <ConfirmModal 
+            <ConfirmModal
                 isOpen={isConfirmOpen}
                 title="Remove profile photo?"
                 message="Your profile picture will be deleted permanently. You can upload a new one anytime."
@@ -235,7 +235,7 @@ const EditProfilePage: React.FC = () => {
                 }}
             />
 
-            <ImageCropModal 
+            <ImageCropModal
                 image={imageToCrop}
                 isOpen={isCropModalOpen}
                 onClose={() => setIsCropModalOpen(false)}

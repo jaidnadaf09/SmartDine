@@ -30,6 +30,11 @@ interface Booking {
   specialRequests?: string;
   tableId: number | null;
   tableNumber: number | null;
+  table?: {
+    id: number;
+    tableNumber: number;
+    capacity: number;
+  } | null;
   createdAt: any;
 }
 
@@ -354,6 +359,26 @@ const MyOrders: React.FC = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* ── Table Assignment Chip ── */}
+                    {booking.status === 'confirmed' && booking.table && (
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '7px',
+                        marginTop: '12px',
+                        padding: '6px 14px',
+                        borderRadius: '999px',
+                        background: 'rgba(16, 185, 129, 0.10)',
+                        border: '1px solid rgba(16, 185, 129, 0.25)',
+                        color: '#059669',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                      }}>
+                        <Icons.armchair size={13} />
+                        Table {booking.table.tableNumber} &bull; {booking.table.capacity} seats
+                      </div>
+                    )}
 
                     {(booking.preference || booking.occasion) && (
                       <div className="cp-extra-info" style={{ marginTop: '12px', padding: '12px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>

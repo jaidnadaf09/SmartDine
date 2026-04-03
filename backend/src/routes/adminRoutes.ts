@@ -12,6 +12,8 @@ import {
     cancelBooking,
     unassignTable,
     updateBookingTable,
+    assignTable,
+    checkInBooking,
     getTables,
     getAvailableTables,
     addTable,
@@ -50,6 +52,8 @@ router.route('/bookings/:id/cancel').put(cancelBooking);
 router.route('/bookings/:id/complete').patch(completeBooking);
 router.route('/bookings/:id/unassign-table').patch(unassignTable);
 router.route('/bookings/:id/table').put(updateBookingTable);
+router.route('/bookings/:id/assign-table').patch(assignTable);
+router.route('/bookings/:id/check-in').patch(checkInBooking);
 
 router.route('/tables').get(getTables).post(addTable);
 router.route('/tables/available').get(getAvailableTables);

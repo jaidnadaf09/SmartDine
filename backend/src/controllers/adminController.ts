@@ -62,15 +62,15 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
 };
 
-// @desc    Get all bookings
+// @desc    Get all bookings (pending + confirmed), pending sorted newest first
 // @route   GET /api/admin/bookings
 // @access  Private/Admin
 export const getBookings = async (req: Request, res: Response) => {
-    console.log("Admin: Fetching active bookings");
+    console.log("Admin: Fetching active bookings (pending + confirmed)");
     try {
         const bookings = await Booking.findAll({
             where: {
-                status: 'confirmed'
+                status: { [Op.in]: ['pending', 'confirmed', 'checked_in'] }
             },
             include: [
                 {
@@ -79,11 +79,86 @@ export const getBookings = async (req: Request, res: Response) => {
                     attributes: ['id', 'tableNumber', 'capacity']
                 }
             ],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']] // Improvement #1: newest first
         });
         res.json(bookings);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Assign a table to a booking with capacity validation
+// @route   PATCH /api/admin/bookings/:id/assign-table
+// @access  Private/Admin
+export const assignTable = async (req: Request, res: Response) => {
+    try {
+        const { tableId } = req.body;
+        const booking = await Booking.findByPk(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        const table = await Table.findByPk(tableId);
+        if (!table) {
+            return res.status(404).json({ message: 'Table not found' });
+        }
+
+        // Capacity validation
+        if (table.capacity < booking.guests) {
+            return res.status(400).json({
+                message: `Table ${table.tableNumber} only has ${table.capacity} seats, but booking requires ${booking.guests}.`
+            });
+        }
+
+        // Prevent assigning already-reserved table (excluding current booking)
+        const existingBooking = await Booking.findOne({
+            where: {
+                tableId,
+                status: { [Op.in]: ['pending', 'confirmed'] },
+                id: { [Op.ne]: booking.id }
+            }
+        });
+        if (existingBooking) {
+            return res.status(409).json({
+                message: `Table ${table.tableNumber} is already assigned to another active booking.`
+            });
+        }
+
+        booking.tableId = table.id;
+        booking.tableNumber = table.tableNumber;
+        booking.status = 'confirmed';
+        await booking.save();
+
+        res.json({ message: 'Table assigned successfully', booking });
+    } catch (error) {
+        console.error('Error assigning table:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Check-in a booking
+// @route   PATCH /api/admin/bookings/:id/check-in
+// @access  Private/Admin
+export const checkInBooking = async (req: Request, res: Response) => {
+    try {
+        const booking = await Booking.findByPk(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        if (!booking.tableId) {
+            return res.status(400).json({ message: 'Assign table before check-in' });
+        }
+
+        booking.status = 'checked_in';
+        await booking.save();
+
+        res.json({ message: 'Customer checked in successfully', booking });
+    } catch (error) {
+        console.error('Error checking in booking:', error);
+        res.status(500).json({ message: 'Check-in failed' });
     }
 };
 

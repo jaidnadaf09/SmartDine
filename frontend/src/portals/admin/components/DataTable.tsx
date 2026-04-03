@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '../../../components/ui/Button';
+import Select from '../../../components/ui/Select';
+import SearchInput from '../../../components/ui/SearchInput';
 
 interface Column<T> {
     header: string;
@@ -57,61 +59,30 @@ const DataTable = <T extends { id: string | number }>({
                 alignItems: 'center',
                 background: 'var(--bg-card)'
             }}>
-                <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
-                    <Search 
-                        size={18} 
-                        style={{ 
-                            position: 'absolute', 
-                            left: '12px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)',
-                            color: 'var(--text-muted)'
-                        }} 
-                    />
-                    <input 
-                        type="text" 
+                <div style={{ flex: '1', minWidth: '250px' }}>
+                    <SearchInput
                         placeholder={searchPlaceholder}
                         value={searchValue}
                         onChange={(e) => {
                             onSearchChange(e.target.value);
                             setCurrentPage(1);
                         }}
-                        style={{ 
-                            width: '100%',
-                            padding: '10px 12px 10px 40px',
-                            borderRadius: '12px',
-                            border: '1px solid var(--border-color)',
-                            background: 'var(--bg-secondary)',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.9rem',
-                            outline: 'none',
-                            transition: 'all 0.2s ease'
-                        }}
-                        onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'}
-                        onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+                        onClear={() => onSearchChange('')}
                     />
                 </div>
                 
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     {filters.map((filter) => (
-                        <div key={filter.key} style={{ position: 'relative' }}>
-                            <select
-                                className="admin-select"
+                        <div key={filter.key} style={{ minWidth: '150px' }}>
+                            <Select
                                 value={activeFilters[filter.key] || ''}
-                                onChange={(e) => onFilterChange?.(filter.key, e.target.value)}
-                                style={{ 
-                                    padding: '9px 30px 9px 12px', 
-                                    borderRadius: '10px', 
-                                    fontSize: '0.85rem',
-                                    fontWeight: 600,
-                                    minWidth: '130px'
-                                }}
-                            >
-                                <option value="">{filter.label}</option>
-                                {filter.options.map(opt => (
-                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                            </select>
+                                onChange={(value: string) => onFilterChange?.(filter.key, value)}
+                                options={[
+                                    { label: filter.label, value: '' },
+                                    ...filter.options
+                                ]}
+                                placeholder={filter.label}
+                            />
                         </div>
                     ))}
                     
