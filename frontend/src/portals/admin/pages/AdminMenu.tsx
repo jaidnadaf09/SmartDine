@@ -146,14 +146,17 @@ const AdminMenu: React.FC = () => {
             header: 'Category', 
             key: 'category',
             render: (item: MenuItem) => (
-                <span className="category-chip" style={{ 
-                    background: 'var(--bg-secondary)', 
-                    padding: '6px 12px', 
-                    borderRadius: '8px', 
-                    fontSize: '0.8rem', 
-                    fontWeight: 700,
+                <span style={{
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
                     color: 'var(--brand-primary)',
-                    border: '1px solid var(--border-color)'
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-color)',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    whiteSpace: 'nowrap',
+                    display: 'inline-block',
+                    letterSpacing: '-0.01em'
                 }}>
                     {item.category}
                 </span>
@@ -217,15 +220,7 @@ const AdminMenu: React.FC = () => {
                 </div>
             )
         },
-        { 
-            header: 'Status', 
-            key: 'status_label',
-            render: (item: MenuItem) => (
-                <span className={`status-pill-modern ${item.status === 'available' ? 'status-modern-confirmed' : 'status-modern-cancelled'}`}>
-                    {item.status === 'available' ? 'Visible' : 'Hidden'}
-                </span>
-            )
-        },
+
         {
             header: 'Actions',
             key: 'actions',
@@ -273,22 +268,15 @@ const AdminMenu: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
-                    <div>
-                        <h1 className="admin-page-title">Menu Management</h1>
-                        <p className="admin-page-subtitle">Add, edit, and control visibility of your restaurant's dishes.</p>
-                    </div>
-                    <Button 
-                        variant="primary" 
-                        icon={<Icons.plus size={18} />}
-                        onClick={openAddModal}
-                    >
-                        Add New Dish
-                    </Button>
-                </div>
-                <div className="admin-header-divider" style={{ marginTop: '1.5rem' }}></div>
-            </header>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+                <Button 
+                    variant="primary" 
+                    icon={<Icons.plus size={18} />}
+                    onClick={openAddModal}
+                >
+                    Add New Dish
+                </Button>
+            </div>
 
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>

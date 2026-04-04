@@ -158,11 +158,6 @@ const Orders: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Active Orders</h1>
-                <p className="admin-page-subtitle">Manage incoming kitchen orders and track their preparation status.</p>
-                <div className="admin-header-divider"></div>
-            </header>
 
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>

@@ -149,11 +149,6 @@ const Users: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">User Management</h1>
-                <p className="admin-page-subtitle">Manage all system users and their access levels.</p>
-                <div className="admin-header-divider"></div>
-            </header>
 
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>

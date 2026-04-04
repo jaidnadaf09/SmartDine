@@ -104,7 +104,7 @@ const DataTable = <T extends { id: string | number }>({
                 </div>
             </div>
 
-            <div style={{ overflowX: 'auto' }}>
+            <div style={{ overflow: 'visible' }}>
                 <table className="admin-table">
                     <thead>
                         <tr>

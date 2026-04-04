@@ -3313,8 +3313,7 @@ body.dark .cancel-booking-btn:hover {
 @media (max-width: 768px) {
   /* Tables */
   .admin-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
     width: 100%;
   }
 

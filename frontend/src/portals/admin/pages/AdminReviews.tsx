@@ -97,12 +97,7 @@ const AdminReviews: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header" style={{ overflow: 'visible' }}>
-                <div>
-                    <h1 className="admin-page-title">Customer Feedback</h1>
-                    <p className="admin-page-subtitle">Monitor customer satisfaction and reviews.</p>
-                </div>
-                
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
                 <Card variant="glass" padding="md" className="admin-card" style={{ minWidth: '250px', display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ padding: '12px', background: 'rgba(139, 90, 43, 0.1)', color: 'var(--brand-primary)', borderRadius: '12px' }}>
                         <Icons.star size={28} />
@@ -115,7 +110,7 @@ const AdminReviews: React.FC = () => {
                         <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Based on {reviews.length} reviews</p>
                     </div>
                 </Card>
-            </header>
+            </div>
 
             <div className="admin-table-container" style={{ marginBottom: '20px', borderRadius: '16px', overflow: 'hidden' }}>
                 <div className="admin-table-header" style={{ 

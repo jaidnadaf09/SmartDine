@@ -47,6 +47,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         { path: '/admin/reviews', label: 'Reviews', icon: <Icons.reviews size={22} />, tooltip: 'Reviews' },
     ];
 
+    const pageMeta: Record<string, { title: string; description: string }> = {
+        "/admin": { title: "Dashboard Overview", description: "Welcome back, Admin. Here's a snapshot of your business performance." },
+        "/admin/dashboard": { title: "Dashboard Overview", description: "Welcome back, Admin. Here's a snapshot of your business performance." },
+        "/admin/users": { title: "User Management", description: "Manage all system users and their access levels." },
+        "/admin/tables-bookings": { title: "Tables & Bookings", description: "Manage reservations and seating floor plan in real time." },
+        "/admin/orders": { title: "Active Orders", description: "Track incoming kitchen orders and preparation status." },
+        "/admin/orders/history": { title: "Order History", description: "Review and analyze past completed kitchen orders." },
+        "/admin/menu": { title: "Menu Management", description: "Add, edit, and control visibility of dishes." },
+        "/admin/payments": { title: "Transaction History", description: "Monitor financial transactions and payment status." },
+        "/admin/booking-history": { title: "Booking History", description: "Review and analyze past reservations." },
+        "/admin/activity-history": { title: "Activity History", description: "Monitor historical system activities and updates." },
+        "/admin/reviews": { title: "Customer Feedback", description: "Monitor customer satisfaction and reviews." }
+    };
+
+    const meta = pageMeta[location.pathname] || { title: navItems.find(n => n.path === location.pathname)?.label || 'Admin Panel', description: 'SmartDine Administration' };
+
     return (
         <div className={`admin-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
             <aside className="admin-sidebar">
@@ -108,20 +124,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
             <main className="admin-main">
                 <header className="header" style={{ 
-                    padding: '1.25rem 2rem', 
+                    padding: '20px 24px 12px 24px', 
                     background: 'var(--bg-card)', 
                     borderBottom: '1px solid var(--border-color)',
-                    boxShadow: 'var(--shadow-sm)',
                     flexShrink: 0
                 }}>
-                    <div className="header-content" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="breadcrumb" style={{ color: 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 500 }}>
-                            Admin <span style={{ margin: '0 8px' }}>/</span> 
-                            <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
-                                {navItems.find(n => n.path === location.pathname)?.label || 'Dashboard'}
-                            </span>
+                    <div className="header-content" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.025em', color: 'var(--text-primary)', margin: 0 }}>
+                                {meta.title}
+                            </h1>
+                            <p style={{ fontSize: '0.875rem', opacity: 0.6, color: 'var(--text-primary)', margin: 0, maxWidth: '520px', lineHeight: 1.4 }}>
+                                {meta.description}
+                            </p>
                         </div>
-                        <div className="navbar-right">
+                        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <AvatarDropdown />
                         </div>
                     </div>

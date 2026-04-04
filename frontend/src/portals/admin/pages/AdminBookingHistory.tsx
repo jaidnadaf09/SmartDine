@@ -9,6 +9,7 @@ const AdminBookingHistory: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchBookingHistory = async () => {
         setLoading(true);
@@ -93,6 +94,10 @@ const AdminBookingHistory: React.FC = () => {
         }
     ];
 
+    const filteredBookings = bookings.filter(booking => {
+        return (booking.customerName || '').toLowerCase().includes(searchTerm.toLowerCase());
+    });
+
     return (
         <div>
             {loading ? (
@@ -108,9 +113,10 @@ const AdminBookingHistory: React.FC = () => {
             ) : (
                 <DataTable 
                     columns={columns} 
-                    data={bookings} 
+                    data={filteredBookings} 
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
                     searchPlaceholder="Search customer..."
-                    searchKey="customerName"
                 />
             )}
         </div>

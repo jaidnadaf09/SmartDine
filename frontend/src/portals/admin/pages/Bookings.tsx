@@ -346,13 +346,6 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
 
     return (
         <div className={hideHeader ? "" : "management-page"}>
-            {!hideHeader && (
-                <header className="admin-page-header">
-                    <h1 className="admin-page-title">Bookings Management</h1>
-                    <p className="admin-page-subtitle">Track and manage upcoming restaurant reservations.</p>
-                    <div className="admin-header-divider"></div>
-                </header>
-            )}
 
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>

@@ -42,6 +42,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }, [theme]);
 
     const toggleTheme = () => {
+        // Apply premium Apple-like subtle scale effect during transition
+        document.body.classList.add('theme-switching');
+        setTimeout(() => {
+            document.body.classList.remove('theme-switching');
+        }, 200);
+
         const newTheme = theme === 'light' ? 'dark' : 'light';
         setTheme(newTheme);
         localStorage.setItem('theme', newTheme); // Manual override

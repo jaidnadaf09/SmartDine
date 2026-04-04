@@ -18,13 +18,6 @@ const AdminTablesBookings: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Tables & Bookings</h1>
-                <p className="admin-page-subtitle">
-                    Manage your restaurant reservations and seating floor plan in real time.
-                </p>
-                <div className="admin-header-divider" />
-            </header>
 
             {/* ── Tab Bar ──────────────────────────────────── */}
             <div

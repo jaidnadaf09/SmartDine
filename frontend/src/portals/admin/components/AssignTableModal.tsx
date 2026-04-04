@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Icons } from '../../../components/icons/IconSystem';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '../../../components/ui/Button';
 import ModernSelect from '../../../components/ui/ModernSelect';
 
@@ -62,76 +63,104 @@ const AssignTableModal: React.FC<AssignTableModalProps> = ({
         if (e.target === e.currentTarget) onClose();
     };
 
-    // Prepare options for ModernSelect
+    if (typeof document === 'undefined') return null;
+
+    // Prepare options for ModernSelect with Premium badging
     const tableOptions = sortedTables.map(t => ({
-        label: `Table ${t.tableNumber} (${t.capacity} seats)${t.id === bestMatchId ? ' ⭐ Best Match' : ''}`,
+        label: `Table ${t.tableNumber} — ${t.capacity} seats 👥${t.id === bestMatchId ? ' ⭐ Recommended' : ''}`,
         value: t.id
     }));
 
-    return (
-        <div className="assign-modal-overlay" onClick={handleOverlayClick}>
-            <div className="assign-modal-box">
-                {/* Header */}
-                <div className="assign-modal-header">
-                    <div>
-                        <h2 className="assign-modal-title">Select a Table</h2>
-                        <p className="assign-modal-sub">
-                            {bookingCustomer ? `Booking for ${bookingCustomer} · ` : ''}
-                            {guestCount} {guestCount === 1 ? 'guest' : 'guests'}
-                        </p>
-                    </div>
-                    <button className="assign-modal-close" onClick={onClose}>
-                        <Icons.close size={16} />
-                    </button>
-                </div>
-
-                {/* Table selector */}
-                <div className="assign-modal-body" style={{ minHeight: '140px' }}>
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                            Available Tables
-                        </label>
-                        <ModernSelect
-                            value={selectedId || ''}
-                            onChange={(id) => setSelectedId(id)}
-                            options={tableOptions}
-                            placeholder="Choose a table..."
-                        />
-                    </div>
-
-                    {selectedId && (
-                        <div className="fade-in" style={{ padding: '12px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', marginTop: '8px' }}>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                                Selected <strong>Table {tables.find(t => t.id === selectedId)?.tableNumber}</strong> for {guestCount} guests.
+    return createPortal(
+        <AnimatePresence>
+            {isOpen && (
+                <motion.div 
+                    className="assign-modal-overlay" 
+                    onClick={handleOverlayClick}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(12px)' }}
+                >
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                        style={{ width: '440px', borderRadius: '16px', padding: '28px', background: 'var(--card-bg)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', display: 'flex', flexDirection: 'column', gap: '24px' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Header */}
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.025em', color: 'var(--text-primary)' }}>
+                                Assign Table
+                            </h2>
+                            <p style={{ margin: '4px 0 0', fontSize: '0.875rem', opacity: 0.6, color: 'var(--text-primary)' }}>
+                                Select the best table for this reservation
                             </p>
                         </div>
-                    )}
 
-                    {sortedTables.length === 0 && (
-                        <div className="booking-empty-state">
-                            <Icons.armchair size={32} className="booking-empty-state-icon" />
-                            <p>No available tables at the moment.</p>
+                        {/* Booking Info Card */}
+                        <div style={{ borderRadius: '12px', padding: '16px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                            <div style={{ fontSize: '0.875rem', opacity: 0.7, color: 'var(--text-primary)' }}>
+                                Booking for
+                            </div>
+                            <div style={{ fontSize: '1.125rem', fontWeight: 500, color: 'var(--brand-primary)', margin: '2px 0' }}>
+                                {bookingCustomer || 'Walk-in Customer'}
+                            </div>
+                            <div style={{ marginTop: '8px', fontSize: '0.875rem', opacity: 0.7, color: 'var(--text-primary)' }}>
+                                {guestCount} guests 👥
+                            </div>
                         </div>
-                    )}
-                </div>
 
-                {/* Footer */}
-                <div className="assign-modal-footer">
-                    <Button variant="ghost" onClick={onClose} disabled={assigning}>
-                        Cancel
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => selectedId && handleAssign(selectedId)}
-                        loading={assigning}
-                        disabled={!selectedId}
-                        style={{ minWidth: '140px' }}
-                    >
-                        Confirm Assignment
-                    </Button>
-                </div>
-            </div>
-        </div>
+                        {/* Table selector */}
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.875rem', opacity: 0.7, marginBottom: '8px', color: 'var(--text-primary)' }}>
+                                Available Tables
+                            </label>
+                            
+                            <ModernSelect
+                                value={selectedId || ''}
+                                onChange={(id) => setSelectedId(id)}
+                                options={tableOptions}
+                                placeholder="Choose a table..."
+                            />
+                            
+                            {sortedTables.length === 0 && (
+                                <div style={{ marginTop: '12px', textAlign: 'center', opacity: 0.6 }}>
+                                    <p style={{ fontSize: '0.875rem', color: 'var(--text-primary)' }}>No available tables at the moment.</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Buttons */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '8px' }}>
+                            <Button 
+                                variant="ghost" 
+                                onClick={onClose} 
+                                disabled={assigning}
+                                style={{ padding: '8px 16px', opacity: 0.7, transition: 'opacity 0.2s', background: 'transparent' }}
+                                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={() => selectedId && handleAssign(selectedId)}
+                                loading={assigning}
+                                disabled={!selectedId}
+                                style={{ padding: '10px 20px', borderRadius: '12px', background: '#3b82f6', color: 'white', fontWeight: 500, boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.2)', transition: 'background 0.2s' }}
+                            >
+                                Confirm Assignment
+                            </Button>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>,
+        document.body
     );
 };
 

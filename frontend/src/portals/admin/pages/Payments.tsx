@@ -124,11 +124,6 @@ const Payments: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Transaction History</h1>
-                <p className="admin-page-subtitle">Monitor all financial transactions and payment statuses.</p>
-                <div className="admin-header-divider"></div>
-            </header>
 
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>

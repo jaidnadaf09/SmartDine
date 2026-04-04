@@ -51,8 +51,8 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
             if (editingTable) {
                 // Update
                 const res = await api.put(`/admin/tables/${editingTable.id}`, { 
-                    tableNumber: newTable.tableNumber,
-                    capacity: newTable.capacity,
+                    tableNumber: Number(newTable.tableNumber),
+                    capacity: Number(newTable.capacity),
                     status: newTable.status
                 });
                 setTables(tables.map(t => t.id === res.data.id ? res.data : t));
@@ -113,16 +113,6 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
         }
     };
 
-    const updateCapacity = async (id: number, capacity: number) => {
-        try {
-            const res = await api.put(`/admin/tables/${id}`, { capacity });
-            setTables(tables.map(t => t.id === res.data.id ? res.data : t));
-            toast.success('Capacity updated!');
-        } catch (err: any) {
-            console.error('Failed to update capacity:', err);
-            toast.error(err.response?.data?.message || 'Failed to update capacity');
-        }
-    };
 
     const columns = [
         { 
@@ -221,13 +211,6 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
 
     return (
         <div className={hideHeader ? "" : "management-page"}>
-            {!hideHeader && (
-                <header className="admin-page-header">
-                    <h1 className="admin-page-title">Dining Tables</h1>
-                    <p className="admin-page-subtitle">Configure your restaurant floor plan and table capacities.</p>
-                    <div className="admin-header-divider"></div>
-                </header>
-            )}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
                 <Button 

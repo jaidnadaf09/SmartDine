@@ -46,12 +46,7 @@ const ActivityOverview: React.FC = () => {
 
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <div>
-                    <h1 className="admin-page-title">Activity Timeline</h1>
-                    <p className="admin-page-subtitle">A comprehensive history of all restaurant interactions.</p>
-                </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '20px' }}>
                     <div className="admin-card" style={{ padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--glass-bg)' }}>
                         <div style={{ color: 'var(--brand-primary)' }}><Icons.calendar size={20} /></div>
                         <div>
@@ -66,8 +61,7 @@ const ActivityOverview: React.FC = () => {
                             <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{orders.length}</div>
                         </div>
                     </div>
-                </div>
-            </header>
+            </div>
 
             <div className="admin-activity-container dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))' }}>
                 {/* ── Bookings History Card ── */}

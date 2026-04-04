@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import './ModernSelect.css';
 
@@ -26,26 +27,62 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
+    const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
+    const controlRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const selectedOption = options.find(opt => opt.value === value);
 
+    // Calculate position for portal-rendered dropdown
+    const updateMenuPosition = useCallback(() => {
+        if (controlRef.current) {
+            const rect = controlRef.current.getBoundingClientRect();
+            setMenuPosition({
+                top: rect.bottom + 8, // 8px gap below control
+                left: rect.left,
+                width: rect.width,
+            });
+        }
+    }, []);
+
     const handleToggle = useCallback(() => {
         if (!disabled) {
-            setIsOpen(prev => !prev);
+            setIsOpen(prev => {
+                if (!prev) updateMenuPosition();
+                return !prev;
+            });
         }
-    }, [disabled]);
+    }, [disabled, updateMenuPosition]);
 
     const handleSelect = useCallback((optionValue: string | number) => {
         onChange(optionValue);
         setIsOpen(false);
     }, [onChange]);
 
-    // Click outside to close
+    // Update position on scroll/resize while open
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handlePositionUpdate = () => updateMenuPosition();
+        
+        window.addEventListener('scroll', handlePositionUpdate, true);
+        window.addEventListener('resize', handlePositionUpdate);
+        
+        return () => {
+            window.removeEventListener('scroll', handlePositionUpdate, true);
+            window.removeEventListener('resize', handlePositionUpdate);
+        };
+    }, [isOpen, updateMenuPosition]);
+
+    // Click outside to close (works with portal)
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+            const target = event.target as Node;
+            const isInsideControl = containerRef.current?.contains(target);
+            const isInsideMenu = menuRef.current?.contains(target);
+            
+            if (!isInsideControl && !isInsideMenu) {
                 setIsOpen(false);
             }
         };
@@ -61,6 +98,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
             e.preventDefault();
             if (!isOpen) {
                 setIsOpen(true);
+                updateMenuPosition();
             } else if (activeIndex >= 0) {
                 handleSelect(options[activeIndex].value);
             }
@@ -70,6 +108,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
             e.preventDefault();
             if (!isOpen) {
                 setIsOpen(true);
+                updateMenuPosition();
                 setActiveIndex(0);
             } else {
                 setActiveIndex(prev => (prev + 1) % options.length);
@@ -92,6 +131,42 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
         }
     }, [activeIndex, isOpen]);
 
+    // Dropdown menu rendered via portal
+    const dropdownMenu = isOpen ? createPortal(
+        <div 
+            className="select-menu select-menu-portal fade-in" 
+            ref={menuRef}
+            role="listbox"
+            style={{
+                position: 'fixed',
+                top: `${menuPosition.top}px`,
+                left: `${menuPosition.left}px`,
+                width: `${menuPosition.width}px`,
+                minWidth: `${menuPosition.width}px`,
+            }}
+        >
+            {options.length === 0 ? (
+                <div className="select-no-options">No options available</div>
+            ) : (
+                options.map((option, index) => (
+                    <div
+                        key={option.value}
+                        className={`select-option ${option.value === value ? 'active' : ''} ${index === activeIndex ? 'focused' : ''}`}
+                        onClick={() => handleSelect(option.value)}
+                        role="option"
+                        aria-selected={option.value === value}
+                    >
+                        <span>{option.label}</span>
+                        {option.value === value && (
+                            <Check size={14} className="check-icon" strokeWidth={3} />
+                        )}
+                    </div>
+                ))
+            )}
+        </div>,
+        document.body
+    ) : null;
+
     return (
         <div 
             className={`modern-select ${className} ${disabled ? 'disabled' : ''}`} 
@@ -102,6 +177,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
             <div 
                 className={`select-control ${isOpen ? 'is-open' : ''}`} 
                 onClick={handleToggle}
+                ref={controlRef}
                 role="button"
                 aria-haspopup="listbox"
                 aria-expanded={isOpen}
@@ -114,32 +190,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
                 </span>
             </div>
 
-            {isOpen && (
-                <div 
-                    className="select-menu fade-in" 
-                    ref={menuRef}
-                    role="listbox"
-                >
-                    {options.length === 0 ? (
-                        <div className="select-no-options">No options available</div>
-                    ) : (
-                        options.map((option, index) => (
-                            <div
-                                key={option.value}
-                                className={`select-option ${option.value === value ? 'active' : ''} ${index === activeIndex ? 'focused' : ''}`}
-                                onClick={() => handleSelect(option.value)}
-                                role="option"
-                                aria-selected={option.value === value}
-                            >
-                                <span>{option.label}</span>
-                                {option.value === value && (
-                                    <Check size={14} className="check-icon" strokeWidth={3} />
-                                )}
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
+            {dropdownMenu}
         </div>
     );
 };

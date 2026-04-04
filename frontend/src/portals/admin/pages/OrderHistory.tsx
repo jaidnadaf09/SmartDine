@@ -9,6 +9,7 @@ const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchOrderHistory = async () => {
         setLoading(true);
@@ -92,13 +93,15 @@ const OrderHistory: React.FC = () => {
         }
     ];
 
+    const filteredOrders = orders.filter(order => {
+        return (
+            order.id.toString().includes(searchTerm) || 
+            (order.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    });
+
     return (
         <div className="management-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Order Archives</h1>
-                <p className="admin-page-subtitle">A historical list of all completed restaurant orders.</p>
-                <div className="admin-header-divider"></div>
-            </header>
 
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>
@@ -113,9 +116,10 @@ const OrderHistory: React.FC = () => {
             ) : (
                 <DataTable 
                     columns={columns} 
-                    data={orders} 
+                    data={filteredOrders} 
+                    searchValue={searchTerm}
+                    onSearchChange={setSearchTerm}
                     searchPlaceholder="Search order ID or customer..."
-                    searchKey="id"
                 />
             )}
         </div>
