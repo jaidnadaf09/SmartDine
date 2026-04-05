@@ -250,7 +250,7 @@
   100% { transform: scale(1); }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .menu-top-row {
     flex-direction: column;
     gap: 12px;
@@ -1370,7 +1370,7 @@ body:not([data-theme="dark"]) .instruction-inline-input {
 
 /* Responsiveness */
 
-/* Tablet — hide sidebar, cart stays inline */
+/* Tablet — layout adjustments */
 @media (max-width: 1100px) {
   .order-layout {
     grid-template-columns: 1fr;
@@ -1379,74 +1379,347 @@ body:not([data-theme="dark"]) .instruction-inline-input {
   .order-layout.cart-open {
     grid-template-columns: 1fr;
   }
+}
 
+/* Mobile — Swiggy-style UX */
+@media (max-width: 768px) {
+  .order-layout {
+    display: block;
+    overflow-x: hidden; /* Prevent horizontal scroll bounce */
+  }
+
+  /* Horizontal category scrolling */
   .categories-sidebar {
+    position: sticky;
+    top: 64px;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 6px 4px 10px; /* Refined padding for tighter top area */
+    background: var(--card-bg);
+    border: none;
+    border-bottom: 1px solid var(--border-subtle);
+    border-radius: 0;
+    box-shadow: none;
+    z-index: 100;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .categories-sidebar::-webkit-scrollbar {
     display: none;
   }
 
-  .cart-section {
-    position: fixed;
-    right: 16px;
-    bottom: 16px;
-    top: auto;
-    width: 360px;
-    max-height: 85vh;
-    /* Larger area for tablet mini-cart */
-    height: auto;
-    overflow-y: auto;
-    display: flex; /* Ensure flex context for internal scroll also on tablet */
-    flex-direction: column;
-    /* Tablet drawer still needs scroll for overlay sanity */
-    border-radius: 18px;
-    z-index: 900;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  .categories-sidebar h3 {
+    display: none;
   }
-}
 
-/* Mobile — full-width cart overlay */
-@media (max-width: 600px) {
+  .sidebar-filters {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    width: max-content;
+  }
+
+  .sidebar-filter-btn {
+    white-space: nowrap;
+    border-radius: 999px;
+    padding: 7px 14px; /* More compact pills */
+    font-size: 13px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    flex-shrink: 0;
+  }
+
+  .sidebar-filter-btn.active {
+    background: var(--brand-primary);
+    color: white;
+    border-color: var(--brand-primary);
+  }
+
+  /* Compact Dish Cards */
+  .compact-menu-card {
+    padding: 12px 14px;
+    border-radius: 14px;
+    gap: 6px;
+    min-height: auto;
+  }
+
+  .dish-name {
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+
+  .dish-desc {
+    font-size: 12.5px;
+    line-height: 1.3;
+  }
+
+  .dish-price {
+    font-size: 14px;
+  }
+
+  .compact-menu-card button {
+    height: 36px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .menu-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .menu-card-footer .price-row {
+    flex: 1;
+  }
+
+  .add-btn-full, .qty-stepper-full {
+    width: auto !important;
+    min-width: 80px;
+  }
+
+  /* Section Title Spacing */
+  .block-title {
+    font-size: 18px;
+    margin-top: 10px;
+    margin-bottom: 8px;
+  }
+
+  /* Single column menu grid */
+  .compact-menu-grid {
+    grid-template-columns: 1fr;
+    padding-bottom: 120px; /* Safe padding for taller sticky bar + overlap */
+  }
+
+  .menu-content-area {
+    padding: 16px;
+  }
+
+  /* Sticky Bottom Cart Bar */
+  .mobile-cart-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 58px; /* Precise height for thumb reach */
+    padding: 0 18px;
+    background: var(--card-bg);
+    border-radius: 14px 14px 0 0;
+    border-top: 1px solid var(--border-subtle);
+    z-index: 1001;
+    box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mini-cart-btn {
+    height: 42px;
+    font-size: 14px;
+    padding: 0 16px;
+  }
+
+  /* Cart Bottom Sheet (Enhanced — Near Full Screen) */
   .cart-section {
     position: fixed;
-    width: 100%;
-    top: auto;
+    top: 64px; /* Align below the app bar */
     bottom: 0;
-    right: 0;
     left: 0;
-    max-height: 88vh;
-    height: 88vh;
+    right: 0;
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 64px);
     border-radius: 18px 18px 0 0;
-    padding: 1rem;
-    z-index: 1000;
+    z-index: 2000;
     transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.25s ease;
+    will-change: transform;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 0; /* Sticky summary covers bottom now */
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cart-section::before {
+    content: "";
+    width: 40px;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 999px;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2001; /* Stay above content */
   }
 
   .cart-section.open {
     transform: translateY(0);
     animation: none;
-    /* Let the transition handle the mobile slide up */
   }
 
-  .order-layout.cart-open {
-    grid-template-columns: 1fr;
+  .cart-header {
+    padding: 22px 18px 14px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0;
   }
 
-  .floating-cart-btn {
-    bottom: 80px;
-    right: 20px;
+  .cart-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px 20px; /* Refined bottom padding */
   }
 
-  .compact-menu-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 10px;
+  /* Compact Cart Items & Wrapped Titles */
+  .cart-item {
+    padding: 10px 0;
+    gap: 6px;
+    border-bottom: 1px solid var(--border-subtle);
   }
 
-  .compact-menu-card {
-    padding: 12px;
-    min-height: 120px;
+  .cart-item-info h4 {
+    font-size: 14px !important;
+    white-space: normal !important;
+    line-height: 1.3 !important;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
-  .dish-modal-content {
-    border-radius: 12px;
+  .cart-item-price {
+    font-size: 13px;
+    color: var(--brand-primary);
+    font-weight: 700;
   }
+
+  /* Compact Quantity Controls */
+  .qty-control {
+    gap: 8px;
+  }
+
+  .qty-control .qty-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  .qty-control .qty-text {
+    font-size: 14px;
+    min-width: 20px;
+  }
+
+  /* Sticky Cart Summary */
+  .cart-summary {
+    position: sticky;
+    bottom: 0;
+    padding: 18px 18px 24px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--card-bg);
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
+  }
+
+  /* Global Press Effect */
+  button:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ───────────────────────────────────
+   Premium Confirm Modal
+   ─────────────────────────────────── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.confirm-modal {
+  width: 320px;
+  max-width: 90vw;
+  padding: 22px;
+  border-radius: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  text-align: center;
+}
+
+.confirm-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 10px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 140, 0, 0.12);
+  color: #ff8c00;
+}
+
+.confirm-modal h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-primary);
+}
+
+.confirm-modal p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 0 4px;
+  margin-bottom: 16px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-secondary {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.btn-danger {
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #ff5a5a, #ff2d2d);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.btn-danger:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
 }

@@ -75,12 +75,12 @@ const OrderPage: React.FC = () => {
   const [isClearCartDialogOpen, setIsClearCartDialogOpen] = useState(false);
   const [cartPulse, setCartPulse] = useState(false);
   const [cartBump, setCartBump] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const prevCartLength = useRef(0);
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 600);
+      setIsMobile(window.innerWidth <= 768);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -534,19 +534,7 @@ const OrderPage: React.FC = () => {
             </div>
           </div>
 
-          <ConfirmDialog 
-            open={isClearCartDialogOpen}
-            title="Clear Cart"
-            message="Are you sure you want to remove all items from your cart?"
-            confirmText="Clear All"
-            cancelText="Keep Items"
-            type="danger"
-            onConfirm={() => {
-              setCart([]);
-              toast.success('Cart cleared successfully');
-            }}
-            onCancel={() => setIsClearCartDialogOpen(false)}
-          />
+
           <div className="table-status-banner compact-banner">
             {assignedTable ? (
               <p><Icons.utensils size={18} className="inline-icon" /> Table {assignedTable} (Dine-In)</p>
@@ -688,7 +676,7 @@ const OrderPage: React.FC = () => {
       </div>
       
       {cart.length > 0 && isMobile && !isCartOpen && (
-        <div className="floating-mini-cart" onClick={() => setIsCartOpen(true)}>
+        <div className="floating-mini-cart mobile-cart-bar" onClick={() => setIsCartOpen(true)}>
           <div className="mini-cart-left">
             <span className="mini-cart-count">
               {cart.length} item{cart.length > 1 ? 's' : ''}
@@ -702,6 +690,20 @@ const OrderPage: React.FC = () => {
           </button>
         </div>
       )}
+
+      <ConfirmDialog 
+        open={isClearCartDialogOpen}
+        title="Clear Cart?"
+        message="All items will be removed from your order."
+        confirmText="Clear Cart"
+        cancelText="Cancel"
+        onConfirm={() => {
+          setCart([]);
+          setIsClearCartDialogOpen(false);
+          toast.success('Cart cleared successfully');
+        }}
+        onCancel={() => setIsClearCartDialogOpen(false)}
+      />
     </div>
   );
 };
