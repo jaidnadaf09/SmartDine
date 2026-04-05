@@ -4,7 +4,7 @@ import {
     getChefDashboardStats,
     getKitchenOrders,
     updateChefOrderStatus,
-    getChefOrderHistory
+    getChefReviews
 } from '../controllers/chefController';
 
 const router = express.Router();
@@ -19,8 +19,8 @@ router.get('/stats', getChefDashboardStats);
 // Active Kitchen Orders
 router.get('/orders', getKitchenOrders);
 router.put('/orders/:id/status', updateChefOrderStatus);
-
-// Order History (Completed Today)
-router.get('/order-history', getChefOrderHistory);
+ 
+// Feedback
+router.get('/reviews', getChefReviews);
 
 export default router;

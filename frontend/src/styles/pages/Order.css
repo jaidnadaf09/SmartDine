@@ -8,7 +8,7 @@
   min-height: 100vh;
   background: var(--bg-primary);
   padding: 1rem 1.25rem;
-  overflow-x: hidden;
+  overflow-x: visible;
 }
 
 /* Three-column layout: Categories | Content | Cart */
@@ -40,65 +40,60 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: var(--card-shadow);
   position: sticky;
-  top: 12px;
+  top: 80px; /* Aligned below the 64px header + gap */
   height: fit-content;
-  max-height: calc(100vh - 110px);
+  max-height: calc(100vh - 100px);
   overflow-y: auto;
   scrollbar-width: thin;
   z-index: 10;
   display: flex;
   flex-direction: column;
   gap: 15px;
-  /* Spacing between search and categories */
-  margin-top: -42px;
-  /* Precision lift for title alignment */
-  /* Strong lift to align with Menu title level */
-  padding-top: 14px;
+  /* Precision alignment with Menu content */
+  padding: 16px 14px;
 }
 
-.menu-search {
-  width: 100%;
+/* ───────────────────────────────────
+   Sidebar Search Styling
+   ─────────────────────────────────── */
+.sidebar-search .search-input-field {
+  background: rgba(255, 255, 255, 0.35); /* Blended for cream sidebar */
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  color: #3b2a1f;
   height: 40px;
-  /* Slight height increase for better UX */
-  position: relative;
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 163, 115, 0.35);
-  border-radius: 12px;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.menu-search:focus-within {
-  border-color: #d4a373;
-  box-shadow: 0 0 0 2px rgba(212, 163, 115, 0.15);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.menu-search svg {
-  position: absolute;
-  left: 14px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.6;
-}
-
-.menu-search input {
-  width: 100%;
-  height: 100%;
-  padding: 10px 14px 10px 42px !important;
-  /* Increased left padding (42px) to clear icon */
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: transparent !important;
+  border-radius: 10px;
+  padding-left: 42px;
   font-size: 14px;
-  color: var(--text-primary);
+  box-shadow: none;
 }
+
+.dark .sidebar-search .search-input-field {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sidebar-search .search-input-field::placeholder {
+  color: rgba(80, 60, 40, 0.6);
+}
+
+.dark .sidebar-search .search-input-field::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-search .search-input-field:focus {
+  outline: none;
+  border-color: rgba(180, 140, 80, 0.6);
+  box-shadow: 0 0 0 3px rgba(180, 140, 80, 0.15);
+  background: rgba(255, 255, 255, 0.5); /* Slight lift on focus */
+}
+
+.dark .sidebar-search .search-input-field:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(212, 163, 115, 0.4);
+  box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.1);
+}
+
 
 .categories-sidebar h3 {
   font-family: 'Montserrat', sans-serif;
@@ -107,9 +102,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding-top: 12px;
+  padding-top: 8px;
   margin-top: 8px;
   border-top: 1px solid var(--border-color);
+  margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -223,17 +219,35 @@
 }
 
 @keyframes cartPulse {
-  0% {
-    transform: scale(1);
-  }
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
 
-  50% {
-    transform: scale(1.06);
-  }
+/* ───────────────────────────────────
+   Fly To Cart Animation Styles
+   ─────────────────────────────────── */
+.flying-dish-clone {
+  pointer-events: none !important;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), 
+              opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.7s ease !important;
+  will-change: transform, opacity;
+  background: var(--brand-primary); /* Fallback */
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.25);
+  border-radius: 12px;
+  z-index: 10001;
+}
 
-  100% {
-    transform: scale(1);
-  }
+.sd-cart-icon.bump {
+  animation: cartBump 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes cartBump {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.18) translateY(-3px); }
+  100% { transform: scale(1); }
 }
 
 @media (max-width: 600px) {
@@ -591,11 +605,10 @@ body:not([data-theme="dark"]) .wishlist-btn {
 ─────────────────────────────────── */
 .cart-section {
   position: sticky;
-  top: 10px;
-  /* Aligned with header height + buffer */
-  height: fit-content;
-  /* Grow naturally */
-  max-height: none;
+  top: 80px; /* Aligned below the 64px header + gap */
+  height: calc(100vh - 100px); /* Fill available height for internal scroll */
+  max-height: calc(100vh - 100px);
+  overflow: hidden; /* Prevent sidebar itself from scrolling */
   width: 340px;
   background: var(--glass-bg) !important;
   border: 1px solid var(--glass-border);
@@ -606,7 +619,7 @@ body:not([data-theme="dark"]) .wishlist-btn {
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  overflow: visible;
+  overflow: clip; /* Ensures container is stable; internal items handle scroll */
   /* Let items expand */
   opacity: 0;
   visibility: hidden;
@@ -817,12 +830,9 @@ body:not([data-theme="dark"]) .wishlist-btn {
    Cart Items — Scrollable Area
 ─────────────────────────────────── */
 .cart-items {
-  flex: none;
-  /* Do not limit to flex parent height */
-  overflow: visible;
-  /* Remove internal scroll */
-  max-height: none;
-  /* Critical for flex overflow */
+  flex: 1; /* Take remaining space between header and footer */
+  overflow-y: auto; /* Enable internal scrolling */
+  min-height: 0; /* Ensures flex container allows internal scroll */
   padding-right: 6px;
   scrollbar-width: thin;
   scrollbar-color: rgba(198, 167, 105, 0.3) transparent;
@@ -1384,6 +1394,8 @@ body:not([data-theme="dark"]) .instruction-inline-input {
     /* Larger area for tablet mini-cart */
     height: auto;
     overflow-y: auto;
+    display: flex; /* Ensure flex context for internal scroll also on tablet */
+    flex-direction: column;
     /* Tablet drawer still needs scroll for overlay sanity */
     border-radius: 18px;
     z-index: 900;

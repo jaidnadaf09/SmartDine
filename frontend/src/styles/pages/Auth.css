@@ -3,7 +3,7 @@
 /* ΓöÇΓöÇ Container ΓöÇΓöÇ */
 .auth-container {
   min-height: 100vh;
-  background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('../assets/Restaurant_business_plan_main.jpg');
+  background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('../../assets/images/Restaurant_business_plan_main.jpg');
   background-size: cover;
   background-position: center;
   display: flex;

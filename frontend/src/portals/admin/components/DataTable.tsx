@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Button from '../../../components/ui/Button';
-import Select from '../../../components/ui/Select';
-import SearchInput from '../../../components/ui/SearchInput';
+import Button from '@ui/Button';
+import Select from '@ui/Select';
+import SearchInput from '@ui/SearchInput';
 
 interface Column<T> {
     header: string;
@@ -27,6 +27,7 @@ interface DataTableProps<T> {
     activeFilters?: Record<string, string>;
     onFilterChange?: (key: string, value: string) => void;
     onRowClick?: (item: T) => void;
+    onClearAll?: () => void;
     itemsPerPage?: number;
 }
 
@@ -40,9 +41,13 @@ const DataTable = <T extends { id: string | number }>({
     activeFilters = {},
     onFilterChange,
     onRowClick,
+    onClearAll,
     itemsPerPage = 10
 }: DataTableProps<T>) => {
     const [currentPage, setCurrentPage] = useState(1);
+    
+    // Check if any filters are active (including search)
+    const hasActiveFilters = searchValue || Object.values(activeFilters).some(v => v !== '');
 
     const totalPages = Math.ceil(data.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -76,7 +81,10 @@ const DataTable = <T extends { id: string | number }>({
                         <div key={filter.key} style={{ minWidth: '150px' }}>
                             <Select
                                 value={activeFilters[filter.key] || ''}
-                                onChange={(value: string) => onFilterChange?.(filter.key, value)}
+                                onChange={(value: string) => {
+                                    onFilterChange?.(filter.key, value);
+                                    setCurrentPage(1);
+                                }}
                                 options={[
                                     { label: filter.label, value: '' },
                                     ...filter.options
@@ -86,15 +94,21 @@ const DataTable = <T extends { id: string | number }>({
                         </div>
                     ))}
                     
-                    {(searchValue || Object.values(activeFilters).some(v => v)) && (
+                    {hasActiveFilters && (
                         <Button 
                             variant="ghost" 
                             size="sm"
                             onClick={() => {
-                                onSearchChange('');
-                                if (onFilterChange) {
-                                    filters.forEach(f => onFilterChange(f.key, ''));
+                                if (onClearAll) {
+                                    onClearAll();
+                                } else {
+                                    // Fallback for pages not yet updated
+                                    onSearchChange('');
+                                    if (onFilterChange) {
+                                        filters.forEach(f => onFilterChange(f.key, ''));
+                                    }
                                 }
+                                setCurrentPage(1);
                             }}
                             style={{ color: '#ef4444' }}
                         >

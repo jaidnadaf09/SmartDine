@@ -1,18 +1,18 @@
 import React from 'react';
 import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import AdminLayout from './components/AdminLayout';
-import Button from '../../components/ui/Button';
-import Dashboard from './pages/Dashboard';
-import Users from './pages/Users';
-import AdminBookingHistory from './pages/AdminBookingHistory';
-import OrderHistory from './pages/OrderHistory';
-import Orders from './pages/Orders';
-import Payments from './pages/Payments';
-import ActivityOverview from './pages/ActivityOverview';
-import AdminReviews from './pages/AdminReviews';
-import AdminMenu from './pages/AdminMenu';
-import AdminTablesBookings from './pages/AdminTablesBookings';
+import { useAuth } from '@context/AuthContext';
+import AdminLayout from '../components/AdminLayout';
+import Button from '@ui/Button';
+import Dashboard from './Dashboard';
+import Users from './Users';
+import AdminBookingHistory from './AdminBookingHistory';
+import OrderHistory from './OrderHistory';
+import Orders from './Orders';
+import Payments from './Payments';
+import ActivityOverview from './ActivityOverview';
+import AdminReviews from './AdminReviews';
+import AdminMenu from './AdminMenu';
+import AdminTablesBookings from './AdminTablesBookings';
 
 const AdminPortal: React.FC = () => {
   const navigate = useNavigate();

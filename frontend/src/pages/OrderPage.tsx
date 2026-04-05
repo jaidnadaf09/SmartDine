@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useAuth } from '../context/AuthContext';
-import { Icons } from '../components/icons/IconSystem';
-import api from '../utils/api';
-import MenuCard from '../components/shared/MenuCard';
-import ConfirmDialog from '../components/shared/ConfirmDialog';
-import SearchInput from '../components/ui/SearchInput';
-import '../styles/Order.css';
-import type { ChangeEvent } from 'react';
+import { useAuth } from '@context/AuthContext';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import MenuCard from '@shared/MenuCard';
+import ConfirmDialog from '@ui/ConfirmModal';
+import SearchInput from '@ui/SearchInput';
+import '@styles/pages/Order.css';
 
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
@@ -75,6 +74,7 @@ const OrderPage: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isClearCartDialogOpen, setIsClearCartDialogOpen] = useState(false);
   const [cartPulse, setCartPulse] = useState(false);
+  const [cartBump, setCartBump] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
   const prevCartLength = useRef(0);
 
@@ -158,7 +158,19 @@ const OrderPage: React.FC = () => {
   }, []);
 
 
-  const addToCart = useCallback(async (item: any) => {
+  const addToCart = useCallback(async (item: any, e?: React.MouseEvent) => {
+    // ✈️ Trigger Fly-to-Cart Animation
+    if (e && e.currentTarget) {
+      const cartBtn = document.querySelector('.sd-cart-icon') as HTMLElement;
+      if (cartBtn) {
+        const { flyToCart } = await import('../utils/flyToCart');
+        flyToCart(e.currentTarget as HTMLElement, cartBtn, () => {
+          setCartBump(true);
+          setTimeout(() => setCartBump(false), 400);
+        });
+      }
+    }
+
     setCart(prevCart => {
       const existingItem = prevCart.find(c => c.id === item.id);
       if (existingItem) {
@@ -383,9 +395,10 @@ const OrderPage: React.FC = () => {
 
       <div className={`order-layout ${isCartOpen ? 'cart-open' : ''}`}>
         <aside className="categories-sidebar">
-          <div className="menu-search-container" style={{ marginBottom: '1.5rem' }}>
+          <div className="menu-search-container" style={{ marginBottom: '8px' }}>
             <SearchInput
               placeholder="Search menu..."
+              containerClassName="sidebar-search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onClear={() => setSearchQuery('')}
@@ -421,7 +434,10 @@ const OrderPage: React.FC = () => {
             </div>
             
             {cart.length > 0 && !isCartOpen && (
-              <button className={`top-view-cart-btn ${cartPulse ? 'pulse' : ''}`} onClick={() => setIsCartOpen(true)}>
+              <button 
+                className={`top-view-cart-btn sd-cart-icon ${cartPulse ? 'pulse' : ''} ${cartBump ? 'bump' : ''}`} 
+                onClick={() => setIsCartOpen(true)}
+              >
                 <Icons.shoppingBag size={18} />
                 <span>View Cart ({cart.reduce((a, b) => a + Number(b.quantity), 0)})</span>
               </button>

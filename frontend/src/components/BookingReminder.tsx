@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, Clock, UtensilsCrossed, ArrowRight } from 'lucide-react';
-import '../styles/CustomerPortal.css';
+import '@styles/portals/CustomerPortal.css';
 
 interface BookingReminderProps {
   booking: {

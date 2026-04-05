@@ -59,16 +59,23 @@
 
 /* Base menu styles (shared between inline and portal) */
 .select-menu {
+    position: absolute;
     z-index: var(--z-dropdown, 9999);
     background: var(--bg-tertiary);
     border: 1px solid var(--border-default);
     border-radius: var(--radius-input, 12px);
     box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.08),
-        0 2px 6px rgba(0, 0, 0, 0.04);
+        0 15px 45px rgba(0, 0, 0, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.08);
     max-height: 260px;
     overflow-y: auto;
     animation: dropdownFade 0.15s ease;
+    transform-origin: top;
+}
+
+.select-menu.open-upward {
+    transform-origin: bottom;
+    animation: dropdownFadeUp 0.15s ease;
 }
 
 /* Portal-specific: rendered at document.body with fixed positioning */
@@ -124,7 +131,22 @@
 @keyframes dropdownFade {
     from {
         opacity: 0;
-        transform: translateY(-8px) scale(0.96);
+        transform: translateY(-10px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.select-menu.open-upward {
+    animation: dropdownFadeUp 0.15s ease;
+}
+
+@keyframes dropdownFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
     }
     to {
         opacity: 1;

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import api from '../../../utils/api';
+import api from '@utils/api';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '../../../components/ui/Button';
-import { Icons } from '../../../components/icons/IconSystem';
+import Button from '@ui/Button';
+import { Icons } from '@components/icons/IconSystem';
 import FormField from '../components/FormField';
-import Modal from '../../../components/ui/Modal';
-import Select from '../../../components/ui/Select';
+import Modal from '@ui/Modal';
+import Select from '@ui/Select';
 
 interface MenuItem {
     id: number;
@@ -266,6 +266,11 @@ const AdminMenu: React.FC = () => {
         return matchesSearch && matchesCategory && matchesStatus;
     });
 
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
+
     return (
         <div className="management-page">
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
@@ -296,7 +301,8 @@ const AdminMenu: React.FC = () => {
                     onSearchChange={setSearchTerm}
                     filters={filterConfig}
                     activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onClearAll={clearAllFilters}
                     searchPlaceholder="Search dishes and descriptions..."
                 />
             )}

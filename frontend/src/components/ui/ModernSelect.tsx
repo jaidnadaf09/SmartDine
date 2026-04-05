@@ -27,19 +27,29 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(-1);
-    const [menuPosition, setMenuPosition] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
+    const [menuPosition, setMenuPosition] = useState<{ top?: number; bottom?: number; left: number; width: number }>({ left: 0, width: 0 });
     const containerRef = useRef<HTMLDivElement>(null);
     const controlRef = useRef<HTMLDivElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
     const selectedOption = options.find(opt => opt.value === value);
 
+    const [openUpward, setOpenUpward] = useState(false);
+
     // Calculate position for portal-rendered dropdown
     const updateMenuPosition = useCallback(() => {
         if (controlRef.current) {
             const rect = controlRef.current.getBoundingClientRect();
+            const menuMaxHeight = 260; // Max height from CSS
+            const DROPDOWN_OFFSET = 6;
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            const shouldOpenUp = spaceBelow < menuMaxHeight && spaceAbove > spaceBelow;
+
+            setOpenUpward(shouldOpenUp);
             setMenuPosition({
-                top: rect.bottom + 8, // 8px gap below control
+                top: shouldOpenUp ? undefined : rect.bottom + DROPDOWN_OFFSET,
+                bottom: shouldOpenUp ? window.innerHeight - rect.top + DROPDOWN_OFFSET : undefined,
                 left: rect.left,
                 width: rect.width,
             });
@@ -134,15 +144,17 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
     // Dropdown menu rendered via portal
     const dropdownMenu = isOpen ? createPortal(
         <div 
-            className="select-menu select-menu-portal fade-in" 
+            className={`select-menu select-menu-portal fade-in ${openUpward ? 'open-upward' : ''}`} 
             ref={menuRef}
             role="listbox"
             style={{
                 position: 'fixed',
-                top: `${menuPosition.top}px`,
+                top: openUpward ? 'auto' : `${menuPosition.top}px`,
+                bottom: openUpward ? `${menuPosition.bottom}px` : 'auto',
                 left: `${menuPosition.left}px`,
                 width: `${menuPosition.width}px`,
                 minWidth: `${menuPosition.width}px`,
+                zIndex: 'var(--z-dropdown, 1000)',
             }}
         >
             {options.length === 0 ? (

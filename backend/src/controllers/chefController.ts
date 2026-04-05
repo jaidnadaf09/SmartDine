@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Order, Table, Booking, User } from '../models';
+import { Order, Table, Booking, User, Review } from '../models';
 
 
 // @desc    Get chef dashboard stats
@@ -74,6 +74,7 @@ export const updateChefOrderStatus = async (req: Request, res: Response) => {
 
         order.status = status;
         await order.save();
+        console.log("[ORDER COMPLETE]", order.id, "status:", order.status);
 
         // Table Management Logic: When order is completed
         if (status === 'completed') {
@@ -125,30 +126,33 @@ export const updateChefOrderStatus = async (req: Request, res: Response) => {
     }
 };
 
-// @desc    Get completed orders for today
-// @route   GET /api/chef/order-history
-// @access  Private/Chef
-export const getChefOrderHistory = async (req: Request, res: Response) => {
-    try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
 
-        const orders = await Order.findAll({
-            where: {
-                status: 'completed',
-                updatedAt: { [Op.gte]: today }
-            },
-            include: [{
-                model: User,
-                as: 'customer',
-                attributes: ['name']
-            }],
-            order: [['updatedAt', 'DESC']]
+
+// @desc    Get all reviews for chef
+// @route   GET /api/chef/reviews
+// @access  Private/Chef
+export const getChefReviews = async (req: Request, res: Response) => {
+    try {
+        const reviews = await Review.findAll({
+            include: [
+                {
+                    model: Order,
+                    as: 'order',
+                    attributes: ["id"]
+                },
+                {
+                    model: User,
+                    as: 'user',
+                    attributes: ["name"]
+                }
+            ],
+            order: [["createdAt", "DESC"]]
         });
-        res.json(orders);
+        res.json(reviews);
     } catch (error) {
-        console.error("Error fetching chef order history:", error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Chef reviews error:", error);
+        res.status(500).json({
+            message: "Failed to fetch reviews"
+        });
     }
 };
-

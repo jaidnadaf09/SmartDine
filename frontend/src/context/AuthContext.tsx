@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import api from '../utils/api';
+import api from '@utils/api';
 
 export type UserRole = 'customer' | 'waiter' | 'chef' | 'admin' | null;
 

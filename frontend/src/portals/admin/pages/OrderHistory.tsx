@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
-import { formatDate, formatTime } from '../../../utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable from '../components/DataTable';
-import Button from '../../../components/ui/Button';
+import Button from '@ui/Button';
 
 const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import Navbar from '../shared/Navbar';
-import MobileBottomNav from '../shared/MobileBottomNav';
+import Navbar from '@layout/Navbar';
+import MobileBottomNav from '@layout/MobileBottomNav';
 
 const CustomerLayout: React.FC = () => {
   const location = useLocation();

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
-import { formatDate, formatTime } from '../../../utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import { formatDate, formatTime } from '@utils/dateFormatter';
 import StatsCard from '../components/StatsCard';
-import Button from '../../../components/ui/Button';
-import '../../../styles/ChefPortal.css';
+import Button from '@ui/Button';
+import '@styles/portals/ChefPortal.css';
 
 const Dashboard: React.FC = () => {
     const navigate = useNavigate();

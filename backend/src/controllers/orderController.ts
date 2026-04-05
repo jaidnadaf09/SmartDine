@@ -9,12 +9,31 @@ import { isRestaurantOpen } from '../utils/workingHours';
 // @access  Private/Staff
 export const getOrders = async (req: AuthRequest, res: Response) => {
     try {
-        const orders = await Order.findAll({
-            where: {
+        const includeAll = req.query.includeAll === 'true';
+        const includeHistory = req.query.includeHistory === 'true';
+        let whereClause = {};
+
+        if (includeAll) {
+            // Return all orders (no filter)
+            whereClause = {};
+        } else if (includeHistory) {
+            // Return only historical orders (Chef History)
+            whereClause = {
                 status: {
-                    [Op.ne]: 'completed'
+                    [Op.in]: ['completed', 'cancelled']
                 }
-            },
+            };
+        } else {
+            // Return only active orders (Default/Chef Kitchen)
+            whereClause = {
+                status: {
+                    [Op.notIn]: ['completed', 'cancelled']
+                }
+            };
+        }
+
+        const orders = await Order.findAll({
+            where: whereClause,
             order: [['createdAt', 'DESC']]
         });
         res.json(orders);
@@ -112,9 +131,9 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             });
         }
 
-        // Table Management: When order is completed, release table and booking
-        if (status === 'completed') {
-            console.log(`Order ${order.id} marked as COMPLETED. Releasing table...`);
+        // Table Management: When order is completed or cancelled, release table and booking
+        if (status === 'completed' || status === 'cancelled') {
+            console.log(`Order ${order.id} marked as ${status.toUpperCase()}. Releasing table...`);
             // Complete the associated booking
             if (order.bookingId) {
                 const booking = await Booking.findByPk(order.bookingId);

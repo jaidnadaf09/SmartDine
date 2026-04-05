@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import { useAuthModal } from '../../../context/AuthModalContext';
+import { useAuth } from '@context/AuthContext';
+import { useAuthModal } from '@context/AuthModalContext';
 import toast from 'react-hot-toast';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
 import BookingReminder from '../../../components/BookingReminder';
-import { formatDate, formatTime } from '../../../utils/dateFormatter';
-import Modal from '../../../components/ui/Modal';
-import Button from '../../../components/ui/Button';
-import '../../../styles/Portals.css';
-import '../../../styles/CustomerPortal.css';
+import { formatDate, formatTime } from '@utils/dateFormatter';
+import Modal from '@ui/Modal';
+import Button from '@ui/Button';
+import '@styles/portals/Portals.css';
+import '@styles/portals/CustomerPortal.css';
 
 
 // Using centralized api instance

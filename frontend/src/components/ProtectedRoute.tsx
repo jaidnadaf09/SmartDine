@@ -1,7 +1,7 @@
 import React, { type ReactNode, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useAuthModal } from '../context/AuthModalContext';
+import { useAuth } from '@context/AuthContext';
+import { useAuthModal } from '@context/AuthModalContext';
 
 interface ProtectedRouteProps {
   children: ReactNode;

@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import { useAuthModal } from '../../../context/AuthModalContext';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
-import { formatDate, formatTime } from '../../../utils/dateFormatter';
-import '../../../styles/Portals.css';
-import '../../../styles/CustomerPortal.css';
+import { useAuth } from '@context/AuthContext';
+import { useAuthModal } from '@context/AuthModalContext';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import { formatDate, formatTime } from '@utils/dateFormatter';
+import '@styles/portals/Portals.css';
+import '@styles/portals/CustomerPortal.css';
 
 
 // Using centralized api instance

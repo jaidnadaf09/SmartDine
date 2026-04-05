@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '@context/AuthContext';
 import toast from 'react-hot-toast';
-import api from '../../../utils/api';
-import { Icons } from '../../../components/icons/IconSystem';
+import api from '@utils/api';
+import { Icons } from '@components/icons/IconSystem';
 import FormField from '../../admin/components/FormField';
 import { motion, AnimatePresence } from 'framer-motion';
-import ConfirmModal from '../../../components/ui/ConfirmModal';
+import ConfirmModal from '@ui/ConfirmModal';
 import ImageCropModal from '../../../components/profile/ImageCropModal';
-import '../../../styles/Profile.css';
+import '@styles/pages/Profile.css';
 
 const EditProfilePage: React.FC = () => {
     const navigate = useNavigate();

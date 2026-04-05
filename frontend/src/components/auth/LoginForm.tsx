@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '../icons/IconSystem';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
-import DotLoader from '../shared/DotLoader';
-import '../../styles/Auth.css';
+import { useAuth } from '@context/AuthContext';
+import DotLoader from '../feedback/DotLoader';
+import '@styles/pages/Auth.css';
 
 interface LoginFormProps {
   onSuccess?: (user: any) => void;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import '../../styles/Portals.css';
-import '../../styles/CustomerPortal.css';
+import '@styles/portals/Portals.css';
+import '@styles/portals/CustomerPortal.css';
 
 const CustomerPortal: React.FC = () => {
   return (

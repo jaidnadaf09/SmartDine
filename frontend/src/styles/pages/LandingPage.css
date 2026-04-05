@@ -37,6 +37,14 @@
   background: var(--bg-hero-hardcoded);
 }
 
+.dark .hero {
+  background: linear-gradient(
+    135deg,
+    #3b2218 0%,
+    #24140d 100%
+  );
+}
+
 .hero-grid-container {
   display: grid;
   grid-template-columns: 1fr 1fr;

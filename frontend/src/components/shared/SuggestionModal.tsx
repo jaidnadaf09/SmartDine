@@ -1,6 +1,6 @@
 import React from 'react';
 import { Icons } from '../icons/IconSystem';
-import '../../styles/Order.css';
+import '@styles/pages/Order.css';
 
 interface SuggestionModalProps {
   isOpen: boolean;

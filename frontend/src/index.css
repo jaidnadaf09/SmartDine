@@ -1,4 +1,4 @@
-@import './styles/theme.css';
+@import './styles/base/theme.css';
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -104,4 +104,349 @@ body {
 /* Global Toast Layering */
 .react-hot-toast {
   z-index: 9999 !important;
+}
+
+/* Premium Avatar Component */
+.sd-avatar {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+
+  border-radius: 50%;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(6px);
+
+  border: 1px solid rgba(255,255,255,0.14);
+
+  box-shadow:
+    0 2px 6px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+
+  transition: all 0.25s ease;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sd-avatar:hover {
+  transform: scale(1.05);
+
+  box-shadow:
+    0 6px 16px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+.sd-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block;
+}
+
+.sd-avatar-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Optional Premium Status Ring */
+.sd-avatar::after {
+  content: "";
+
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+
+  width: 8px;
+  height: 8px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  border: 2px solid rgba(30,30,30,0.9);
+}
+
+/* Premium Dropdown UI */
+.sd-profile-dropdown {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  width: 220px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(30, 20, 12, 0.75);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  z-index: 1000;
+}
+
+.light .sd-profile-dropdown {
+  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.sd-profile-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.92);
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+.sd-profile-item:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateX(2px);
+}
+
+.light .sd-profile-item {
+  color: #1f2937;
+}
+
+.light .sd-profile-item:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.sd-profile-header {
+  padding: 12px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.light .sd-profile-header {
+  background: rgba(0,0,0,0.03);
+}
+
+.sd-profile-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.sd-profile-email {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Premium Notification UI */
+.sd-notification-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  color: var(--text-primary);
+  padding: 0;
+}
+
+.sd-notification-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+
+.light .sd-notification-btn {
+  background: rgba(0,0,0,0.04);
+}
+
+.sd-notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(30,20,12,0.9);
+}
+
+.light .sd-notification-dot {
+  box-shadow: 0 0 0 2px white;
+}
+
+/* ----------------------------------------------------
+   Update: Contrast & Accessibility Overrides 
+   ---------------------------------------------------- */
+.sd-profile-dropdown {
+  color: var(--text-primary);
+}
+
+.dark .sd-profile-dropdown {
+  background: rgba(24, 18, 12, 0.88);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.light .sd-profile-dropdown {
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+.dark .sd-profile-name { color: rgba(255,255,255,0.96); }
+.dark .sd-profile-email { color: rgba(255,255,255,0.65); }
+.dark .sd-profile-item { color: rgba(255,255,255,0.9); }
+
+.light .sd-profile-name { color: #111827; }
+.light .sd-profile-email { color: #6b7280; }
+.light .sd-profile-item { color: #1f2937; }
+
+.dark .sd-profile-item:hover {
+  background: rgba(255,255,255,0.08);
+}
+
+.light .sd-profile-item:hover {
+  background: rgba(0,0,0,0.06);
+}
+
+.sd-bell-icon {
+  transition: all 0.2s ease;
+}
+
+.dark .sd-bell-icon {
+  color: rgba(255,255,255,0.85);
+}
+
+.light .sd-bell-icon {
+  color: #374151;
+}
+
+.sd-notification-btn:hover .sd-bell-icon {
+  transform: scale(1.05);
+}
+
+.sd-notification-dot {
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+}
+
+/* ----------------------------------------------------
+   Update: Header Layout & Spacing Standardization 
+   ---------------------------------------------------- */
+.sd-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  
+  /* Original SmartDine Brown for Light Mode */
+  background: linear-gradient(90deg, #7a4a2b 0%, #6b4226 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  backdrop-filter: none;
+
+  position: sticky;
+  top: 0;
+  z-index: 999;
+}
+
+.dark .sd-header {
+  /* Matching Hero Section Brown for Dark Mode Seamless Transition */
+  background: linear-gradient(
+    90deg,
+    #3b2218 0%,
+    #2a1810 45%,
+    #24140d 100%
+  );
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  box-shadow: none; /* Smooth visual flow */
+}
+
+.sd-header-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.sd-header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sd-header-right > * {
+  display: flex;
+  align-items: center;
+}
+
+.sd-welcome-text {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-right: 4px;
+  white-space: nowrap;
+  color: rgba(255,255,255,0.9);
+}
+
+.dark .sd-welcome-text { color: rgba(255,255,255,0.92); }
+.light .sd-welcome-text { color: rgba(255,255,255,0.9); }
+
+.sd-icon-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+  
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.dark .sd-icon-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+}
+
+.sd-notification-btn {
+  margin-left: 2px;
+}
+
+.sd-avatar {
+  border-radius: 50%;
+  margin-left: 2px;
+}
+
+.dark .sd-avatar {
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+/* Micro Interaction Polish */
+.sd-icon-btn:hover {
+  background: rgba(255,255,255,0.16);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+
+.dark .sd-icon-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.sd-avatar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
 }

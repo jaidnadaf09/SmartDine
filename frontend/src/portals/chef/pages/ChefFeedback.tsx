@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
 import toast from 'react-hot-toast';
-import { formatDate } from '../../../utils/dateFormatter';
+import { formatDate } from '@utils/dateFormatter';
 
 interface Review {
     id: number;
@@ -54,13 +54,6 @@ const ChefFeedback: React.FC = () => {
 
     return (
         <div className="chef-feedback-page" style={{ padding: '20px' }}>
-            <div className="admin-page-header">
-                <div className="header-titles">
-                    <h1 style={{ color: 'var(--text-primary)', marginBottom: '5px' }}>Customer Feedback</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Hear what customers say about your food</p>
-                </div>
-            </div>
-
             <div className="reviews-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px', marginTop: '20px' }}>
                 {reviews.length === 0 ? (
                     <div className="empty-state" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '50px' }}>

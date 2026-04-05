@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
 import toast from 'react-hot-toast';
-import { formatDate } from '../../../utils/dateFormatter';
+import { formatDate } from '@utils/dateFormatter';
 import { motion } from 'framer-motion';
-import Button from '../../../components/ui/Button';
-import Select from '../../../components/ui/Select';
-import Card from '../../../components/ui/Card';
-import SearchInput from '../../../components/ui/SearchInput';
+import Button from '@ui/Button';
+import Select from '@ui/Select';
+import Card from '@ui/Card';
+import SearchInput from '@ui/SearchInput';
 
 interface Review {
     id: number;

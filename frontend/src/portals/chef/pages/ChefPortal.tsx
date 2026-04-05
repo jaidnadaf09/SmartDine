@@ -1,10 +1,11 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import ChefLayout from './components/ChefLayout';
-import ChefDashboard from './pages/ChefDashboard';
-import KitchenOrders from './pages/KitchenOrders';
-import OrderHistory from './pages/OrderHistory';
-import ChefFeedback from './pages/ChefFeedback';
+import ChefLayout from '../components/ChefLayout';
+import ChefDashboard from './ChefDashboard';
+import KitchenOrders from './KitchenOrders';
+
+import ChefFeedback from './ChefFeedback';
+import OrderHistory from './OrderHistory';
 
 const ChefPortal: React.FC = () => {
   return (

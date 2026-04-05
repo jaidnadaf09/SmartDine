@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import api from '../../../utils/api';
-import { useAuth } from '../../../context/AuthContext';
-import { Icons } from '../../../components/icons/IconSystem';
-import '../../../styles/Portals.css';
-import '../../../styles/ChefPortal.css';
-
+import api from '@utils/api';
+import { formatTime, formatDate } from '@utils/dateFormatter';
+import { useAuth } from '@context/AuthContext';
+import { Icons } from '@components/icons/IconSystem';
+import ChefOrderModal from '../components/ChefOrderModal';
+import '@styles/portals/Portals.css';
+import '@styles/portals/ChefPortal.css';
 
 interface OrderItem {
     itemName: string;
     quantity: number;
+    price: number;
+    specialInstructions?: string;
 }
 
 interface Order {
     id: number;
+    orderType: 'DINE_IN' | 'TAKEAWAY';
     items: OrderItem[];
     tableNumber: number;
     totalAmount: number;
+    status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
+    createdAt: string;
     updatedAt: string;
-    orderType: string;
+    customer?: { name: string };
+    User?: { name: string };
+    specialInstructions?: string;
 }
 
 const OrderHistory: React.FC = () => {
@@ -25,13 +33,35 @@ const OrderHistory: React.FC = () => {
     const token = user?.token;
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-    const fetchHistory = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) { setLoading(false); return; }
+    const fetchOrderHistory = async () => {
+        if (!token) return;
         try {
-            const response = await api.get('/chef/order-history');
-            setOrders(response.data);
+            // Fix: Use general /orders endpoint as /chef/orders only returns active orders
+            // Add includeHistory=true to fetch completed/cancelled and timestamp to bypass cache
+            const res = await api.get(`/orders?includeHistory=true&t=${Date.now()}`);
+            const allOrders = res.data;
+            
+            // Debug: Log statuses to verify actual values
+            console.log("Order History raw statuses:", allOrders.map((o: any) => o.status));
+
+            // Filter: Completed or Cancelled (Normalized check)
+            const historyOrders = allOrders.filter((o: Order) => {
+                const status = o.status?.toLowerCase();
+                return (
+                    status === 'completed' || 
+                    status === 'cancelled' || 
+                    status === 'canceled'
+                );
+            });
+
+            // Sort: Newest First
+            historyOrders.sort((a: Order, b: Order) => 
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            setOrders(historyOrders);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching order history:', error);
@@ -40,16 +70,8 @@ const OrderHistory: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchHistory();
+        fetchOrderHistory();
     }, [token]);
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
 
     if (loading) return (
         <div className="chef-loading">
@@ -60,69 +82,116 @@ const OrderHistory: React.FC = () => {
 
     return (
         <div className="chef-page">
-            <header className="admin-page-header">
-                <h1 className="admin-page-title">Activity History</h1>
-                <p className="admin-page-subtitle">Review completed kitchen orders and performance stats.</p>
-                <div className="admin-header-divider"></div>
-            </header>
-            
+            <div className="page-section">
+                <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="tab-btn active" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <Icons.historyIcon size={18} style={{ marginRight: '8px' }} /> Order History
+                        <span className="chef-tab-count" style={{ marginLeft: '8px', background: 'white', color: 'var(--brand-primary)' }}>{orders.length}</span>
+                    </div>
+                </div>
+            </div>
+
             {orders.length === 0 ? (
                 <div className="admin-card" style={{ textAlign: 'center', padding: '80px 20px', background: 'transparent' }}>
-                    <div style={{ opacity: 0.2 }}><Icons.historyIcon size={80} /></div>
-                    <h3 className="chef-empty-title" style={{ marginTop: '24px' }}>History is Empty</h3>
-                    <p style={{ color: 'var(--text-secondary)' }}>Orders completed during this session will appear here.</p>
+                    <div className="chef-empty-icon" style={{ opacity: 0.2 }}>
+                        <Icons.historyIcon size={80} />
+                    </div>
+                    <h3 className="chef-empty-title" style={{ marginTop: '24px', fontSize: '1.5rem', color: 'var(--text-primary)' }}>
+                        No History Found
+                    </h3>
+                    <p className="chef-empty-sub" style={{ maxWidth: '400px', margin: '12px auto 0', color: 'var(--text-muted)' }}>
+                        You haven't completed or cancelled any orders yet. Finished orders will appear here for your records.
+                    </p>
                 </div>
             ) : (
                 <div className="chef-cards-grid">
                     {orders.map(order => (
-                        <div key={order.id} className="admin-card" style={{ padding: '0', overflow: 'hidden' }}>
-                            <div className="chef-card-header" style={{ padding: '15px 20px', borderBottom: '1px solid var(--card-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span className="chef-card-id" style={{ fontWeight: 800, color: 'var(--text-secondary)' }}>ORD-#{order.id}</span>
-                                <span className="status-pill-modern status-modern-completed">
-                                    COMPLETED
+                        <div 
+                            key={order.id} 
+                            className={`premium-order-card history-card ${order.status === 'cancelled' ? 'status-cancelled-border' : ''}`}
+                            style={{ 
+                                opacity: order.status === 'cancelled' ? 0.85 : 1,
+                                padding: '16px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '10px'
+                            }}
+                            onClick={() => setSelectedOrder(order)}
+                        >
+                            {/* Card Header: ID + Status */}
+                            <div className="premium-card-header" style={{ marginBottom: 0, paddingBottom: '8px' }}>
+                                <div className="premium-card-id" style={{ fontSize: '0.9rem' }}>
+                                    <span className="order-hash">#</span>{order.id}
+                                </div>
+                                <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`} style={{ fontSize: '0.7rem', padding: '3px 10px' }}>
+                                    {order.status}
                                 </span>
                             </div>
 
-                            {/* Details Grid */}
-                            <div className="chef-card-details" style={{ padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <Icons.utensils size={16} style={{ color: 'var(--brand-primary)' }} />
-                                    <div>
-                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Location</div>
-                                        <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber}`}</div>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <Icons.clock size={16} style={{ color: '#3b82f6' }} />
-                                    <div>
-                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Finished</div>
-                                        <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{new Date(order.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    <Icons.rupee size={16} style={{ color: '#10b981' }} />
-                                    <div>
-                                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>Rev</div>
-                                        <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{formatCurrency(order.totalAmount)}</div>
-                                    </div>
-                                </div>
+                            {/* Customer Info: Compact */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.95rem' }}>
+                                <Icons.user size={14} className="icon-primary" />
+                                {order.customer?.name || order.User?.name || 'Guest'}
                             </div>
 
-                            {/* Items Container */}
-                            <div className="chef-items-container">
-                                <div className="chef-items-label">Completed Items</div>
-                                {order.items.map((item, idx) => (
-                                    <div key={idx} className="chef-item-row">
-                                        <div className="chef-item-info">
-                                            <span className="chef-item-qty">{item.quantity}x</span>
-                                            <span className="chef-item-name">{item.itemName}</span>
-                                        </div>
-                                    </div>
-                                ))}
+                            {/* Timestamp: Compact */}
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <Icons.calendar size={12} />
+                                <span>
+                                    {order.status === 'completed' ? 'Completed' : 'Cancelled'} on: {formatDate(order.updatedAt)} • {formatTime(order.updatedAt)}
+                                </span>
+                            </div>
+
+                            {/* Main Item: Highlighted */}
+                            {order.items && order.items.length > 0 && (
+                                <div style={{ 
+                                    fontWeight: 500, 
+                                    marginTop: '4px', 
+                                    color: 'var(--text-primary)',
+                                    fontSize: '0.9rem',
+                                    borderLeft: '2px solid var(--brand-primary)',
+                                    paddingLeft: '10px'
+                                }}>
+                                    {order.items[0].itemName}
+                                    {order.items.length > 1 && <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: '6px' }}>+{order.items.length - 1} more items</span>}
+                                </div>
+                            )}
+
+                            {/* Amount: Bold */}
+                            <div style={{ 
+                                marginTop: '4px', 
+                                fontSize: '1.1rem', 
+                                fontWeight: 800, 
+                                color: 'var(--brand-primary)' 
+                            }}>
+                                ₹{order.totalAmount}
+                            </div>
+
+                            {/* View Details Footer */}
+                            <div style={{ 
+                                marginTop: '4px', 
+                                paddingTop: '10px', 
+                                borderTop: '1px dashed var(--border-subtle)',
+                                fontSize: '0.75rem', 
+                                color: 'var(--brand-primary)', 
+                                fontWeight: 700,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                cursor: 'pointer'
+                            }}>
+                                Click to view full details <Icons.right size={12} />
                             </div>
                         </div>
                     ))}
                 </div>
+            )}
+
+            {selectedOrder && (
+                <ChefOrderModal 
+                    order={selectedOrder} 
+                    onClose={() => setSelectedOrder(null)} 
+                />
             )}
         </div>
     );

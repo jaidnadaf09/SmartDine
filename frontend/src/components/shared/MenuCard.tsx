@@ -13,7 +13,7 @@ interface MenuCardProps {
   item: MenuItemType;
   quantityInCart: number;
   isFavourite: boolean;
-  onAddToCart: (item: MenuItemType) => void;
+  onAddToCart: (item: MenuItemType, e: React.MouseEvent) => void;
   onUpdateQuantity: (id: number, quantity: number) => void;
   onToggleFavourite: (id: number) => void;
 }
@@ -28,7 +28,6 @@ const MenuCard: React.FC<MenuCardProps> = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddAnimation, setShowAddAnimation] = useState(false);
-  const [isFlying, setIsFlying] = useState(false);
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,7 +35,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
   };
 
   return (
-    <div className={`compact-menu-card ${quantityInCart > 0 ? 'in-cart-glow' : ''} ${isExpanded ? 'expanded' : ''} ${isFlying ? 'fly' : ''}`}>
+    <div className={`compact-menu-card ${quantityInCart > 0 ? 'in-cart-glow' : ''} ${isExpanded ? 'expanded' : ''}`}>
       
       {/* Header: Name + Expand Arrow */}
       <div className="menu-card-header">
@@ -112,18 +111,14 @@ const MenuCard: React.FC<MenuCardProps> = ({
             className="add-btn-full"
             onClick={(e) => {
               e.stopPropagation();
-              onAddToCart(item);
+              onAddToCart(item, e);
               setShowAddAnimation(true);
-              setIsFlying(true);
               setTimeout(() => setShowAddAnimation(false), 700);
-              setTimeout(() => setIsFlying(false), 600);
             }}
           >
             Add
           </button>
         )}
-        
-        {isFlying && <div className="fly-particle" />}
       </div>
     </div>
   );

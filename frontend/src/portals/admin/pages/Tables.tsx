@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import api from '../../../utils/api';
-import { Icons } from '../../../components/icons/IconSystem';
+import api from '@utils/api';
+import { Icons } from '@components/icons/IconSystem';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import FormField from '../components/FormField';
-import Button from '../../../components/ui/Button';
-import Modal from '../../../components/ui/Modal';
-import Select from '../../../components/ui/Select';
-import ConfirmDialog from '../../../components/shared/ConfirmDialog';
+import Button from '@ui/Button';
+import Modal from '@ui/Modal';
+import Select from '@ui/Select';
+import ConfirmDialog from '@ui/ConfirmModal';
 
 interface TablesProps {
     hideHeader?: boolean;
@@ -209,6 +209,11 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
         return matchesSearch && matchesStatus && matchesCapacity;
     });
 
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
+
     return (
         <div className={hideHeader ? "" : "management-page"}>
 
@@ -240,7 +245,8 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
                     onSearchChange={setSearchTerm}
                     filters={filterConfig}
                     activeFilters={activeFilters}
-                    onFilterChange={(key: string, value: string) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    onFilterChange={(key: string, value: string) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onClearAll={clearAllFilters}
                     searchPlaceholder="Search table number..."
                 />
             )}

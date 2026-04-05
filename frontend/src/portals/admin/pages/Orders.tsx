@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
-import { formatTime } from '../../../utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import { formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '../../../components/ui/Button';
-import Select from '../../../components/ui/Select';
+import Button from '@ui/Button';
+import Select from '@ui/Select';
 
 const Orders: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -18,7 +18,7 @@ const Orders: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await api.get('/orders');
+            const res = await api.get(`/orders?includeAll=true&t=${Date.now()}`);
             setOrders(Array.isArray(res.data) ? res.data : []);
         } catch (err: any) {
             console.error('Failed to fetch orders:', err);
@@ -37,11 +37,7 @@ const Orders: React.FC = () => {
     const updateStatus = async (id: number, status: string) => {
         try {
             await api.patch(`/orders/${id}/status`, { status });
-            if (status === 'completed') {
-                setOrders(orders.filter(o => o.id !== id));
-            } else {
-                setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
-            }
+            setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
             toast.success('Order status updated');
         } catch (err: any) {
             console.error('Failed to update order status:', err);
@@ -156,13 +152,18 @@ const Orders: React.FC = () => {
         return matchesSearch && matchesStatus && matchesType;
     });
 
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
+
     return (
         <div className="management-page">
 
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>
                     <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
-                    <p style={{ color: 'var(--text-muted)' }}>Fetching active orders...</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Fetching all orders...</p>
                 </div>
             ) : error ? (
                 <div className="error-state">
@@ -177,7 +178,8 @@ const Orders: React.FC = () => {
                     onSearchChange={setSearchTerm}
                     filters={filterConfig}
                     activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onClearAll={clearAllFilters}
                     searchPlaceholder="Search order ID or customer name..."
                 />
             )}

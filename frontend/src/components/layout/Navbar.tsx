@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useAuthModal } from '../../context/AuthModalContext';
-import AvatarDropdown from './AvatarDropdown';
-import NotificationPanel from './NotificationPanel';
+import { useAuth } from '@context/AuthContext';
+import { useAuthModal } from '@context/AuthModalContext';
+import AvatarDropdown from '@shared/AvatarDropdown';
+import NotificationPanel from '@feedback/NotificationPanel';
 import { Icons } from '../icons/IconSystem';
 import '../../App.css';
 import './MobileBottomNav.css';
@@ -89,8 +89,8 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
   };
 
   return (
-    <header className="header">
-      <div className="header-content">
+    <header className="sd-header">
+      <div className="sd-header-left">
         {/* Logo */}
         <div className="brand" onClick={handleBrandClick}>
           <Icons.utensils className="brand-icon" />
@@ -98,53 +98,44 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
           {roleTag && <span className="role-tag-badge">{roleTag}</span>}
         </div>
 
-        {/* Nav Links + Right controls */}
-        <div className="navbar-right">
-          <nav className="nav-buttons desktop-nav">
-            {finalLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={(e) => {
-                  handleProtectedNavigation(e, link.path);
+        {/* Nav Links */}
+        <nav className="nav-buttons desktop-nav">
+          {finalLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              onClick={(e) => {
+                handleProtectedNavigation(e, link.path);
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }, 0);
+              }}
+              className={`nav-btn${isActive(link.path) ? ' active' : ''} navbar-item`}
+            >
+              {link.icon}
+              <span className="nav-label">{link.name}</span>
+            </Link>
+          ))}
+        </nav>
+      </div>
 
-                  setTimeout(() => {
-                    window.scrollTo({
-                      top: 0,
-                      behavior: "smooth"
-                    });
-                  }, 0);
-                }}
-                className={`nav-btn${isActive(link.path) ? ' active' : ''} navbar-item`}
-              >
-                {link.icon}
-                <span className="nav-label">{link.name}</span>
-              </Link>
-            ))}
-          </nav>
-
-          {/* Auth */}
-          {isAuthenticated ? (
-            <div className="navbar-user-welcome header-actions">
-              <span className="welcome-text">Welcome, {user?.name}</span>
-              
-              <NotificationPanel />
-              <AvatarDropdown />
-            </div>
-          ) : (
-            <>
-              <button className="nav-btn login-btn" onClick={() => openAuthModal('login')}>
-                Login
-              </button>
-              <button
-                className="nav-btn signup-btn"
-                onClick={() => openAuthModal('signup')}
-              >
-                Sign Up
-              </button>
-            </>
-          )}
-        </div>
+      <div className="sd-header-right">
+        {isAuthenticated ? (
+          <>
+            <span className="sd-welcome-text">Welcome, {user?.name}</span>
+            <NotificationPanel />
+            <AvatarDropdown />
+          </>
+        ) : (
+          <>
+            <button className="nav-btn login-btn" onClick={() => openAuthModal('login')}>
+              Login
+            </button>
+            <button className="nav-btn signup-btn" onClick={() => openAuthModal('signup')}>
+              Sign Up
+            </button>
+          </>
+        )}
       </div>
     </header>
   );

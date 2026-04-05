@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
+import { useAuth } from '@context/AuthContext';
 import toast from 'react-hot-toast';
 import FormField from '../../admin/components/FormField';
 import { motion } from 'framer-motion';
-import '../../../styles/Profile.css';
+import '@styles/pages/Profile.css';
 
 const getPasswordStrength = (pw: string): { level: string; class: string } => {
   if (!pw || pw.length < 6) return { level: 'Weak', class: 'weak' };

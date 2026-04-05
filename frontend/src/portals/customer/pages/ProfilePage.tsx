@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import { formatDate } from '../../../utils/dateFormatter';
-import { Icons } from '../../../components/icons/IconSystem';
+import { useAuth } from '@context/AuthContext';
+import { formatDate } from '@utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
 import { motion } from 'framer-motion';
-import '../../../styles/Profile.css';
+import '@styles/pages/Profile.css';
 
 const ProfilePage: React.FC = () => {
     const navigate = useNavigate();

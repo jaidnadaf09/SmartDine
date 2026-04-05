@@ -14,7 +14,8 @@
     --card-muted: #f8fafc;
 
     /* Borders */
-    --border-subtle: #e2e8f0;
+    --border-subtle: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.18);
     --border-default: #cbd5e1;
     --border: var(--border-subtle);
 
@@ -52,6 +53,15 @@
     --space-3: 12px;
     --space-4: 16px;
     --space-5: 20px;
+
+    /* Layering Scale */
+    --z-base: 1;
+    --z-card: 10;
+    --z-header: 100;
+    --z-dropdown: 1000;
+    --z-popover: 1100;
+    --z-modal: 2000;
+    --z-toast: 3000;
 }
 
 .dark {

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
-import { formatDate, formatTime } from '../../../utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import { formatDate, formatTime } from '@utils/dateFormatter';
 import { motion } from 'framer-motion';
-import Button from '../../../components/ui/Button';
+import Button from '@ui/Button';
 
 const ActivityOverview: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);

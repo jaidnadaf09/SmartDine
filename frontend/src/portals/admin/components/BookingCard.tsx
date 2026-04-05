@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Icons } from '../../../components/icons/IconSystem';
-import { formatDate, formatTime } from '../../../utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
+import { formatDate, formatTime } from '@utils/dateFormatter';
 
 interface BookingCardProps {
     booking: any;

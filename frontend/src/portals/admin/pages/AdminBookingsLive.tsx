@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Icons } from '../../../components/icons/IconSystem';
-import Button from '../../../components/ui/Button';
+import { Icons } from '@components/icons/IconSystem';
+import Button from '@ui/Button';
 import BookingCard from '../components/BookingCard';
 import AssignTableModal from '../components/AssignTableModal';
 import {
@@ -14,7 +14,7 @@ import {
     completeBooking,
     unassignTable as unassignTableApi,
 } from '../../../services/bookingService';
-import '../../../styles/AdminBookingsLive.css';
+import '@styles/portals/AdminBookingsLive.css';
 
 const POLL_INTERVAL = 10_000; // 10 seconds
 

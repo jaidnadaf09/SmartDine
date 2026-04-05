@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import { useAuthModal } from '../../../context/AuthModalContext';
-import '../../../styles/Portals.css';
+import { useAuth } from '@context/AuthContext';
+import { useAuthModal } from '@context/AuthModalContext';
+import '@styles/portals/Portals.css';
 
-import AvatarDropdown from '../../../components/shared/AvatarDropdown';
-import { Icons } from '../../../components/icons/IconSystem';
-import Button from '../../../components/ui/Button';
+import AvatarDropdown from '@shared/AvatarDropdown';
+import NotificationPanel from '@feedback/NotificationPanel';
+import { Icons } from '@components/icons/IconSystem';
+import Button from '@ui/Button';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -123,28 +124,26 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </aside>
 
             <main className="admin-main">
-                <header className="header" style={{ 
-                    padding: '20px 24px 12px 24px', 
-                    background: 'var(--bg-card)', 
-                    borderBottom: '1px solid var(--border-color)',
-                    flexShrink: 0
-                }}>
-                    <div className="header-content" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, letterSpacing: '-0.025em', color: 'var(--text-primary)', margin: 0 }}>
+                <header className="sd-header">
+                    <div className="sd-header-left">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <h1 style={{ fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.025em', color: 'var(--text-primary)', margin: 0 }}>
                                 {meta.title}
                             </h1>
-                            <p style={{ fontSize: '0.875rem', opacity: 0.6, color: 'var(--text-primary)', margin: 0, maxWidth: '520px', lineHeight: 1.4 }}>
+                            <p style={{ fontSize: '0.8rem', opacity: 0.6, color: 'var(--text-primary)', margin: 0, maxWidth: '520px', lineHeight: 1.2 }}>
                                 {meta.description}
                             </p>
                         </div>
-                        <div className="navbar-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            <AvatarDropdown />
-                        </div>
+                    </div>
+                    
+                    <div className="sd-header-right">
+                        <span className="sd-welcome-text">Welcome, Administrator</span>
+                        <NotificationPanel />
+                        <AvatarDropdown />
                     </div>
                 </header>
 
-                <div className="admin-content" style={{ padding: '2rem', flex: 1, overflowY: 'auto' }}>
+                <div className="admin-content" style={{ padding: '24px 30px', flex: 1, overflowY: 'auto' }}>
                     {children}
                 </div>
             </main>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Button from '../../../components/ui/Button';
-import ModernSelect from '../../../components/ui/ModernSelect';
+import Button from '@ui/Button';
+import ModernSelect from '@ui/ModernSelect';
 
 interface Table {
     id: number;

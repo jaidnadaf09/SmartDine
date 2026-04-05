@@ -1,16 +1,16 @@
 import React, { useState, useRef } from 'react';
-import { Icons } from '../components/icons/IconSystem';
-import GuestStepper from '../components/shared/GuestStepper';
-import BookingCalendar from '../components/shared/BookingCalendar';
-import TimeDropdown from '../components/shared/TimeDropdown';
+import { Icons } from '@components/icons/IconSystem';
+import GuestStepper from '@shared/GuestStepper';
+import BookingCalendar from '@shared/BookingCalendar';
+import TimeDropdown from '@shared/TimeDropdown';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { useAuth } from '../context/AuthContext';
-import api from '../utils/api';
-import { useAuthModal } from '../context/AuthModalContext';
-import { formatDate, formatTime } from '../utils/dateFormatter';
-import '../styles/BookTable.css';
-import '../styles/Profile.css';
+import { useAuth } from '@context/AuthContext';
+import api from '@utils/api';
+import { useAuthModal } from '@context/AuthModalContext';
+import { formatDate, formatTime } from '@utils/dateFormatter';
+import '@styles/pages/BookTable.css';
+import '@styles/pages/Profile.css';
 
 
 // Using centralized api instance

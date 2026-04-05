@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Icons } from '../../components/icons/IconSystem';
-import { useAuth } from '../../context/AuthContext';
-import { useAuthModal } from '../../context/AuthModalContext';
-import WaiterLayout from './components/WaiterLayout';
-import '../../styles/Portals.css';
+import { Icons } from '@components/icons/IconSystem';
+import { useAuth } from '@context/AuthContext';
+import { useAuthModal } from '@context/AuthModalContext';
+import WaiterLayout from '../components/WaiterLayout';
+import '@styles/portals/Portals.css';
 
 interface Table {
   id: number;

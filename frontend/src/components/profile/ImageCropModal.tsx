@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import { motion, AnimatePresence } from 'framer-motion';
-import '../../styles/ImageCropModal.css';
+import '@styles/components/ImageCropModal.css';
 
 interface ImageCropModalProps {
   image: string | null;

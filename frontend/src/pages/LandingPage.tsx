@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/LandingPage.css';
-import restaurantImage from '../assets/Restaurant_business_plan_main.jpg';
-import restaurantInterior from '../assets/restaurant_interior.png';
-import reservedTable from '../assets/reserved_table.png';
-import { Icons } from '../components/icons/IconSystem';
+import '@styles/pages/LandingPage.css';
+import restaurantImage from '@assets/images/Restaurant_business_plan_main.jpg';
+import restaurantInterior from '@assets/images/restaurant_interior.png';
+import reservedTable from '@assets/images/reserved_table.png';
+import { Icons } from '@components/icons/IconSystem';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();

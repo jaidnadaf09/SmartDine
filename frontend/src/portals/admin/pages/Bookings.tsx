@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
-import { formatDate, formatTime } from '../../../utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '../../../components/ui/Button';
-import Modal from '../../../components/ui/Modal';
-import Select from '../../../components/ui/Select';
+import Button from '@ui/Button';
+import Modal from '@ui/Modal';
+import Select from '@ui/Select';
 
 interface BookingsProps {
     hideHeader?: boolean;
@@ -344,6 +344,11 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
         return matchesSearch && matchesStatus && matchesGuests && matchesTime;
     });
 
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
+
     return (
         <div className={hideHeader ? "" : "management-page"}>
 
@@ -365,7 +370,8 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
                     onSearchChange={setSearchTerm}
                     filters={filterConfig}
                     activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onClearAll={clearAllFilters}
                     searchPlaceholder="Search customer or table number..."
                 />
             )}

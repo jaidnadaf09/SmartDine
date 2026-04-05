@@ -1,7 +1,7 @@
 import React from 'react';
-import Navbar from '../../../components/shared/Navbar';
+import Navbar from '@layout/Navbar';
 import '../../../App.css';
-import '../../../styles/Portals.css';
+import '@styles/portals/Portals.css';
 
 interface WaiterLayoutProps {
   children: React.ReactNode;

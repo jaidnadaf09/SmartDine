@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import ConfirmDialog from '../../../components/shared/ConfirmDialog';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
+import ConfirmDialog from '@ui/ConfirmModal';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '../../../components/ui/Button';
-import Select from '../../../components/ui/Select';
+import Button from '@ui/Button';
+import Select from '@ui/Select';
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -147,6 +147,11 @@ const Users: React.FC = () => {
         return matchesSearch && matchesRole;
     });
 
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
+
     return (
         <div className="management-page">
 
@@ -168,7 +173,8 @@ const Users: React.FC = () => {
                     onSearchChange={setSearchTerm}
                     filters={filterConfig}
                     activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onClearAll={clearAllFilters}
                     searchPlaceholder="Search by name or email..."
                 />
             )}

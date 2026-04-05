@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Legal.css';
+import '@styles/pages/Legal.css';
 
 const ContactUs: React.FC = () => {
     const navigate = useNavigate();

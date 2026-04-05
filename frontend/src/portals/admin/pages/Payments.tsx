@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Icons } from '../../../components/icons/IconSystem';
-import api from '../../../utils/api';
-import { formatDate } from '../../../utils/dateFormatter';
+import { Icons } from '@components/icons/IconSystem';
+import api from '@utils/api';
+import { formatDate } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '../../../components/ui/Button';
+import Button from '@ui/Button';
 
 const Payments: React.FC = () => {
     const [payments, setPayments] = useState<any[]>([]);
@@ -122,6 +122,11 @@ const Payments: React.FC = () => {
         return matchesSearch && matchesStatus && matchesType;
     });
 
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
+
     return (
         <div className="management-page">
 
@@ -143,7 +148,8 @@ const Payments: React.FC = () => {
                     onSearchChange={setSearchTerm}
                     filters={filterConfig}
                     activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters({ ...activeFilters, [key]: value })}
+                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onClearAll={clearAllFilters}
                     searchPlaceholder="Search customer or payment ID..."
                 />
             )}

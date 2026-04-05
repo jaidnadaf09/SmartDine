@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Tables from './Tables';
 import AdminBookingsLive from './AdminBookingsLive';
 import AdminBookingHistory from './AdminBookingHistory';
-import '../../../styles/AdminBookingsLive.css';
+import '@styles/portals/AdminBookingsLive.css';
 
 type Tab = 'tables' | 'live-bookings' | 'history';
 
