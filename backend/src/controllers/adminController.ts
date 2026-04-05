@@ -371,18 +371,27 @@ export const getTables = async (req: Request, res: Response) => {
 export const getAvailableTables = async (req: Request, res: Response) => {
     console.log("Admin: Fetching available tables");
     try {
-        const bookings = await Booking.findAll({
-            where: { tableId: { [Op.ne]: null } }
+        // Only exclude tables that have an ACTIVE booking (pending/confirmed/checked_in)
+        const activeBookings = await Booking.findAll({
+            where: {
+                tableId: { [Op.ne]: null },
+                status: { [Op.in]: ['pending', 'confirmed', 'checked_in'] }
+            }
         });
 
-        const assignedTableIds = bookings.map(b => b.tableId);
+        const assignedTableIds = activeBookings
+            .map(b => b.tableId)
+            .filter((id): id is number => id !== null);
 
-        let whereClause = {};
+        let whereClause: any = {};
         if (assignedTableIds.length > 0) {
             whereClause = { id: { [Op.notIn]: assignedTableIds } };
         }
 
-        const tables = await Table.findAll({ where: whereClause });
+        const tables = await Table.findAll({
+            where: whereClause,
+            order: [['tableNumber', 'ASC']]
+        });
         res.json(tables);
     } catch (error) {
         console.error("Error fetching available tables:", error);

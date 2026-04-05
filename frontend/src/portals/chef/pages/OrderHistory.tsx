@@ -23,7 +23,7 @@ interface Order {
     status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
     createdAt: string;
     updatedAt: string;
-    customer?: { name: string };
+    customer?: { id: number; name: string };
     User?: { name: string };
     specialInstructions?: string;
 }

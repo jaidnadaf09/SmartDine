@@ -265,10 +265,18 @@ const OrderPage: React.FC = () => {
            updateUser({ walletBalance: walletRes.data.walletBalance });
         }
 
-        toast.success(`Payment successful! Order placed. Total: ₹${totalAmountFloat}`);
+        const walletOrder = walletRes.data.order;
+        toast.success(`Payment successful! Order placed.`);
         setCart([]);
         setIsCartOpen(false);
-        navigate('/');
+        navigate('/customer/order-success', {
+          state: {
+            orderId: walletOrder?.id,
+            items: cart.map(i => ({ itemName: i.name, quantity: i.quantity })),
+            totalAmount: totalAmountFloat,
+            paymentMethod: 'wallet',
+          }
+        });
         setLoading(false);
         return;
       }
@@ -293,7 +301,7 @@ const OrderPage: React.FC = () => {
             });
 
             if (verifyRes.data.success) {
-              await api.post('/orders', {
+              const orderRes2 = await api.post('/orders', {
                 userId: user.id,
                 totalAmount: totalAmountFloat,
                 paymentId: response.razorpay_payment_id,
@@ -306,9 +314,18 @@ const OrderPage: React.FC = () => {
               });
 
               toast.success(`Payment successful! Order placed.`);
+              const cartSnapshot = [...cart];
               setCart([]);
               setIsCartOpen(false);
-              navigate('/');
+              navigate('/customer/order-success', {
+                state: {
+                  orderId: orderRes2.data?.id,
+                  items: cartSnapshot.map(i => ({ itemName: i.name, quantity: i.quantity })),
+                  totalAmount: totalAmountFloat,
+                  paymentMethod: 'online',
+                  paymentId: response.razorpay_payment_id,
+                }
+              });
             } else {
               setError("Payment signature verification failed.");
             }

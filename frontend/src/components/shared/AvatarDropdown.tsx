@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@context/AuthContext';
 import { useAuthModal } from '@context/AuthModalContext';
 import { Icons } from '../icons/IconSystem';
-import { createPortal } from 'react-dom';
 
 const AvatarDropdown: React.FC = () => {
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -57,7 +55,7 @@ const AvatarDropdown: React.FC = () => {
               loading="lazy"
             />
           ) : (
-            <Icons.user size={20} color="var(--brand-primary)" />
+            <Icons.user size={20} className="sd-profile-icon" />
           )}
         </div>
       </button>

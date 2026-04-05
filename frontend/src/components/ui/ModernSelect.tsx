@@ -154,7 +154,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({
                 left: `${menuPosition.left}px`,
                 width: `${menuPosition.width}px`,
                 minWidth: `${menuPosition.width}px`,
-                zIndex: 'var(--z-dropdown, 1000)',
+                zIndex: 99999,
             }}
         >
             {options.length === 0 ? (

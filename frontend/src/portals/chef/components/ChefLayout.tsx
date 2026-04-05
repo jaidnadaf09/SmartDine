@@ -26,7 +26,7 @@ const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
     }, [location.pathname]);
 
     const navLinks = [
-        { path: '/chef', label: 'Dashboard', icon: <Icons.dashboard size={20} /> },
+        { path: '/chef/dashboard', label: 'Dashboard', icon: <Icons.dashboard size={20} /> },
         { path: '/chef/orders', label: 'Kitchen Orders', icon: <Icons.chef size={20} /> },
         { path: '/chef/order-history', label: 'Order History', icon: <Icons.historyIcon size={20} /> },
         { path: '/chef/feedback', label: 'Customer Feedback', icon: <Icons.star size={20} /> },

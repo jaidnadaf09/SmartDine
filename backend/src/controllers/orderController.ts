@@ -34,6 +34,11 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
 
         const orders = await Order.findAll({
             where: whereClause,
+            include: [{
+                model: User,
+                as: 'customer',
+                attributes: ['id', 'name']
+            }],
             order: [['createdAt', 'DESC']]
         });
         res.json(orders);

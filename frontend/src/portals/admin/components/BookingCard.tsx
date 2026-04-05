@@ -9,6 +9,8 @@ interface BookingCardProps {
     onCheckIn: (bookingId: number) => void;
     onReject: (booking: any) => void;
     onAssign: (bookingId: number) => void;
+    onUnassign?: (bookingId: number) => void;
+    onChangeTable?: (bookingId: number) => void;
 }
 
 const isNewBooking = (createdAt?: string | Date): boolean => {
@@ -40,6 +42,8 @@ const BookingCard: React.FC<BookingCardProps> = ({
     onCheckIn,
     onReject,
     onAssign,
+    onUnassign: _onUnassign,
+    onChangeTable: _onChangeTable,
 }) => {
     const [assigning, setAssigning] = useState(false);
     const [completing, setCompleting] = useState(false);

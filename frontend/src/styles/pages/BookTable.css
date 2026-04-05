@@ -212,6 +212,7 @@ body[data-theme="dark"] .book-table-box {
   box-shadow: var(--shadow-sm);
   margin-bottom: 12px;
   transition: 0.2s ease;
+  overflow: visible !important;
 }
 
 body[data-theme="dark"] .booking-card {
@@ -321,7 +322,7 @@ body[data-theme="dark"] .booking-card {
   padding: 16px;
   border: 1px solid var(--glass-border);
   box-shadow: var(--card-shadow-lg);
-  z-index: 9999;
+  z-index: 11000 !important;
   max-height: 320px;
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -433,7 +434,7 @@ body[data-theme="dark"] .time-slot.selected {
   padding: 16px;
   border: 1px solid rgba(198, 167, 105, 0.2);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
-  z-index: 9999;
+  z-index: 11000 !important;
 }
 
 /* ── Smart Positioning Utility ── */

@@ -53,7 +53,7 @@ const ChefDashboard: React.FC = () => {
 
   const quickLinks = [
     { label: 'View Kitchen Orders', path: '/chef/orders', icon: <Icons.chef size={20} /> },
-    { label: 'Order History', path: '/chef/history', icon: <Icons.historyIcon size={20} /> },
+    { label: 'Order History', path: '/chef/order-history', icon: <Icons.historyIcon size={20} /> },
     { label: 'Inventory (Soon)', path: '#', icon: <Icons.package size={20} /> },
   ];
 

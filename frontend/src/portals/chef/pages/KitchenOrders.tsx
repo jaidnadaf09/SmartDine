@@ -9,8 +9,21 @@ import Select from '@ui/Select';
 import ConfirmModal from '@ui/ConfirmModal';
 import {
 } from 'lucide-react';
-import '@styles/portals/Portals.css';
 import '@styles/portals/ChefPortal.css';
+
+const ORDER_STATUS = {
+    PENDING: 'pending',
+    PREPARING: 'preparing',
+    READY: 'ready',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled'
+};
+
+const ACTIONABLE_STATUSES = [
+    ORDER_STATUS.PENDING,
+    ORDER_STATUS.PREPARING,
+    ORDER_STATUS.READY
+];
 
 interface OrderItem {
     itemName: string;
@@ -28,7 +41,7 @@ interface Order {
     status: 'pending' | 'preparing' | 'ready' | 'completed' | 'cancelled';
     createdAt: string;
     updatedAt: string;
-    customer?: { name: string };
+    customer?: { id: number; name: string };
     User?: { name: string };
     specialInstructions?: string;
 }
@@ -69,7 +82,7 @@ const KitchenOrders: React.FC = () => {
             // Detect newly arrived orders
             const existingIds = prevOrdersRef.current.map((o: Order) => o.id);
             const freshIds = newOrders
-                .filter((o: Order) => o.status === 'pending' && !existingIds.includes(o.id))
+                .filter((o: Order) => o.status === ORDER_STATUS.PENDING && !existingIds.includes(o.id))
                 .map((o: Order) => o.id);
 
             // Sound notification + glow for new orders
@@ -113,7 +126,7 @@ const KitchenOrders: React.FC = () => {
         if (!rejectTarget) return;
         
         try {
-            await api.put(`/chef/orders/${rejectTarget}/status`, { status: 'cancelled' });
+            await api.put(`/chef/orders/${rejectTarget}/status`, { status: ORDER_STATUS.CANCELLED });
             toast.success('Order rejected and cancelled');
             setRejectTarget(null);
             fetchOrders();
@@ -234,10 +247,10 @@ const KitchenOrders: React.FC = () => {
                                     )}
                                 </div>
 
-                                <div className="order-actions">
-                                    {order.status === 'pending' && (
+                                 <div className="order-actions">
+                                    {order.status === ORDER_STATUS.PENDING && (
                                         <>
-                                            <button className="btn-primary-action" onClick={() => handleUpdateStatus(order.id, 'preparing')}>
+                                            <button className="btn-primary-action" onClick={() => handleUpdateStatus(order.id, ORDER_STATUS.PREPARING)}>
                                                 <Icons.play size={16} fill="white" /> Start Preparing
                                             </button>
                                             <button className="btn-danger-action" onClick={() => setRejectTarget(order.id)}>
@@ -245,30 +258,39 @@ const KitchenOrders: React.FC = () => {
                                             </button>
                                         </>
                                     )}
-                                    {order.status === 'preparing' && (
-                                        <button className="btn-primary-action" onClick={() => handleUpdateStatus(order.id, 'ready')}>
+                                    {order.status === ORDER_STATUS.PREPARING && (
+                                        <button className="btn-primary-action" onClick={() => handleUpdateStatus(order.id, ORDER_STATUS.READY)}>
                                             <Icons.chef size={16} /> Mark Ready
                                         </button>
                                     )}
-                                    {order.status === 'ready' && (
-                                        <button className="btn-primary-action" onClick={() => handleUpdateStatus(order.id, 'completed')}>
+                                    {order.status === ORDER_STATUS.READY && (
+                                        <button className="btn-primary-action" onClick={() => handleUpdateStatus(order.id, ORDER_STATUS.COMPLETED)}>
                                             <Icons.checkCircle size={16} /> Mark Completed
                                         </button>
                                     )}
-                                    <div className="premium-select-wrap">
-                                        <Select 
-                                            className="status-select"
-                                            value={order.status}
-                                            onChange={(value) => handleUpdateStatus(order.id, value)}
-                                            options={[
-                                                { label: 'Pending', value: 'pending' },
-                                                { label: 'Preparing', value: 'preparing' },
-                                                { label: 'Ready', value: 'ready' },
-                                                { label: 'Completed', value: 'completed' },
-                                                { label: 'Cancelled', value: 'cancelled' }
-                                            ]}
-                                        />
-                                    </div>
+                                    
+                                    {ACTIONABLE_STATUSES.includes(order.status) ? (
+                                        <div className="premium-select-wrap">
+                                            <Select 
+                                                className="status-select"
+                                                value={order.status}
+                                                onChange={(value) => handleUpdateStatus(order.id, value)}
+                                                options={[
+                                                    { label: 'Pending', value: ORDER_STATUS.PENDING },
+                                                    { label: 'Preparing', value: ORDER_STATUS.PREPARING },
+                                                    { label: 'Ready', value: ORDER_STATUS.READY },
+                                                    { label: 'Completed', value: ORDER_STATUS.COMPLETED },
+                                                    { label: 'Cancelled', value: ORDER_STATUS.CANCELLED }
+                                                ]}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="final-status-badge-wrap" style={{ marginLeft: 'auto' }}>
+                                            <span className={`status-badge ${order.status}`}>
+                                                {order.status}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -287,7 +309,7 @@ const KitchenOrders: React.FC = () => {
             <ConfirmModal
                 open={rejectTarget !== null}
                 title="Reject Order?"
-                description="Are you sure you want to REJECT this order? This will cancel the order and move it to history."
+                message="Are you sure you want to REJECT this order? This will cancel the order and move it to history."
                 confirmText="Reject Order"
                 onConfirm={confirmReject}
                 onCancel={() => setRejectTarget(null)}

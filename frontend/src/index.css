@@ -331,7 +331,19 @@ body {
 }
 
 .light .sd-bell-icon {
-  color: #374151;
+  color: #ffffff;
+}
+
+.sd-profile-icon {
+  transition: all 0.2s ease;
+}
+
+.dark .sd-profile-icon {
+  color: rgba(255,255,255,0.85);
+}
+
+.light .sd-profile-icon {
+  color: #ffffff;
 }
 
 .sd-notification-btn:hover .sd-bell-icon {

@@ -8,7 +8,6 @@ interface BookingCalendarProps {
 
 const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,14 +18,6 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChang
     };
     if (isOpen) {
       window.addEventListener('click', handleClick);
-      
-      // Smart Positioning Logic
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        // Calendar popup is taller (approx 400px with header/actions)
-        setOpenUpward(spaceBelow < 450);
-      }
     }
     return () => window.removeEventListener('click', handleClick);
   }, [isOpen]);
@@ -58,7 +49,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChang
   };
 
   return (
-    <div className="custom-calendar-container" ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div className="custom-calendar-container" ref={containerRef} style={{ position: 'relative', width: '100%', zIndex: isOpen ? 100 : 'auto' }}>
       <div
         className="selector-box"
         onClick={() => setIsOpen(!isOpen)}
@@ -69,7 +60,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ selectedDate, onChang
       </div>
 
       {isOpen && (
-        <div className={`calendar-popup popup-animation ${openUpward ? 'open-upward' : ''}`}>
+        <div className="calendar-popup popup-animation">
           <div className="calendar-popup-header">
             <span className="calendar-popup-title">Select Date</span>
             <button

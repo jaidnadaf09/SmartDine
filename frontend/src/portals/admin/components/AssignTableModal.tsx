@@ -84,11 +84,18 @@ const AssignTableModal: React.FC<AssignTableModalProps> = ({
                     style={{ position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, background: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(12px)' }}
                 >
                     <motion.div 
+                        className="modal-premium assign-table-modal"
                         initial={{ opacity: 0, scale: 0.96, y: 8 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.96, y: 8 }}
                         transition={{ duration: 0.18, ease: "easeOut" }}
-                        style={{ width: '440px', borderRadius: '16px', padding: '28px', background: 'var(--card-bg)', border: '1px solid rgba(255, 255, 255, 0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', display: 'flex', flexDirection: 'column', gap: '24px' }}
+                        style={{ 
+                            width: '440px', borderRadius: '16px', padding: '28px', 
+                            background: 'var(--card-bg)', border: '1px solid rgba(255, 255, 255, 0.1)', 
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', 
+                            display: 'flex', flexDirection: 'column', gap: '24px',
+                            overflow: 'visible', isolation: 'isolate'
+                        }}
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}

@@ -358,10 +358,15 @@ textarea:focus {
 }
 
 .chef-sidebar .nav-link.active {
-  background: rgba(120, 72, 32, 0.12);
-  color: var(--brand-primary) !important;
-  font-weight: 600;
-  border-left: 3px solid var(--brand-primary);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.05));
+  color: #D4AF37 !important;
+  font-weight: 700;
+  border-left: 3px solid #D4AF37;
+  box-shadow: inset 4px 0 10px rgba(212, 175, 55, 0.05);
+}
+
+.dark .chef-sidebar .nav-link.active {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.08));
 }
 
 

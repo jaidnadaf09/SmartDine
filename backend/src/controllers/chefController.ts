@@ -47,7 +47,7 @@ export const getKitchenOrders = async (req: Request, res: Response) => {
             include: [{
                 model: User,
                 as: 'customer',
-                attributes: ['name']
+                attributes: ['id', 'name']
             }],
             order: [['createdAt', 'ASC']]
         });

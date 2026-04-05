@@ -15,8 +15,8 @@ const SLOT_SECTIONS = [
   {
     label: 'Lunch',
     slots: [
-      '14:30', '15:00', '15:30', '16:00',
-      '16:30', '17:00', '17:30', '18:00'
+      '13:00', '13:30', '14:00', '14:30', 
+      '15:00', '15:30', '16:00', '16:30', '17:00'
     ],
   },
   {
@@ -63,7 +63,7 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
   };
 
   return (
-    <div className="custom-time-dropdown-container" ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div className="custom-time-dropdown-container" ref={containerRef} style={{ position: 'relative', width: '100%', zIndex: isOpen ? 100 : 'auto' }}>
       <div
         className="selector-box"
         onClick={() => setIsOpen(!isOpen)}

@@ -224,9 +224,19 @@ const MyOrders: React.FC = () => {
     }
   };
 
+  const isWithinCancelWindow = (createdAt: any) => {
+    if (!createdAt) return false;
+    const createdTime = new Date(createdAt).getTime();
+    const now = Date.now();
+    const diffMinutes = (now - createdTime) / (1000 * 60);
+    return diffMinutes <= 5;
+  };
+
   const isCancellable = (booking: Booking) => {
     const status = booking.status?.toLowerCase();
-    return (status === 'pending' || status === 'confirmed') && booking.tableId === null;
+    return (status === 'pending' || status === 'confirmed') && 
+           booking.tableId === null && 
+           isWithinCancelWindow(booking.createdAt);
   };
 
   const getStatusClass = (status: string) => `status-badge status-${status?.toLowerCase()}`;
@@ -403,7 +413,7 @@ const MyOrders: React.FC = () => {
                       </div>
                     )}
 
-                    {isCancellable(booking) && (
+                    {isCancellable(booking) ? (
                       <button
                         className="cp-cancel-btn"
                         onClick={() => setBookingToCancel(booking)}
@@ -411,6 +421,11 @@ const MyOrders: React.FC = () => {
                       >
                         {cancellingId === booking.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : <><Icons.close size={14} className="inline-icon" /> Cancel Booking</>}
                       </button>
+                    ) : (booking.status?.toLowerCase() === 'pending' || booking.status?.toLowerCase() === 'confirmed') && booking.tableId === null && (
+                      <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Icons.alertCircle size={14} />
+                        Cancellation window expired
+                      </div>
                     )}
                   </div>
                 ))}
@@ -500,7 +515,7 @@ const MyOrders: React.FC = () => {
                       }
                     </div>
 
-                    {order.status?.toLowerCase() === 'pending' ? (
+                    {order.status?.toLowerCase() === 'pending' && isWithinCancelWindow(order.createdAt) ? (
                       <button
                         className="cp-cancel-btn"
                         onClick={() => setOrderToCancel(order)}
@@ -508,6 +523,11 @@ const MyOrders: React.FC = () => {
                       >
                         <Icons.close size={14} className="inline-icon" /> Cancel Order
                       </button>
+                    ) : order.status?.toLowerCase() === 'pending' && !isWithinCancelWindow(order.createdAt) ? (
+                      <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Icons.alertCircle size={14} />
+                        Cancellation window expired
+                      </div>
                     ) : order.status?.toLowerCase() === 'preparing' || order.status?.toLowerCase() === 'ready' ? (
                       <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Icons.alertCircle size={14} />

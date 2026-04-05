@@ -17,11 +17,15 @@ interface ChefOrderModalProps {
         items: OrderItem[];
         createdAt: string;
         specialInstructions?: string;
+        customer?: { id: number; name: string };
+        User?: { name: string };
     };
     onClose: () => void;
 }
 
 const ChefOrderModal: React.FC<ChefOrderModalProps> = ({ order, onClose }) => {
+    const customerName = order.customer?.name || order.User?.name || 'Guest';
+
     return (
         <Modal 
             isOpen={true} 
@@ -30,7 +34,14 @@ const ChefOrderModal: React.FC<ChefOrderModalProps> = ({ order, onClose }) => {
             size="md"
         >
             <div className="modal-body">
-                <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', gap: '24px', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Customer</div>
+                        <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            {customerName}
+                        </div>
+                    </div>
                     <div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', marginBottom: '4px' }}>Location</div>
                         <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-primary)' }}>

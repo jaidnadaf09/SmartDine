@@ -32,6 +32,7 @@ const ReturnRefundPolicy = lazy(() => import('./pages/ReturnRefundPolicy'));
 const TermsAndConditions = lazy(() => import('./pages/TermsAndConditions'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 const ContactUs = lazy(() => import('./pages/ContactUs'));
+const OrderSuccessPage = lazy(() => import('./portals/customer/pages/OrderSuccessPage'));
 
 const PageLoader = () => (
     <div style={{ height: '70vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -109,6 +110,14 @@ const AppContent = () => {
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
             <Route path="/about-us" element={<AboutUs />} />
             <Route path="/contact-us" element={<ContactUs />} />
+            <Route
+              path="/customer/order-success"
+              element={
+                <ProtectedRoute>
+                  <OrderSuccessPage />
+                </ProtectedRoute>
+              }
+            />
           </Route>
 
           {/* Auth Pages */}

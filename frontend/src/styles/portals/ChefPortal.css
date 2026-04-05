@@ -1523,6 +1523,16 @@ body.dark .new-order-glow {
   color: #00c87a;
 }
 
+.status-badge.completed {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.status-badge.cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
 .customer-row {
   display: flex;
   align-items: center;
