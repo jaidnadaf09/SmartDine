@@ -642,6 +642,17 @@ body[data-theme='dark'] .header {
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.15);
 }
 
+.avatar-icon-small {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-secondary);
+}
+
 .avatar-container {
   display: flex;
   align-items: center;
@@ -1281,35 +1292,39 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 /* ═══════════════════════════════════════════
    PREMIUM MODAL SYSTEM (SaaS Style)
 ═══════════════════════════════════════════ */
+/* ── Premium Modal System (Universal Flex-Center) ── */
 .modal-root-wrapper {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: var(--z-modal);
+  z-index: var(--z-modal, 9999);
   display: flex;
   align-items: center;
   justify-content: center;
-  pointer-events: none; /* Allow clicks to pass through to overlay */
+  pointer-events: none;
 }
 
-.modal-overlay-new {
+.modal-overlay {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(15, 23, 42, 0.35);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  pointer-events: auto; /* Catch clicks to close */
+  z-index: 9998;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-container-centered {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: fit-content;
-  max-height: 90vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1317,17 +1332,19 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
   pointer-events: none;
 }
 
-.modal-content-premium {
+.modal-content-premium, 
+.modal-card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 24px;
-  width: calc(100vw - 48px); /* Responsive fallback */
+  width: calc(100vw - 48px);
   padding: 32px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
   position: relative;
+  z-index: 9999;
   pointer-events: auto;
   overflow-y: auto;
-  max-height: calc(90vh - 48px);
+  max-height: 85vh;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1500,3 +1517,111 @@ html, body, #root {
     padding: 20px !important;
   }
 }
+
+/* ═══════════════════════════════════════════
+   PREMIUM LOCK OVERLAY (GUEST CTA)
+═══════════════════════════════════════════ */
+.premium-lock-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: var(--brand-primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  z-index: 10;
+  cursor: pointer;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+}
+
+body[data-theme='dark'] .premium-lock-overlay {
+  background: rgba(30, 30, 30, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--brand-primary);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.premium-lock-overlay:hover {
+  background: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(138, 90, 60, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+body[data-theme='dark'] .premium-lock-overlay:hover {
+  background: rgba(40, 40, 40, 0.8);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+/* For OrderPage cart which uses the lock within an empty state */
+.empty-cart-container .premium-lock-overlay {
+  border-radius: 12px;
+  background: var(--brand-primary-light);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border: 1px solid transparent;
+  margin-top: 1rem;
+  position: static;
+  padding: 10px 20px;
+  flex-direction: row;
+}
+
+body[data-theme='dark'] .empty-cart-container .premium-lock-overlay {
+  background: rgba(200, 155, 106, 0.15);
+}
+
+/* ═══════════════════════════════════════════
+   PREMIUM LOGIN CTA
+═══════════════════════════════════════════ */
+.premium-login-cta {
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  background: linear-gradient(
+    135deg,
+    rgba(212,175,120,0.22),
+    rgba(212,175,120,0.08)
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212,175,120,0.35);
+  color: #8A5A3C; /* Darker brown for light mode readability */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+body[data-theme='dark'] .premium-login-cta {
+  color: #f1d6a8; /* Elegant light gold for dark mode */
+}
+
+.premium-login-cta:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 22px rgba(212,175,120,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+  border-color: rgba(212,175,120,0.55);
+}
+
+.premium-login-cta:active {
+  transform: scale(0.98);
+}

@@ -142,7 +142,7 @@ const NotificationPanel: React.FC = () => {
         className="sd-icon-btn sd-notification-btn" 
         onClick={() => setShowNotifications(!showNotifications)}
       >
-        <Icons.bell className="sd-bell-icon" size={18} strokeWidth={1.8} />
+        <Icons.bell color="#ffffff" size={17} strokeWidth={1.5} />
         {unreadCount > 0 && <span className="sd-notification-dot"></span>}
       </button>
       

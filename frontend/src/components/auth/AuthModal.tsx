@@ -1,4 +1,7 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuthModal } from '../../context/AuthModalContext';
+import { useAuth } from '../../context/AuthContext';
 import { Icons } from '../icons/IconSystem';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
@@ -12,6 +15,23 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose }) => {
+  const { authOptions } = useAuthModal();
+  const navigate = useNavigate();
+
+  const handleSuccess = () => {
+    onClose();
+    if (authOptions?.redirectTo) {
+      navigate(authOptions.redirectTo);
+      setTimeout(() => {
+        const scrollY = sessionStorage.getItem("redirectScroll");
+        if (scrollY) {
+          window.scrollTo(0, Number(scrollY));
+          sessionStorage.removeItem("redirectScroll");
+        }
+      }, 50);
+    }
+  };
+
   // ESC key support
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -28,6 +48,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose })
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
+
+  const { user } = useAuth();
+
+  // Safety auto-close if login succeeds behind modal's back
+  useEffect(() => {
+    if (user && isOpen) {
+      onClose();
+    }
+  }, [user, isOpen, onClose]);
 
   // Prevent background scroll
   useEffect(() => {
@@ -57,13 +86,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose })
         {type === 'login' ? (
           <LoginForm 
             isModal={true} 
-            onSuccess={() => onClose()} 
+            onSuccess={handleSuccess} 
             onSwitchToSignup={() => setType('signup')} 
           />
         ) : (
           <SignupForm 
             isModal={true} 
-            onSuccess={() => onClose()} 
+            onSuccess={handleSuccess} 
             onSwitchToLogin={() => setType('login')} 
           />
         )}

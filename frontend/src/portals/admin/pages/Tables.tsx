@@ -7,7 +7,7 @@ import FormField from '../components/FormField';
 import Button from '@ui/Button';
 import Modal from '@ui/Modal';
 import Select from '@ui/Select';
-import ConfirmDialog from '@ui/ConfirmModal';
+import { AlertTriangle } from 'lucide-react';
 
 interface TablesProps {
     hideHeader?: boolean;
@@ -31,7 +31,8 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
         setError(null);
         try {
             const res = await api.get('/admin/tables');
-            setTables(Array.isArray(res.data) ? res.data : []);
+            const data = res.data?.data || res.data;
+            setTables(Array.isArray(data) ? data : []);
         } catch (err: any) {
             console.error('Failed to fetch tables:', err);
             setError(err.response?.data?.message || err.message || 'Failed to load tables.');
@@ -55,7 +56,9 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
                     capacity: Number(newTable.capacity),
                     status: newTable.status
                 });
-                setTables(tables.map(t => t.id === res.data.id ? res.data : t));
+                const data = res.data?.data || res.data;
+                setTables(prev => prev.map(t => t.id === data.id ? data : t));
+                await fetchTables();
                 toast.success('Table updated successfully');
             } else {
                 // Create
@@ -64,7 +67,9 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
                     capacity: newTable.capacity,
                     status: 'available' 
                 });
-                setTables([...tables, res.data]);
+                const data = res.data?.data || res.data;
+                setTables(prev => [...prev, data]);
+                await fetchTables();
                 toast.success('Table added successfully');
             }
             setIsModalOpen(false);
@@ -103,7 +108,8 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
         if (!tableToDelete) return;
         try {
             await api.delete(`/admin/tables/${tableToDelete}`);
-            setTables(tables.filter(t => t.id !== tableToDelete));
+            setTables(prev => prev.filter(t => t.id !== tableToDelete));
+            await fetchTables();
             toast.success('Table deleted!');
             setConfirmDeleteOpen(false);
             setTableToDelete(null);
@@ -195,19 +201,19 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
         }
     ];
 
-    const filteredTables = tables.filter(t => {
-        const matchesSearch = t.tableNumber.toString().includes(searchTerm);
+    const filteredTables = tables?.filter(t => {
+        const matchesSearch = t?.tableNumber?.toString().includes(searchTerm);
         
-        const matchesStatus = !activeFilters.status || t.status.toLowerCase() === activeFilters.status.toLowerCase();
+        const matchesStatus = !activeFilters.status || t?.status?.toLowerCase() === activeFilters.status?.toLowerCase();
         
         const matchesCapacity = !activeFilters.capacityRange || (
-            activeFilters.capacityRange === 'small' ? t.capacity <= 2 :
-            activeFilters.capacityRange === 'medium' ? (t.capacity > 2 && t.capacity <= 4) :
-            t.capacity >= 6
+            activeFilters.capacityRange === 'small' ? t?.capacity <= 2 :
+            activeFilters.capacityRange === 'medium' ? (t?.capacity > 2 && t?.capacity <= 4) :
+            t?.capacity >= 6
         );
 
         return matchesSearch && matchesStatus && matchesCapacity;
-    });
+    }) || [];
 
     const clearAllFilters = () => {
         setSearchTerm('');
@@ -251,17 +257,30 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
                 />
             )}
 
-            <ConfirmDialog
-                open={confirmDeleteOpen}
-                title="Delete Table"
-                message="Are you sure you want to delete this table? This cannot be undone if there are active bookings."
-                onConfirm={confirmDelete}
-                onCancel={() => {
-                    setConfirmDeleteOpen(false);
-                    setTableToDelete(null);
-                }}
-                confirmText="Delete Table"
-            />
+            {confirmDeleteOpen && (
+                <div className="modal-overlay">
+                    <div className="delete-table-modal">
+                        <div className="modal-icon">
+                            <AlertTriangle size={20} />
+                        </div>
+                        <h3 className="modal-title">Delete Table</h3>
+                        <p className="modal-description">
+                            Are you sure you want to delete this table? This cannot be undone if there are active bookings.
+                        </p>
+                        <div className="modal-actions">
+                            <button className="btn-cancel" onClick={() => {
+                                setConfirmDeleteOpen(false);
+                                setTableToDelete(null);
+                            }}>
+                                Cancel
+                            </button>
+                            <button className="btn-delete" onClick={confirmDelete}>
+                                Delete Table
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <Modal
                 isOpen={isModalOpen}

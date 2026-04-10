@@ -9,7 +9,7 @@ interface User {
   role: UserRole;
   name: string;
   phone?: string;
-  profileImage?: string;
+  profileImage?: string | null;
   token?: string;
   walletBalance?: number;
 }
@@ -22,6 +22,7 @@ interface AuthContextType {
   updateUser: (newData: Partial<User>) => void;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   isAuthenticated: boolean;
+  isGuest: boolean;
   loading: boolean;
 }
 
@@ -34,22 +35,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for user data on load
-    const storedUser = localStorage.getItem('smartdine_user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        // Normalize role on load to fix stale session data
-        if (parsedUser.role) {
-          parsedUser.role = parsedUser.role.toLowerCase() as UserRole;
-        }
-        console.log('AuthContext: Restored user from storage:', parsedUser.email, 'Role:', parsedUser.role);
-        setUser(parsedUser);
-      } catch (e) {
-        console.error('Failed to parse user from local storage');
-      }
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    const hydrateAuth = async () => {
+      try {
+        const res = await api.get('/auth/me');
+        const data = res.data;
+        const fetchedUser: User = {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          phone: data.phone || undefined,
+          profileImage: data.profileImage || null,
+          role: (data.role as string).toLowerCase() as UserRole,
+          token: token,
+          walletBalance: data.walletBalance || 0,
+        };
+        setUser(fetchedUser);
+      } catch (e) {
+        console.error('Auth Hydration failed');
+        localStorage.removeItem('token');
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    hydrateAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<User> => {
@@ -67,7 +84,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         name: data.name,
         email: data.email,
         phone: data.phone || undefined,
-        profileImage: data.profileImage || undefined,
+        profileImage: data.profileImage || null,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
         walletBalance: data.walletBalance || 0,
@@ -79,11 +96,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem('smartdine_user');
       localStorage.removeItem('token');
       
-      setUser(loggedInUser);
       localStorage.setItem('smartdine_user', JSON.stringify(loggedInUser));
       if (data.token) {
         localStorage.setItem('token', data.token);
       }
+      setUser(loggedInUser);
 
       return loggedInUser;
     } catch (error: any) {
@@ -98,8 +115,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password,
-        phone: phone || null,
-        role: 'customer'
+        phone: phone || null
       });
 
       const data = response.data;
@@ -109,7 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         name: data.name,
         email: data.email,
         phone: data.phone || undefined,
-        profileImage: data.profileImage || undefined,
+        profileImage: data.profileImage || null,
         role: (data.role as string).toLowerCase() as UserRole,
         token: data.token,
         walletBalance: data.walletBalance || 0,
@@ -118,11 +134,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem('smartdine_user');
       localStorage.removeItem('token');
       
-      setUser(newUser);
       localStorage.setItem('smartdine_user', JSON.stringify(newUser));
       if (data.token) {
         localStorage.setItem('token', data.token);
       }
+      setUser(newUser);
 
       return newUser;
     } catch (error: any) {
@@ -156,7 +172,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, changePassword, isAuthenticated: !!user, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, changePassword, isAuthenticated: !!user, isGuest: !user, loading }}>
       {children}
     </AuthContext.Provider>
   );

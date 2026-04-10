@@ -30,81 +30,107 @@
 }
 
 /* ───────────────────────────────────
-   Categories Sidebar
+   Categories Sidebar (Layout)
 ─────────────────────────────────── */
 .categories-sidebar {
   width: 230px;
-  padding: 14px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: var(--card-shadow);
   position: sticky;
   top: 80px; /* Aligned below the 64px header + gap */
   height: fit-content;
   max-height: calc(100vh - 100px);
-  overflow-y: auto;
-  scrollbar-width: thin;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  /* Precision alignment with Menu content */
-  padding: 16px 14px;
 }
 
 /* ───────────────────────────────────
-   Sidebar Search Styling
-   ─────────────────────────────────── */
-.sidebar-search .search-input-field {
-  background: rgba(255, 255, 255, 0.35); /* Blended for cream sidebar */
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  color: #3b2a1f;
-  height: 40px;
-  border-radius: 10px;
-  padding-left: 42px;
+   Menu Filter Panel (New Styling)
+─────────────────────────────────── */
+.menu-filter-panel {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.06),
+    rgba(255,255,255,0.02)
+  );
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    0 8px 30px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  transition: all 0.25s ease;
+  max-height: calc(100vh - 100px);
+}
+
+body[data-theme='dark'] .menu-filter-panel {
+  background: linear-gradient(
+    145deg,
+    rgba(30,30,30,0.6),
+    rgba(30,30,30,0.3)
+  );
+}
+
+/* ───────────────────────────────────
+   Search Integration
+─────────────────────────────────── */
+.menu-search input.search-input-field {
+  width: 100%;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 12px 14px 12px 38px;  /* 38px left padding for absolute search icon */
   font-size: 14px;
-  box-shadow: none;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
 }
 
-.dark .sidebar-search .search-input-field {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.sidebar-search .search-input-field::placeholder {
-  color: rgba(80, 60, 40, 0.6);
-}
-
-.dark .sidebar-search .search-input-field::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.sidebar-search .search-input-field:focus {
+.menu-search input.search-input-field:focus {
   outline: none;
-  border-color: rgba(180, 140, 80, 0.6);
-  box-shadow: 0 0 0 3px rgba(180, 140, 80, 0.15);
-  background: rgba(255, 255, 255, 0.5); /* Slight lift on focus */
+  border-color: rgba(212,175,120,0.45);
+  box-shadow: 0 0 0 2px rgba(212,175,120,0.15);
+  background: rgba(255, 255, 255, 0.5);
 }
 
-.dark .sidebar-search .search-input-field:focus {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(212, 163, 115, 0.4);
-  box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.1);
+body[data-theme="dark"] .menu-search input.search-input-field {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
 }
 
+body[data-theme="dark"] .menu-search input.search-input-field:focus {
+  background: rgba(255,255,255,0.1);
+}
 
-.categories-sidebar h3 {
+/* ───────────────────────────────────
+   Divider & Categories
+─────────────────────────────────── */
+.menu-divider {
+  height: 1px;
+  margin: 14px 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,0.08),
+    transparent
+  );
+  flex-shrink: 0;
+}
+
+.menu-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.menu-categories h3 {
   font-family: 'Montserrat', sans-serif;
   color: var(--text-primary);
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding-top: 8px;
-  margin-top: 8px;
-  border-top: 1px solid var(--border-color);
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -114,35 +140,31 @@
 .sidebar-filters {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-.sidebar-filter-btn {
+.category-item {
+  border-radius: 10px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
   background: transparent;
   color: var(--text-secondary);
   border: none;
-  padding: 8px 12px;
-  border-radius: 10px;
   font-size: 0.84rem;
   font-weight: 500;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 6px;
-  position: relative;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.sidebar-filter-btn:hover {
-  background: var(--brand-primary-light, rgba(111, 78, 55, 0.08));
+.category-item:hover {
+  background: rgba(212,175,120,0.08);
   color: var(--brand-primary);
 }
 
-.sidebar-filter-btn.active {
+.category-item.active {
   background: linear-gradient(135deg, #c6a769, #b8965a);
   color: white !important;
   font-weight: 700;

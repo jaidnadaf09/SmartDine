@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '@context/AuthContext';
+import { useAuthModal } from '@context/AuthModalContext';
 import { Icons } from '@components/icons/IconSystem';
 import api from '@utils/api';
 import MenuCard from '@shared/MenuCard';
@@ -55,7 +56,9 @@ const loadRazorpayScript = () => {
 
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const location = useLocation();
+  const { user, updateUser, isGuest } = useAuth();
+  const { openAuthModal } = useAuthModal();
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'wallet'>('online');
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [cart, setCart] = useState<OrderItem[]>([]);
@@ -130,8 +133,7 @@ const OrderPage: React.FC = () => {
     };
 
     const fetchUserBooking = async () => {
-      const token = localStorage.getItem('token');
-      if (user && token) {
+      if (user && !isGuest) {
         try {
           const res = await api.get(`/bookings/user/${user.id}`);
           const bookings = res.data;
@@ -159,6 +161,10 @@ const OrderPage: React.FC = () => {
 
 
   const addToCart = useCallback(async (item: any, e?: React.MouseEvent) => {
+    if (isGuest) {
+      openAuthModal('login', { redirectTo: location.pathname });
+      return;
+    }
     // ✈️ Trigger Fly-to-Cart Animation
     if (e && e.currentTarget) {
       const cartBtn = document.querySelector('.sd-cart-icon') as HTMLElement;
@@ -184,13 +190,17 @@ const OrderPage: React.FC = () => {
     }
 
     triggerCartPulse();
-  }, [triggerCartPulse]);
+  }, [triggerCartPulse, isGuest, openAuthModal, location.pathname]);
 
   const removeFromCart = useCallback((id: number) => {
     setCart(prev => prev.filter(c => c.id !== id));
   }, []);
 
   const updateQuantity = useCallback((id: number, quantity: number) => {
+    if (isGuest) {
+      openAuthModal('login', { redirectTo: location.pathname });
+      return;
+    }
     if (quantity <= 0) {
       removeFromCart(id);
     } else {
@@ -202,10 +212,10 @@ const OrderPage: React.FC = () => {
         return prev.map(c => c.id === id ? { ...c, quantity } : c);
       });
     }
-  }, [removeFromCart, triggerCartPulse]);
+  }, [removeFromCart, triggerCartPulse, isGuest, openAuthModal, location.pathname]);
 
   const updateInstruction = useCallback((id: number, instruction: string) => {
-    setCart(prev => prev.map(item => 
+    setCart(prev => prev.map(item =>
       item.id === id ? { ...item, specialInstructions: instruction } : item
     ));
   }, []);
@@ -222,15 +232,23 @@ const OrderPage: React.FC = () => {
   };
 
   const toggleFavourite = useCallback((id: number) => {
-    setFavourites(prev => 
+    if (isGuest) {
+      openAuthModal('login', { redirectTo: location.pathname });
+      return;
+    }
+    setFavourites(prev =>
       prev.includes(id) ? prev.filter(favId => favId !== id) : [...prev, id]
     );
-  }, []);
+  }, [isGuest, openAuthModal, location.pathname]);
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const handleCheckout = async () => {
     setError('');
+    if (isGuest) {
+      openAuthModal('login', { redirectTo: location.pathname });
+      return;
+    }
     if (cart.length === 0) return setError('Your cart is empty!');
     if (!user) return setError('You must be logged in to place an order.');
 
@@ -253,8 +271,8 @@ const OrderPage: React.FC = () => {
         const walletRes = await api.post('/payment/wallet-pay', {
           amount: totalAmountFloat,
           orderData: {
-            items: cart.map(item => ({ 
-              itemName: item.name, 
+            items: cart.map(item => ({
+              itemName: item.name,
               quantity: item.quantity,
               specialInstructions: item.specialInstructions || ''
             }))
@@ -262,7 +280,7 @@ const OrderPage: React.FC = () => {
         });
 
         if (walletRes.data.walletBalance !== undefined) {
-           updateUser({ walletBalance: walletRes.data.walletBalance });
+          updateUser({ walletBalance: walletRes.data.walletBalance });
         }
 
         const walletOrder = walletRes.data.order;
@@ -306,8 +324,8 @@ const OrderPage: React.FC = () => {
                 totalAmount: totalAmountFloat,
                 paymentId: response.razorpay_payment_id,
                 paymentStatus: 'paid',
-                items: cart.map(item => ({ 
-                  itemName: item.name, 
+                items: cart.map(item => ({
+                  itemName: item.name,
                   quantity: item.quantity,
                   specialInstructions: item.specialInstructions || ''
                 }))
@@ -379,14 +397,14 @@ const OrderPage: React.FC = () => {
 
   const groupedMenu = useMemo(() => {
     const groups: { [key: string]: any[] } = {};
-    
+
     // Combined Logic: Favorites + Search
-    groups['Favorites'] = availableItems.filter(item => 
-      favourites.includes(item.id) && 
-      (item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
-       (item.description && item.description.toLowerCase().includes(debouncedSearch.toLowerCase())))
+    groups['Favorites'] = availableItems.filter(item =>
+      favourites.includes(item.id) &&
+      (item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (item.description && item.description.toLowerCase().includes(debouncedSearch.toLowerCase())))
     );
-    
+
     availableItems.forEach(item => {
       if (!groups[item.category]) groups[item.category] = [];
       groups[item.category].push(item);
@@ -399,7 +417,7 @@ const OrderPage: React.FC = () => {
     const parts = text.split(new RegExp(`(${query})`, 'gi'));
     return (
       <>
-        {parts.map((part, i) => 
+        {parts.map((part, i) =>
           part.toLowerCase() === query.toLowerCase() ? <mark key={i} className="search-highlight">{part}</mark> : part
         )}
       </>
@@ -412,47 +430,53 @@ const OrderPage: React.FC = () => {
 
       <div className={`order-layout ${isCartOpen ? 'cart-open' : ''}`}>
         <aside className="categories-sidebar">
-          <div className="menu-search-container" style={{ marginBottom: '8px' }}>
-            <SearchInput
-              placeholder="Search menu..."
-              containerClassName="sidebar-search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onClear={() => setSearchQuery('')}
-            />
-          </div>
+          <div className="menu-filter-panel">
+            <div className="menu-search">
+              <SearchInput
+                placeholder="Search menu..."
+                containerClassName="sidebar-search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onClear={() => setSearchQuery('')}
+                icon={<Icons.search size={16} />}
+              />
+            </div>
 
-          <h3><Icons.folderOpen size={20} className="inline-icon" /> Categories</h3>
-          <div className="sidebar-filters">
-            <button
-              className={`sidebar-filter-btn ${activeCategory === 'All' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('All')}
-            >
-              All Items
-            </button>
-            {categoriesList.map((category) => (
-              (groupedMenu[category] && groupedMenu[category].length > 0) && (
+            <div className="menu-divider" />
+
+            <div className="menu-categories">
+              <h3><Icons.folderOpen size={20} className="inline-icon" /> Categories</h3>
+              <div className="sidebar-filters">
                 <button
-                  key={category}
-                  className={`sidebar-filter-btn ${activeCategory === category ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(category)}
+                  className={`category-item sidebar-filter-btn ${activeCategory === 'All' ? 'active' : ''}`}
+                  onClick={() => setActiveCategory('All')}
                 >
-                  {category === 'Favorites' ? <Icons.heart size={14} className="inline-icon" color="#f59e0b" fill={activeCategory === 'Favorites' ? '#f59e0b' : 'transparent'}/> : null} {category}
+                  All Items
                 </button>
-              )
-            ))}
+                {categoriesList.map((category) => (
+                  (groupedMenu[category] && groupedMenu[category].length > 0) && (
+                    <button
+                      key={category}
+                      className={`category-item sidebar-filter-btn ${activeCategory === category ? 'active' : ''}`}
+                      onClick={() => setActiveCategory(category)}
+                    >
+                      {category === 'Favorites' ? <Icons.heart size={14} className="inline-icon" color="#f59e0b" fill={activeCategory === 'Favorites' ? '#f59e0b' : 'transparent'} /> : null} {category}
+                    </button>
+                  )
+                ))}
+              </div>
+            </div>
           </div>
         </aside>
 
         <div className="menu-content-area">
           <div className="menu-top-row">
             <div className="menu-title-area">
-              <h2 className="page-title">Menu</h2>
             </div>
-            
+
             {cart.length > 0 && !isCartOpen && (
-              <button 
-                className={`top-view-cart-btn sd-cart-icon ${cartPulse ? 'pulse' : ''} ${cartBump ? 'bump' : ''}`} 
+              <button
+                className={`top-view-cart-btn sd-cart-icon ${cartPulse ? 'pulse' : ''} ${cartBump ? 'bump' : ''}`}
                 onClick={() => setIsCartOpen(true)}
               >
                 <Icons.shoppingBag size={18} />
@@ -471,10 +495,10 @@ const OrderPage: React.FC = () => {
                 .filter(category => activeCategory === 'All' || activeCategory === category)
                 .map((category) => {
                   const itemsInCategory = category === 'All' ? availableItems : (groupedMenu[category] || []);
-                  
+
                   // Final Combined Filter: Search + (Category or All)
                   const filteredItems = itemsInCategory.filter(item =>
-                    item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
+                    item.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
                     (item.description && item.description.toLowerCase().includes(debouncedSearch.toLowerCase()))
                   );
 
@@ -487,7 +511,7 @@ const OrderPage: React.FC = () => {
                         {filteredItems.map((item) => {
                           const cartItem = cart.find(c => c.id === item.id);
                           return (
-                            <MenuCard 
+                            <MenuCard
                               key={item.id}
                               item={{
                                 ...item,
@@ -506,30 +530,30 @@ const OrderPage: React.FC = () => {
                     </div>
                   );
                 })}
-                
+
               {/* Empty state for Favorites */}
               {activeCategory === 'Favorites' && (!groupedMenu['Favorites'] || groupedMenu['Favorites'].length === 0) && (
-                <div className="empty-cart" style={{marginTop: '40px'}}>
+                <div className="empty-cart" style={{ marginTop: '40px' }}>
                   <Icons.heart size={48} color="var(--text-muted)" />
                   <p>No favorites yet ❤️</p>
-                  <p style={{fontSize: '0.85rem', marginTop: '8px'}}>Tap heart icon to save dishes.</p>
+                  <p style={{ fontSize: '0.85rem', marginTop: '8px' }}>Tap heart icon to save dishes.</p>
                 </div>
               )}
 
               {/* General No Results state */}
               {availableItems.length > 0 && categoriesList.every(c => {
-                  const items = c === 'All' ? availableItems : (groupedMenu[c] || []);
-                  return items.filter(i => 
-                    i.name.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
-                    (i.description && i.description.toLowerCase().includes(debouncedSearch.toLowerCase()))
-                  ).length === 0;
+                const items = c === 'All' ? availableItems : (groupedMenu[c] || []);
+                return items.filter(i =>
+                  i.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+                  (i.description && i.description.toLowerCase().includes(debouncedSearch.toLowerCase()))
+                ).length === 0;
               }) && (
-                <div className="no-results-msg" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-                  <Icons.search size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
-                  <h3>No dishes found</h3>
-                  <p>Try searching something else.</p>
-                </div>
-              )}
+                  <div className="no-results-msg" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                    <Icons.search size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                    <h3>No dishes found</h3>
+                    <p>Try searching something else.</p>
+                  </div>
+                )}
             </div>
           )}
         </div>
@@ -559,14 +583,20 @@ const OrderPage: React.FC = () => {
               <p><Icons.shoppingBag size={18} className="inline-icon" /> Parcel (Table Pending)</p>
             )}
           </div>
-          
+
           {cart.length === 0 ? (
-            <div className="empty-cart-container">
+            <div className="empty-cart-container" style={{ position: 'relative' }}>
               <div className="empty-cart-illustrations">
                 <Icons.shoppingBag size={64} className="empty-cart-main-icon" />
               </div>
               <h3>Your cart is empty</h3>
               <p>Add delicious items from the menu to get started!</p>
+              {isGuest && (
+                <div className="premium-lock-overlay">
+                  <Icons.lock size={18} className="lucide" />
+                  <span>Login to continue</span>
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -604,7 +634,7 @@ const OrderPage: React.FC = () => {
                                 autoFocus
                                 rows={2}
                               />
-                              <button 
+                              <button
                                 className="instruction-save-btn"
                                 onClick={() => saveInstruction(item.id)}
                               >
@@ -612,16 +642,16 @@ const OrderPage: React.FC = () => {
                               </button>
                             </div>
                           ) : (
-                            <button 
+                            <button
                               className={`instruction-toggle ${item.specialInstructions ? 'filled' : ''}`}
                               onClick={() => openInstructionModal(item)}
                             >
                               <Icons.edit size={12} />
                               <span>
-                                {item.specialInstructions 
-                                  ? (item.specialInstructions.length > 20 
-                                      ? item.specialInstructions.substring(0, 18) + "..." 
-                                      : item.specialInstructions) 
+                                {item.specialInstructions
+                                  ? (item.specialInstructions.length > 20
+                                    ? item.specialInstructions.substring(0, 18) + "..."
+                                    : item.specialInstructions)
                                   : "Add instruction"}
                               </span>
                             </button>
@@ -653,7 +683,7 @@ const OrderPage: React.FC = () => {
                 <div className="payment-method-selector" style={{ marginTop: '15px', padding: '10px 0', borderTop: '1px solid var(--border-color, #eee)' }}>
                   <h4 style={{ marginBottom: '10px', fontSize: '1rem', color: 'var(--text-color)' }}>Payment Method</h4>
                   <div className="payment-methods">
-                    <div 
+                    <div
                       className={`payment-card ${paymentMethod === 'online' ? 'selected' : ''}`}
                       onClick={() => setPaymentMethod('online')}
                     >
@@ -662,10 +692,15 @@ const OrderPage: React.FC = () => {
                         <span className="payment-card-title">Online</span>
                       </div>
                     </div>
-
-                    <div 
+                    <div
                       className={`payment-card ${paymentMethod === 'wallet' ? 'selected' : ''}`}
-                      onClick={() => setPaymentMethod('wallet')}
+                      onClick={() => {
+                        if (isGuest) {
+                          openAuthModal('login', { redirectTo: location.pathname });
+                          return;
+                        }
+                        setPaymentMethod('wallet');
+                      }}
                     >
                       <div className="payment-card-icon"><Icons.wallet size={24} /></div>
                       <div className="payment-card-info">
@@ -678,11 +713,11 @@ const OrderPage: React.FC = () => {
                   </div>
                 </div>
 
-                 <button 
-                   className="checkout-btn" 
-                   onClick={handleCheckout} 
-                   disabled={loading}
-                   style={{ marginTop: '5px' }}
+                <button
+                  className="checkout-btn"
+                  onClick={handleCheckout}
+                  disabled={loading}
+                  style={{ marginTop: '5px' }}
                 >
                   {loading ? 'Processing...' : 'Checkout & Pay'}
                 </button>
@@ -691,7 +726,7 @@ const OrderPage: React.FC = () => {
           )}
         </div>
       </div>
-      
+
       {cart.length > 0 && isMobile && !isCartOpen && (
         <div className="floating-mini-cart mobile-cart-bar" onClick={() => setIsCartOpen(true)}>
           <div className="mini-cart-left">
@@ -708,7 +743,7 @@ const OrderPage: React.FC = () => {
         </div>
       )}
 
-      <ConfirmDialog 
+      <ConfirmDialog
         open={isClearCartDialogOpen}
         title="Clear Cart?"
         message="All items will be removed from your order."

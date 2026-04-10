@@ -7,7 +7,7 @@ export interface UserAttributes {
     email: string;
     password?: string;
     phone?: string;
-    profileImage?: string;
+    profileImage?: string | null;
     role: 'customer' | 'admin' | 'chef' | 'WAITER' | 'CHEF';
     shift?: 'Morning' | 'Evening';
     status?: 'active' | 'inactive';
@@ -20,7 +20,7 @@ export class User extends Model<UserAttributes> implements UserAttributes {
     public email!: string;
     public password!: string;
     public phone!: string;
-    public profileImage!: string;
+    public profileImage!: string | null;
     public role!: 'customer' | 'admin' | 'chef' | 'WAITER' | 'CHEF';
     public shift!: 'Morning' | 'Evening';
     public status!: 'active' | 'inactive';

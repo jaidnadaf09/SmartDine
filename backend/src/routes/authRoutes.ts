@@ -49,6 +49,6 @@ router.post(
 router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
 router.get('/me', protect, getMe);
-router.delete('/remove-profile-photo', protect, removeProfilePhoto);
+router.delete('/profile/photo', protect, removeProfilePhoto);
 
 export default router;

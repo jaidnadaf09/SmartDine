@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icons } from '../icons/IconSystem';
 
@@ -64,53 +65,56 @@ const Modal: React.FC<ModalProps> = ({
 
     const sizeClass = `modal-${size}`;
 
-    return (
+    const modalJSX = (
         <AnimatePresence>
             {isOpen && (
                 <div className="modal-root-wrapper">
                     <motion.div
-                        className="modal-overlay-new"
+                        className="modal-overlay"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                    />
-                    <div className="modal-container-centered">
-                        <motion.div
-                            className={`modal-content-premium ${sizeClass} ${className}`}
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            transition={{ 
-                                type: 'spring', 
-                                damping: 25, 
-                                stiffness: 300,
-                                mass: 0.5 
-                            }}
-                            style={maxWidth ? { maxWidth } : {}}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {showClose && (
-                                <button className="modal-close-btn-new" onClick={onClose} aria-label="Close modal">
-                                    <Icons.close size={20} />
-                                </button>
-                            )}
-                            
-                            {title && (
-                                <div className="modal-header-premium">
-                                    <h3 className="modal-title-premium">{title}</h3>
+                    >
+                        <div className="modal-container-centered">
+                            <motion.div
+                                className={`modal-content-premium modal-card ${sizeClass} ${className}`}
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                transition={{ 
+                                    type: 'spring', 
+                                    damping: 25, 
+                                    stiffness: 300,
+                                    mass: 0.5 
+                                }}
+                                style={maxWidth ? { maxWidth } : {}}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {showClose && (
+                                    <button className="modal-close-btn-new" onClick={onClose} aria-label="Close modal">
+                                        <Icons.close size={20} />
+                                    </button>
+                                )}
+                                
+                                {title && (
+                                    <div className="modal-header-premium">
+                                        <h3 className="modal-title-premium">{title}</h3>
+                                    </div>
+                                )}
+                                
+                                <div className="modal-body-premium">
+                                    {children}
                                 </div>
-                            )}
-                            
-                            <div className="modal-body-premium">
-                                {children}
-                            </div>
-                        </motion.div>
-                    </div>
+                            </motion.div>
+                        </div>
+                    </motion.div>
                 </div>
             )}
         </AnimatePresence>
     );
+
+    return createPortal(modalJSX, document.body);
 };
 
 export default Modal;

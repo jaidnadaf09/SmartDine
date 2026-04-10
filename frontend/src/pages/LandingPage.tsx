@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import '@styles/pages/LandingPage.css';
 import restaurantImage from '@assets/images/Restaurant_business_plan_main.jpg';
 import restaurantInterior from '@assets/images/restaurant_interior.png';
@@ -8,6 +9,60 @@ import { Icons } from '@components/icons/IconSystem';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+
+  const heroMessages = [
+    "Experience the finest culinary culture at Rasoi Ghar.",
+    "Delicious food meets authentic recipes.",
+    "Reserve your table in seconds.",
+    "Freshly prepared meals, served with perfection.",
+    "Smart dining experience powered by technology."
+  ];
+
+  const [text, setText] = useState("");
+  const [index, setIndex] = useState(0);
+  const [subIndex, setSubIndex] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    if (index >= heroMessages.length) return;
+
+    const currentMessage = heroMessages[index];
+
+    let timeout: any;
+
+    // typing forward
+    if (!deleting && subIndex <= currentMessage.length) {
+      timeout = setTimeout(() => {
+        setText(currentMessage.substring(0, subIndex));
+        setSubIndex(prev => prev + 1);
+      }, 55);
+    }
+
+    // pause AFTER full sentence typed
+    else if (!deleting && subIndex > currentMessage.length) {
+      timeout = setTimeout(() => {
+        setDeleting(true);
+        setSubIndex(prev => prev - 1);
+      }, 2200); // 2.2 second pause
+    }
+
+    // deleting text
+    else if (deleting && subIndex >= 0) {
+      timeout = setTimeout(() => {
+        setText(currentMessage.substring(0, subIndex));
+        setSubIndex(prev => prev - 1);
+      }, 35);
+    }
+
+    // move to next message
+    else if (deleting && subIndex < 0) {
+      setDeleting(false);
+      setIndex(prev => (prev + 1) % heroMessages.length);
+      setSubIndex(0);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [subIndex, index, deleting, heroMessages]);
 
   const featuredDishes = [
     { id: 1, name: 'Paneer Butter Masala', price: '₹280', description: 'Paneer in tomato gravy' },
@@ -23,25 +78,80 @@ const LandingPage: React.FC = () => {
   return (
     <div className="landing-page">
       {/* Hero Section - Optimized 2-Column Grid */}
-      <section className="hero">
+      <motion.section 
+        className="hero"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4 }}
+      >
         <div className="hero-grid-container">
           <div className="hero-text-content">
-            <div className="restaurant-status-badge open">
-              <span className="status-dot"></span>
-              Open 24/7 • Ready to Serve You
-            </div>
-            <h2>Ready to Taste the Excellence?</h2>
-            <p>Experience the finest culinary culture at Rasoi Ghar. Delicious food meets authentic recipes for an unforgettable meal.</p>
-            <div className="hero-actions">
-              <button className="cta-btn" onClick={() => navigate('/order')}>Order Online Now</button>
-              <button className="cta-btn secondary" onClick={() => navigate('/book-table')}>Table Reservation</button>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: 25 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            >
+              <motion.div 
+                className="restaurant-status-badge open"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
+              >
+                <span className="status-dot"></span>
+                Open 24/7 • Ready to Serve You
+              </motion.div>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                Ready to Taste the Excellence?
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="hero-description"
+              >
+                {text}
+                <span className="typing-cursor">|</span>
+              </motion.p>
+              <div className="hero-actions">
+                <motion.button 
+                  className="cta-btn" 
+                  onClick={() => navigate('/order')}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  Order Online Now
+                </motion.button>
+                <motion.button 
+                  className="cta-btn secondary" 
+                  onClick={() => navigate('/book-table')}
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  Table Reservation
+                </motion.button>
+              </div>
+            </motion.div>
           </div>
           <div className="hero-image-wrapper">
-            <img src={restaurantInterior} alt="Rasoi Ghar Interior" className="hero-side-image" loading="lazy" />
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <img src={restaurantInterior} alt="Rasoi Ghar Interior" className="hero-side-image" loading="lazy" />
+            </motion.div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Featured Dishes Section */}
       <section className="menu-section" id="featured-menu">

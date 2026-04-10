@@ -95,8 +95,8 @@ app.use((req, res) => {
 app.use((err: any, req: any, res: any, next: any) => {
     console.error("GLOBAL ERROR:", err);
     res.status(500).json({
-        message: "Internal Server Error",
-        error: process.env.NODE_ENV === "development" ? err.message : undefined
+        success: false,
+        message: "Server error"
     });
 });
 

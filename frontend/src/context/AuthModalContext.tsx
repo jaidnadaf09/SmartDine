@@ -2,9 +2,14 @@ import React, { createContext, useContext, useState, type ReactNode } from 'reac
 
 type AuthType = 'login' | 'signup' | null;
 
+export interface AuthModalOptions {
+  redirectTo?: string;
+}
+
 interface AuthModalContextType {
   authType: AuthType;
-  openAuthModal: (type: 'login' | 'signup') => void;
+  authOptions?: AuthModalOptions;
+  openAuthModal: (type: 'login' | 'signup', options?: AuthModalOptions) => void;
   closeAuthModal: () => void;
   setAuthType: (type: AuthType) => void;
 }
@@ -13,12 +18,25 @@ const AuthModalContext = createContext<AuthModalContextType | undefined>(undefin
 
 export const AuthModalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [authType, setAuthType] = useState<AuthType>(null);
+  const [authOptions, setAuthOptions] = useState<AuthModalOptions | undefined>();
 
-  const openAuthModal = (type: 'login' | 'signup') => setAuthType(type);
-  const closeAuthModal = () => setAuthType(null);
+  const openAuthModal = (type: 'login' | 'signup', options?: AuthModalOptions) => {
+    setAuthType(type);
+    if (options) {
+      setAuthOptions(options);
+      if (options.redirectTo) {
+        sessionStorage.setItem("redirectScroll", window.scrollY.toString());
+      }
+    }
+  };
+  
+  const closeAuthModal = () => {
+    setAuthType(null);
+    setTimeout(() => setAuthOptions(undefined), 300);
+  };
 
   return (
-    <AuthModalContext.Provider value={{ authType, openAuthModal, closeAuthModal, setAuthType }}>
+    <AuthModalContext.Provider value={{ authType, authOptions, openAuthModal, closeAuthModal, setAuthType }}>
       {children}
     </AuthModalContext.Provider>
   );

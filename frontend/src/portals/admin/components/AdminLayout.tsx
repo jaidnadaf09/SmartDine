@@ -127,10 +127,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 <header className="sd-header">
                     <div className="sd-header-left">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <h1 style={{ fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.025em', color: 'var(--text-primary)', margin: 0 }}>
+                            <h1 style={{ fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.025em', color: '#ffffff', margin: 0 }}>
                                 {meta.title}
                             </h1>
-                            <p style={{ fontSize: '0.8rem', opacity: 0.6, color: 'var(--text-primary)', margin: 0, maxWidth: '520px', lineHeight: 1.2 }}>
+                            <p style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.85)', margin: 0, maxWidth: '520px', lineHeight: 1.2 }}>
                                 {meta.description}
                             </p>
                         </div>

@@ -41,7 +41,8 @@ const AdminReviews: React.FC = () => {
     const fetchReviews = async () => {
         try {
             const res = await api.get('/admin/reviews');
-            setReviews(res.data);
+            const data = res.data?.data || res.data;
+            setReviews(Array.isArray(data) ? data : []);
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to fetch reviews');
         } finally {
@@ -55,16 +56,16 @@ const AdminReviews: React.FC = () => {
         return (sum / reviews.length).toFixed(1);
     };
 
-    const filteredReviews = reviews.filter(review => {
+    const filteredReviews = reviews?.filter(review => {
         const matchesSearch = 
-            review.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            review.comment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            review.orderId.toString().includes(searchTerm);
+            review.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            review.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            review.orderId?.toString().includes(searchTerm);
         
         const matchesRating = !activeFilters.rating || review.rating === parseInt(activeFilters.rating);
         
         return matchesSearch && matchesRating;
-    }).sort((a, b) => {
+    })?.sort((a, b) => {
         if (activeFilters.date === 'oldest') {
             return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         }
@@ -96,9 +97,9 @@ const AdminReviews: React.FC = () => {
     }
 
     return (
-        <div className="management-page">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-                <Card variant="glass" padding="md" className="admin-card" style={{ minWidth: '250px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className="reviews-page">
+            <div className="reviews-top-section">
+                <Card variant="glass" padding="md" className="average-rating-card" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ padding: '12px', background: 'rgba(139, 90, 43, 0.1)', color: 'var(--brand-primary)', borderRadius: '12px' }}>
                         <Icons.star size={28} />
                     </div>
@@ -112,69 +113,59 @@ const AdminReviews: React.FC = () => {
                 </Card>
             </div>
 
-            <div className="admin-table-container" style={{ marginBottom: '20px', borderRadius: '16px', overflow: 'hidden' }}>
-                <div className="admin-table-header" style={{ 
-                    padding: '1.25rem 1.5rem', 
-                    borderBottom: '1px solid var(--border-color)',
-                    display: 'flex',
-                    gap: '16px',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    background: 'var(--bg-card)'
-                }}>
-                    <div className="dropdown-container" style={{ flex: '1', minWidth: '250px' }}>
-                        <SearchInput 
-                            placeholder="Search customer, comment or order ID..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onClear={() => setSearchTerm('')}
-                        />
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                        <Select
-                            value={activeFilters.rating}
-                            onChange={(value: string) => setActiveFilters({ ...activeFilters, rating: value })}
-                            options={[
-                                { label: '5 Stars', value: '5' },
-                                { label: '4 Stars', value: '4' },
-                                { label: '3 Stars', value: '3' },
-                                { label: '2 Stars', value: '2' },
-                                { label: '1 Star', value: '1' }
-                            ]}
-                            placeholder="All Ratings"
-                            style={{ width: '150px' }}
-                        />
+            <div className="reviews-filter-container">
+                <div style={{ flex: 1 }}>
+                    <SearchInput 
+                        placeholder="Search customer, comment or order ID..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onClear={() => setSearchTerm('')}
+                    />
+                </div>
+                
+                <div className="reviews-filters">
+                    <Select
+                        value={activeFilters.rating}
+                        onChange={(value: string) => setActiveFilters({ ...activeFilters, rating: value })}
+                        options={[
+                            { label: '5 Stars', value: '5' },
+                            { label: '4 Stars', value: '4' },
+                            { label: '3 Stars', value: '3' },
+                            { label: '2 Stars', value: '2' },
+                            { label: '1 Star', value: '1' }
+                        ]}
+                        placeholder="All Ratings"
+                        style={{ width: '150px' }}
+                    />
 
-                        <Select
-                            value={activeFilters.date}
-                            onChange={(value: string) => setActiveFilters({ ...activeFilters, date: value })}
-                            options={[
-                                { label: 'Newest First', value: '' },
-                                { label: 'Oldest First', value: 'oldest' }
-                            ]}
-                            placeholder="Sort by Date"
-                            style={{ width: '160px' }}
-                        />
-                        
-                        {(searchTerm || activeFilters.rating || activeFilters.date) && (
-                            <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                    setSearchTerm('');
-                                    setActiveFilters({ rating: '', date: '' });
-                                }}
-                                style={{ color: '#ef4444' }}
-                            >
-                                Clear
-                            </Button>
-                        )}
-                    </div>
+                    <Select
+                        value={activeFilters.date}
+                        onChange={(value: string) => setActiveFilters({ ...activeFilters, date: value })}
+                        options={[
+                            { label: 'Newest First', value: '' },
+                            { label: 'Oldest First', value: 'oldest' }
+                        ]}
+                        placeholder="Sort by Date"
+                        style={{ width: '160px' }}
+                    />
+                    
+                    {(searchTerm || activeFilters.rating || activeFilters.date) && (
+                        <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                                setSearchTerm('');
+                                setActiveFilters({ rating: '', date: '' });
+                            }}
+                            style={{ color: '#ef4444' }}
+                        >
+                            Clear
+                        </Button>
+                    )}
                 </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+            <div className="reviews-grid">
                 {filteredReviews.length === 0 ? (
                     <div style={{ 
                         gridColumn: '1/-1', 
@@ -213,8 +204,8 @@ const AdminReviews: React.FC = () => {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
                             key={review.id} 
-                            className="admin-card"
-                            style={{ padding: '24px', position: 'relative' }}
+                            className="review-card admin-card"
+                            style={{ position: 'relative' }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                                 <div>
@@ -226,7 +217,7 @@ const AdminReviews: React.FC = () => {
                                 {renderStars(review.rating)}
                             </div>
                             
-                            <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', marginBottom: '20px', minHeight: '80px', position: 'relative' }}>
+                            <div className="review-comment" style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', minHeight: '80px', position: 'relative' }}>
                                 <Icons.quote size={24} style={{ position: 'absolute', top: '10px', left: '10px', opacity: 0.05, color: 'var(--brand-primary)' }} />
                                 <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: 1.6 }}>
                                     {review.comment || 'No comment provided by the customer.'}

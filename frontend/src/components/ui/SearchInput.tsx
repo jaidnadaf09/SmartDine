@@ -5,21 +5,27 @@ import './SearchInput.css';
 interface SearchInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     onClear?: () => void;
     containerClassName?: string;
+    icon?: React.ReactNode;
 }
 
 const SearchInput: React.FC<SearchInputProps> = ({ 
     className = '', 
     containerClassName = '',
     onClear,
+    icon,
     ...props 
 }) => {
     return (
         <div className={`search-input-wrapper ${containerClassName}`}>
-            <Search 
-                className="search-icon" 
-                size={18} 
-                strokeWidth={2} 
-            />
+            {icon ? (
+              <span className="search-icon">{icon}</span>
+            ) : (
+              <Search 
+                  className="search-icon" 
+                  size={18} 
+                  strokeWidth={2} 
+              />
+            )}
             <input 
                 type="text" 
                 className={`search-input-field ${className}`}

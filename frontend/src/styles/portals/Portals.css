@@ -177,15 +177,15 @@ textarea:focus {
   font-family: 'Montserrat', sans-serif;
   font-size: 26px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
   letter-spacing: -0.3px;
   margin-bottom: 4px;
 }
 
 .admin-page-subtitle {
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.85);
   font-size: 14.5px;
-  opacity: 0.75;
+  opacity: 1;
   margin-top: 4px;
 }
 
@@ -3602,4 +3602,222 @@ body.dark .cancel-booking-btn:hover {
   .profile-card {
     padding: 1rem;
   }
+}
+
+/* Delete User Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+}
+
+.delete-user-modal {
+  width: 420px;
+  max-width: 92%;
+  padding: 28px 26px;
+  border-radius: 18px;
+
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(255,255,255,0.35);
+
+  box-shadow:
+    0 20px 45px rgba(0,0,0,0.12),
+    0 8px 18px rgba(0,0,0,0.08);
+
+  text-align: center;
+  animation: modalFade 0.18s ease;
+}
+
+@keyframes modalFade {
+  from {
+    transform: translateY(6px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-top: 8px;
+}
+
+.modal-description {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+.modal-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin: 0 auto 6px auto;
+
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+
+  color: #f97316;
+
+  box-shadow: 0 6px 14px rgba(249,115,22,0.15);
+}
+
+.modal-actions {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.btn-cancel {
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(148,163,184,0.35);
+
+  color: #475569;
+
+  transition: all 0.18s ease;
+}
+
+.btn-cancel:hover {
+  background: rgba(248,250,252,0.9);
+}
+
+.btn-delete {
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+
+  background: linear-gradient(135deg,#ef4444,#dc2626);
+
+  color: white;
+  border: none;
+
+  box-shadow:
+    0 8px 18px rgba(239,68,68,0.28);
+
+  transition: all 0.18s ease;
+}
+
+.btn-delete:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 24px rgba(239,68,68,0.35);
+}
+
+/* Delete Table Modal */
+.delete-table-modal {
+  width: 440px;
+  max-width: 92%;
+  padding: 28px 26px;
+  border-radius: 18px;
+
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(255,255,255,0.35);
+
+  box-shadow:
+    0 20px 45px rgba(0,0,0,0.12),
+    0 8px 18px rgba(0,0,0,0.08);
+
+  text-align: center;
+  animation: modalFade 0.18s ease;
+}
+
+/* Reviews Page Layout Update */
+.reviews-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.reviews-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.average-rating-card {
+  min-width: 220px;
+}
+
+.reviews-filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.reviews-filter-container > div:first-child {
+  flex: 1;
+}
+
+.reviews-filters {
+  display: flex;
+  gap: 12px;
+}
+
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.review-card {
+  padding: 18px;
+  border-radius: 16px;
+}
+
+.review-comment {
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+  .reviews-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fix Reviews Header Layout */
+.reviews-top-section {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+
+.average-rating-card {
+  width: 240px;
+}
+
+.reviews-filter-container {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 20px;
 }

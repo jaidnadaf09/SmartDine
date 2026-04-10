@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Icons } from '@components/icons/IconSystem';
 import api from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
-import DataTable from '../components/DataTable';
+import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
 
 const AdminBookingHistory: React.FC = () => {
@@ -10,13 +10,27 @@ const AdminBookingHistory: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const fetchBookingHistory = async () => {
         setLoading(true);
         setError(null);
         try {
-            const res = await api.get('/admin/bookings/history');
-            setBookings(Array.isArray(res.data) ? res.data : []);
+            const params = new URLSearchParams();
+            if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
+            if (activeFilters.status) params.append('status', activeFilters.status);
+            if (activeFilters.payment) params.append('payment', activeFilters.payment);
+            if (activeFilters.dateRange) params.append('dateRange', activeFilters.dateRange);
+
+            const res = await api.get(`/admin/bookings/history?${params.toString()}`);
+            const data = res.data?.data || res.data;
+            setBookings(Array.isArray(data) ? data : []);
         } catch (err: any) {
             console.error('Failed to fetch booking history:', err);
             setError(err.response?.data?.message || err.message || 'Failed to load booking history.');
@@ -27,7 +41,7 @@ const AdminBookingHistory: React.FC = () => {
 
     useEffect(() => {
         fetchBookingHistory();
-    }, []);
+    }, [debouncedSearchTerm, activeFilters]);
 
     const columns = [
         { 
@@ -94,12 +108,46 @@ const AdminBookingHistory: React.FC = () => {
         }
     ];
 
-    const filteredBookings = bookings.filter(booking => {
-        return (booking.customerName || '').toLowerCase().includes(searchTerm.toLowerCase());
-    });
+    const filterConfig: TableFilterConfig[] = [
+        {
+            key: 'status',
+            label: 'All Statuses',
+            options: [
+                { label: 'Completed', value: 'completed' },
+                { label: 'Cancelled', value: 'cancelled' },
+                { label: 'Pending', value: 'pending' },
+                { label: 'Confirmed', value: 'confirmed' },
+                { label: 'No Show', value: 'no_show' }
+            ]
+        },
+        {
+            key: 'payment',
+            label: 'All Payments',
+            options: [
+                { label: 'Paid', value: 'paid' },
+                { label: 'Unpaid', value: 'unpaid' },
+                { label: 'Failed', value: 'failed' },
+                { label: 'Refunded', value: 'refunded' }
+            ]
+        },
+        {
+            key: 'dateRange',
+            label: 'All Dates',
+            options: [
+                { label: 'Today', value: '1d' },
+                { label: 'Last 7 Days', value: '7d' },
+                { label: 'Last 30 Days', value: '30d' }
+            ]
+        }
+    ];
+
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
 
     return (
-        <div>
+        <div className="management-page">
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>
                     <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
@@ -113,9 +161,13 @@ const AdminBookingHistory: React.FC = () => {
             ) : (
                 <DataTable 
                     columns={columns} 
-                    data={filteredBookings} 
+                    data={bookings} 
                     searchValue={searchTerm}
                     onSearchChange={setSearchTerm}
+                    filters={filterConfig}
+                    activeFilters={activeFilters}
+                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onClearAll={clearAllFilters}
                     searchPlaceholder="Search customer..."
                 />
             )}

@@ -108,6 +108,7 @@ const MyOrders: React.FC = () => {
       ]);
 
       const bookingsData = bookingsRes.data || [];
+      console.log("BOOKINGS API RESPONSE:", bookingsData);
       const rawOrders = ordersRes.data;
       const upcomingData = upcomingRes.data;
       const reviewsData = reviewsRes.data || [];
@@ -140,7 +141,7 @@ const MyOrders: React.FC = () => {
         });
       }
 
-      setBookings(bookingsData);
+      setBookings(Array.isArray(bookingsData) ? bookingsData : []);
       setOrders(processedOrders);
     } catch (err: any) {
       setError(`Failed to fetch your data: ${err.message}`);
@@ -287,6 +288,15 @@ const MyOrders: React.FC = () => {
     </div>
   );
 
+  if (!Array.isArray(bookings)) {
+    console.error("Bookings is not array:", bookings)
+    return (
+      <div className="cp-error">
+        Failed to load bookings
+      </div>
+    )
+  }
+
   return (
     <div className="cp-page">
       <div className="cp-content">
@@ -337,14 +347,17 @@ const MyOrders: React.FC = () => {
               </div>
             ) : (
               <div className="cp-cards-grid single-col">
-                {bookings.map((booking) => (
-                  <div key={booking.id} className="cp-card">
-                    <div className="cp-card-header">
+                {Array.isArray(bookings) && bookings.map((booking) => {
+                  if (!booking) return null;
+
+                  return (
+                    <div key={booking.id} className="cp-card">
+                      <div className="cp-card-header">
                       <span className="cp-card-id">#{String(booking.id).slice(-6).toUpperCase()}</span>
                       <span className={getStatusClass(booking.status)}>{booking.status}</span>
                     </div>
 
-                    <div className="cp-details-row">
+                    <div className="cp-details-row booking-info-grid">
                       <div className="cp-detail-item">
                         <Icons.calendar className="cp-detail-icon" size={16} />
                         <div>
@@ -368,27 +381,16 @@ const MyOrders: React.FC = () => {
                           <div className="cp-detail-value">{booking.guests}</div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* ── Table Assignment Chip ── */}
-                    {booking.status === 'confirmed' && booking.table && (
-                      <div style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '7px',
-                        marginTop: '12px',
-                        padding: '6px 14px',
-                        borderRadius: '999px',
-                        background: 'rgba(16, 185, 129, 0.10)',
-                        border: '1px solid rgba(16, 185, 129, 0.25)',
-                        color: '#059669',
-                        fontSize: '0.82rem',
-                        fontWeight: 600,
-                      }}>
-                        <Icons.armchair size={13} />
-                        Table {booking.table.tableNumber} &bull; {booking.table.capacity} seats
+                      <div className="cp-detail-item">
+                        <Icons.table className="cp-detail-icon" size={16} />
+                        <div>
+                          <div className="cp-detail-label">Table</div>
+                          <div className="cp-detail-value">
+                            {booking.tableNumber ? `Table ${booking.tableNumber}` : "Assigning table"}
+                          </div>
+                        </div>
                       </div>
-                    )}
+                    </div>
 
                     {(booking.preference || booking.occasion) && (
                       <div className="cp-extra-info" style={{ marginTop: '12px', padding: '12px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
@@ -428,7 +430,7 @@ const MyOrders: React.FC = () => {
                       </div>
                     )}
                   </div>
-                ))}
+                )})}
               </div>
             )}
           </section>

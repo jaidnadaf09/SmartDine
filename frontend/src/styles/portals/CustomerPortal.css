@@ -318,12 +318,24 @@
   margin-bottom: 10px;
 }
 
-/* Detail rows */
 .cp-details-row {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 14px;
+}
+
+.booking-info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .booking-info-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
 }
 
 .cp-detail-item {
@@ -355,6 +367,13 @@
   font-weight: 700;
   color: var(--text-primary);
   font-family: 'Inter', sans-serif;
+}
+
+.cp-detail-sub {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  opacity: 0.7;
+  letter-spacing: 0.2px;
 }
 
 .cp-pending-text {

@@ -37,7 +37,8 @@ const Orders: React.FC = () => {
     const updateStatus = async (id: number, status: string) => {
         try {
             await api.patch(`/orders/${id}/status`, { status });
-            setOrders(orders.map(o => o.id === id ? { ...o, status } : o));
+            setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+            await fetchOrders();
             toast.success('Order status updated');
         } catch (err: any) {
             console.error('Failed to update order status:', err);
@@ -141,7 +142,7 @@ const Orders: React.FC = () => {
         }
     ];
 
-    const filteredOrders = orders.filter(order => {
+    const filteredOrders = orders?.filter(order => {
         const matchesSearch = 
             order.id.toString().includes(searchTerm) || 
             (order.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -150,7 +151,7 @@ const Orders: React.FC = () => {
         const matchesType = !activeFilters.orderType || order.orderType === activeFilters.orderType;
 
         return matchesSearch && matchesStatus && matchesType;
-    });
+    }) || [];
 
     const clearAllFilters = () => {
         setSearchTerm('');

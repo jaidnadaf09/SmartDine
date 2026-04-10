@@ -595,3 +595,20 @@ body[data-theme="dark"] .remove-photo-btn {
 body[data-theme="dark"] .remove-photo-btn:hover {
   background: rgba(255, 255, 255, 0.05);
 }
+
+.profile-avatar-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #a3a3a3; /* neutral-400 */
+  color: #ffffff; /* text-white */
+  transition: all 0.25s ease;
+}
+
+body[data-theme="dark"] .profile-avatar-icon {
+  background: #404040; /* neutral-700 */
+  color: #e5e5e5; /* neutral-200 */
+}

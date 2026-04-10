@@ -21,7 +21,7 @@ const EditProfilePage: React.FC = () => {
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone: user?.phone || '',
-        profileImage: user?.profileImage || '',
+        profileImage: user?.profileImage ?? null,
     });
 
     if (!user) return null;
@@ -92,12 +92,12 @@ const EditProfilePage: React.FC = () => {
         // Wait for exit animation to complete (250ms)
         setTimeout(async () => {
             try {
-                await api.delete('/auth/remove-profile-photo');
-                setFormData({ ...formData, profileImage: '' });
-                updateUser({ ...user, profileImage: '' });
-                toast.success('Profile photo removed');
+                await api.delete('/auth/profile/photo');
+                setFormData(prev => ({ ...prev, profileImage: null }));
+                updateUser({ ...user, profileImage: null });
+                toast.success('Photo removed');
             } catch (err: any) {
-                toast.error(err.message || 'Failed to remove photo');
+                toast.error('Failed to remove photo');
             } finally {
                 setLoading(false);
                 setIsRemovingPhoto(false);
@@ -126,15 +126,26 @@ const EditProfilePage: React.FC = () => {
                         >
                             <div className="edit-avatar-inner">
                                 <AnimatePresence mode="wait">
-                                    {formData.profileImage && !isRemovingPhoto ? (
-                                        <motion.img
-                                            key="avatar-image"
-                                            src={formData.profileImage}
-                                            alt="Preview"
+                                    {!isRemovingPhoto ? (
+                                        <motion.div
+                                            key="avatar-image-wrapper"
+                                            style={{ width: '100%', height: '100%' }}
                                             initial={{ opacity: 0, scale: 0.92 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.25 } }}
-                                        />
+                                        >
+                                            {formData.profileImage ? (
+                                                <img
+                                                    src={formData.profileImage}
+                                                    alt="Preview"
+                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                                />
+                                            ) : (
+                                                <div className="profile-avatar-icon">
+                                                    <Icons.user size={42} />
+                                                </div>
+                                            )}
+                                        </motion.div>
                                     ) : (
                                         <motion.div
                                             key="avatar-placeholder"
@@ -222,12 +233,11 @@ const EditProfilePage: React.FC = () => {
             </motion.div>
 
             <ConfirmModal
-                isOpen={isConfirmOpen}
+                open={isConfirmOpen}
                 title="Remove profile photo?"
                 message="Your profile picture will be deleted permanently. You can upload a new one anytime."
                 confirmText="Remove Photo"
                 cancelText="Keep Photo"
-                isDanger
                 onCancel={() => setIsConfirmOpen(false)}
                 onConfirm={() => {
                     setIsConfirmOpen(false);

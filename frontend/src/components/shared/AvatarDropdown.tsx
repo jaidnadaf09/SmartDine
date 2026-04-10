@@ -41,24 +41,32 @@ const AvatarDropdown: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="avatar-container" style={{ position: 'relative' }}>
-      <button 
+    <div className="relative">
+      <button
         ref={triggerRef}
         onClick={() => setOpen(prev => !prev)}
-        style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer', display: 'block' }}
+        className="sd-icon-btn"
       >
-        <div className="sd-avatar">
-          {user.profileImage ? (
-            <img 
-              src={user.profileImage} 
-              alt={user.name} 
-              loading="lazy"
-            />
-          ) : (
-            <Icons.user size={20} className="sd-profile-icon" />
-          )}
-        </div>
+        {user.profileImage ? (
+          <img
+            src={user.profileImage}
+            alt={user.name}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              borderRadius: "9999px"
+            }}
+          />
+        ) : (
+          <Icons.user
+            size={17}
+            strokeWidth={1.5}
+            color="#ffffff"
+          />
+        )}
       </button>
+
 
       {open && (
         <div 

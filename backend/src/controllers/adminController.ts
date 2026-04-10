@@ -126,6 +126,7 @@ export const assignTable = async (req: Request, res: Response) => {
         }
 
         booking.tableId = table.id;
+        // IMPORTANT: Directly syncing tableNumber ensures frontend MyOrders displays it safely
         booking.tableNumber = table.tableNumber;
         booking.status = 'confirmed';
         await booking.save();
@@ -168,10 +169,44 @@ export const checkInBooking = async (req: Request, res: Response) => {
 export const getBookingsHistory = async (req: Request, res: Response) => {
     console.log("Admin: Fetching booking history");
     try {
+        const { search, status, payment, dateRange } = req.query;
+
+        const whereClause: any = {};
+
+        if (status) {
+            whereClause.status = status;
+        } else {
+            whereClause.status = { [Op.in]: ['completed', 'cancelled'] };
+        }
+
+        if (search && typeof search === 'string') {
+            whereClause.customerName = {
+                [Op.iLike]: `%${search}%`
+            };
+        }
+
+        if (payment) {
+            whereClause.paymentStatus = payment;
+        }
+
+        if (dateRange) {
+            const now = new Date();
+            let calculatedDate = new Date();
+
+            if (dateRange === '1d') {
+                calculatedDate.setHours(0, 0, 0, 0);
+                whereClause.createdAt = { [Op.gte]: calculatedDate };
+            } else if (dateRange === '7d') {
+                calculatedDate.setDate(now.getDate() - 7);
+                whereClause.createdAt = { [Op.gte]: calculatedDate };
+            } else if (dateRange === '30d') {
+                calculatedDate.setDate(now.getDate() - 30);
+                whereClause.createdAt = { [Op.gte]: calculatedDate };
+            }
+        }
+
         const bookings = await Booking.findAll({
-            where: {
-                status: { [Op.in]: ['completed', 'cancelled'] }
-            },
+            where: whereClause,
             include: [
                 {
                     model: Table,
@@ -183,6 +218,7 @@ export const getBookingsHistory = async (req: Request, res: Response) => {
         });
         res.json(bookings);
     } catch (error) {
+        console.error("Error fetching booking history:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };

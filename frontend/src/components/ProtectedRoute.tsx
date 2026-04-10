@@ -1,5 +1,5 @@
 import React, { type ReactNode, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@context/AuthContext';
 import { useAuthModal } from '@context/AuthModalContext';
 
@@ -11,12 +11,16 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, loading } = useAuth();
   const { openAuthModal } = useAuthModal();
+  const location = useLocation();
+
+  const publicRoutes = ["/", "/order", "/book-table"];
+  const isPublicRoute = publicRoutes.includes(location.pathname);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      openAuthModal('login');
+    if (!loading && !isAuthenticated && !isPublicRoute) {
+      openAuthModal('login', { redirectTo: location.pathname });
     }
-  }, [loading, isAuthenticated, openAuthModal]);
+  }, [loading, isAuthenticated, isPublicRoute, location.pathname, openAuthModal]);
 
   if (loading) {
     return (
@@ -27,9 +31,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     );
   }
 
+  if (!isAuthenticated && isPublicRoute) {
+    return <>{children}</>;
+  }
+
   if (!isAuthenticated) {
-    // Return null while modal handles login, or Navigate to home if preferred
-    // For premium feel, we stay on current page and show modal
+    // Return null while modal handles login
     return null;
   }
 

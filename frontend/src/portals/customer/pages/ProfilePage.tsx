@@ -32,7 +32,9 @@ const ProfilePage: React.FC = () => {
                                 {user.profileImage ? (
                                     <img src={user.profileImage} alt={user.name} />
                                 ) : (
-                                    <Icons.user size={32} color="var(--pf-gold)" />
+                                    <div className="profile-avatar-icon">
+                                        <Icons.user size={32} />
+                                    </div>
                                 )}
                             </div>
                         </div>

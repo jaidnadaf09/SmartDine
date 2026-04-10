@@ -73,12 +73,12 @@ const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
 
   const handleProtectedNavigation = (e: React.MouseEvent, path: string) => {
     // Only intercept for certain paths that require auth
-    const protectedPaths = ['/order', '/book-table', '/customer', '/profile'];
+    const protectedPaths = ['/customer', '/profile'];
     const isProtected = protectedPaths.some(p => path.startsWith(p));
 
     if (isProtected && !isAuthenticated) {
       e.preventDefault();
-      openAuthModal('login');
+      openAuthModal('login', { redirectTo: path });
       return;
     }
   };

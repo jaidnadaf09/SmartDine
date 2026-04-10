@@ -191,20 +191,20 @@ export const getMe = async (req: AuthRequest, res: Response) => {
 
 export const removeProfilePhoto = async (req: AuthRequest, res: Response) => {
     try {
-        const user = await User.findByPk(req.user!.id);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        user.profileImage = ""; // Using empty string as per user request
-        await user.save();
-
+        const userId = req.user!.id;
+        await User.update(
+            { profileImage: null },
+            { where: { id: userId } }
+        );
         res.json({
-            message: "Profile photo removed",
-            profileImage: ""
+            success: true,
+            message: "Profile photo removed"
         });
-    } catch (error: any) {
+    } catch (error) {
         console.error("Remove profile photo error:", error);
-        res.status(500).json({ message: error.message || "Failed to remove photo" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to remove photo"
+        });
     }
 };

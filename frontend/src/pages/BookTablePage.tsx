@@ -3,7 +3,7 @@ import { Icons } from '@components/icons/IconSystem';
 import GuestStepper from '@shared/GuestStepper';
 import BookingCalendar from '@shared/BookingCalendar';
 import TimeDropdown from '@shared/TimeDropdown';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '@context/AuthContext';
 import api from '@utils/api';
@@ -33,7 +33,8 @@ const loadRazorpayScript = () => {
 
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
+  const location = useLocation();
+  const { user, updateUser, isGuest } = useAuth();
   const { openAuthModal } = useAuthModal();
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'wallet'>('online');
 
@@ -55,7 +56,31 @@ const BookTablePage: React.FC = () => {
     date: todayStr, // Default to today
     time: '',
     guests: '2',
+    name: isGuest ? "" : user?.name || "",
+    email: isGuest ? "" : user?.email || "",
+    phone: isGuest ? "" : user?.phone || "",
+    preference: "",
+    occasion: "",
+    specialRequests: ""
   });
+
+  React.useEffect(() => {
+    if (isGuest) {
+      setFormData(prev => ({
+        ...prev,
+        name: "",
+        email: "",
+        phone: ""
+      }));
+    } else if (user) {
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || ""
+      }));
+    }
+  }, [isGuest, user]);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,11 +136,9 @@ const BookTablePage: React.FC = () => {
 
   const handleAdminBook = async () => {
     setError('');
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (isGuest) {
         toast.error('Session expired. Please login again.');
-        navigate('/');
-        openAuthModal('login');
+        openAuthModal('login', { redirectTo: location.pathname });
         return;
     }
     setLoading(true);
@@ -145,6 +168,11 @@ const BookTablePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isGuest) {
+      openAuthModal('login', { redirectTo: location.pathname });
+      return;
+    }
 
     if (bookingInProgress.current) {
       console.warn("Booking already in progress");
@@ -406,25 +434,29 @@ const BookTablePage: React.FC = () => {
         ) : (
           <form onSubmit={handleSubmit} className="booking-form">
 
-            {/* User Info Pill */}
-            <div className="user-info-pill">
-              <div className="user-info-col">
-                <span className="icon-box"><Icons.user size={16} className="lucide info-icon" /></span>
-                <span className="info-label">Name:</span>
-                <span className="info-value">{user?.name || 'tester'}</span>
+            {/* User Info Row */}
+            <div className="user-info-row" style={{ marginBottom: "14px" }}>
+              <div className="user-info-pill">
+                <Icons.user size={16} className="pill-icon"/>
+                <span className="pill-label">Name:</span>
+                <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
+                  {isGuest ? "Login required" : user?.name || "tester"}
+                </span>
               </div>
-              <div className="info-divider"></div>
-              <div className="user-info-col">
-                <span className="icon-box"><Icons.mail size={16} className="lucide info-icon" /></span>
-                <span className="info-label">Email:</span>
-                <span className="info-value">{user?.email || 'test@gmail.com'}</span>
+              <div className="user-info-pill">
+                <Icons.mail size={16} className="pill-icon"/>
+                <span className="pill-label">Email:</span>
+                <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
+                  {isGuest ? "Login required" : user?.email || "test@gmail.com"}
+                </span>
               </div>
-              <div className="info-divider"></div>
-              <div className="user-info-col">
-                <span className="icon-box"><Icons.phone size={16} className="lucide info-icon" /></span>
-                <span className="info-label">Phone:</span>
-                <span className="info-value">{user?.phone || '9823743793'}</span>
-              </div>
+              <div className="user-info-pill">
+                <Icons.phone size={16} className="pill-icon"/>
+                <span className="pill-label">Phone:</span>
+                <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
+                  {isGuest ? "Login required" : user?.phone || "9823743793"}
+                </span>
+             </div>
             </div>
 
             <div className="booking-card">
@@ -445,7 +477,13 @@ const BookTablePage: React.FC = () => {
                   ) : (
                     <TimeDropdown 
                       value={formData.time} 
-                      onChange={(time) => setFormData(prev => ({ ...prev, time }))} 
+                      onChange={(time) => {
+                        if (isGuest) {
+                          openAuthModal('login', { redirectTo: location.pathname });
+                          return;
+                        }
+                        setFormData(prev => ({ ...prev, time }));
+                      }} 
                       minTime={minTimeForToday}
                     />
                   )}
@@ -526,7 +564,13 @@ const BookTablePage: React.FC = () => {
 
                 <div 
                   className={`payment-option ${paymentMethod === 'wallet' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('wallet')}
+                  onClick={() => {
+                    if (isGuest) {
+                      openAuthModal('login', { redirectTo: location.pathname });
+                      return;
+                    }
+                    setPaymentMethod('wallet');
+                  }}
                 >
                   <div className="payment-card-icon"><span className="icon-box"><Icons.wallet size={24} className="lucide" /></span></div>
                   <div className="payment-card-info">
@@ -538,28 +582,39 @@ const BookTablePage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="booking-actions-group">
-              <button type="submit" className={`reserve-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                {loading ? (
-                  <>
-                    <span className="icon-box" style={{ marginRight: 10 }}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
-                        <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="10" />
-                      </svg>
-                    </span>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <span className="icon-box" style={{ marginRight: 10 }}>
-                      <Icons.card size={20} className="lucide" />
-                    </span>
-                    Pay ₹10 & Reserve Table
-                  </>
-                )}
-              </button>
+            <div className="booking-actions-group" style={{ position: 'relative' }}>
+              {isGuest ? (
+                <button
+                  type="button"
+                  className="premium-login-cta"
+                  onClick={() => openAuthModal('login', { redirectTo: location.pathname })}
+                >
+                  <Icons.lock size={16} />
+                  Unlock Reservation Experience
+                </button>
+              ) : (
+                <button type="submit" className={`reserve-btn ${loading ? 'loading' : ''}`} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <span className="icon-box" style={{ marginRight: 10 }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                          <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="10" />
+                        </svg>
+                      </span>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <span className="icon-box" style={{ marginRight: 10 }}>
+                        <Icons.card size={20} className="lucide" />
+                      </span>
+                      Pay ₹10 & Reserve Table
+                    </>
+                  )}
+                </button>
+              )}
               
-              {isAdmin && (
+              {!isGuest && isAdmin && (
                 <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn">
                   Admin: Instant Booking
                 </button>

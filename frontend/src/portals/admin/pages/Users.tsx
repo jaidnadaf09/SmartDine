@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import ConfirmDialog from '@ui/ConfirmModal';
 import { Icons } from '@components/icons/IconSystem';
+import { AlertTriangle } from 'lucide-react';
 import api from '@utils/api';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
@@ -137,15 +137,15 @@ const Users: React.FC = () => {
         }
     ];
 
-    const filteredUsers = users.filter(user => {
+    const filteredUsers = users?.filter(user => {
         const matchesSearch = 
-            user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            user.email.toLowerCase().includes(searchTerm.toLowerCase());
+            (user?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (user?.email || '').toLowerCase().includes(searchTerm.toLowerCase());
         
-        const matchesRole = !activeFilters.role || user.role === activeFilters.role;
+        const matchesRole = !activeFilters.role || user?.role === activeFilters.role;
 
         return matchesSearch && matchesRole;
-    });
+    }) || [];
 
     const clearAllFilters = () => {
         setSearchTerm('');
@@ -179,17 +179,30 @@ const Users: React.FC = () => {
                 />
             )}
 
-            <ConfirmDialog
-                open={confirmDeleteOpen}
-                title="Delete User"
-                message="Are you sure you want to delete this user? This action cannot be undone."
-                onConfirm={confirmDelete}
-                onCancel={() => {
-                    setConfirmDeleteOpen(false);
-                    setUserToDelete(null);
-                }}
-                confirmText="Delete User"
-            />
+            {confirmDeleteOpen && (
+                <div className="modal-overlay">
+                    <div className="delete-user-modal">
+                        <div className="modal-icon">
+                            <AlertTriangle size={20} />
+                        </div>
+                        <h3 className="modal-title">Delete User</h3>
+                        <p className="modal-description">
+                            Are you sure you want to delete this user? This action cannot be undone.
+                        </p>
+                        <div className="modal-actions">
+                            <button className="btn-cancel" onClick={() => {
+                                setConfirmDeleteOpen(false);
+                                setUserToDelete(null);
+                            }}>
+                                Cancel
+                            </button>
+                            <button className="btn-delete" onClick={confirmDelete}>
+                                Delete User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
