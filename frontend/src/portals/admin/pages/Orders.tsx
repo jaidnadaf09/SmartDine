@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Icons } from '@components/icons/IconSystem';
-import api from '@utils/api';
+import api, { safeFetch } from '@utils/api';
 import { formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
@@ -13,25 +13,31 @@ const Orders: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+    const mountedRef = useRef(true);
 
     const fetchOrders = async () => {
-        setLoading(true);
-        setError(null);
         try {
-            const res = await api.get(`/orders?includeAll=true&t=${Date.now()}`);
-            setOrders(Array.isArray(res.data) ? res.data : []);
+            const res = await safeFetch(() => api.get(`/orders?includeAll=true&t=${Date.now()}`));
+            if (mountedRef.current) {
+                setOrders(Array.isArray(res.data) ? res.data : []);
+                setError(null);
+            }
         } catch (err: any) {
             console.error('Failed to fetch orders:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to load orders.');
+            // Only show error if we have no data (first load failure)
+            if (mountedRef.current && orders.length === 0) {
+                setError(err.response?.data?.message || err.message || 'Failed to load orders.');
+            }
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     };
 
     useEffect(() => {
+        mountedRef.current = true;
         fetchOrders();
         const interval = setInterval(fetchOrders, 15000); // Auto-refresh every 15s
-        return () => clearInterval(interval);
+        return () => { clearInterval(interval); mountedRef.current = false; };
     }, []);
 
     const updateStatus = async (id: number, status: string) => {
@@ -52,15 +58,6 @@ const Orders: React.FC = () => {
             header: 'Customer', 
             key: 'customer', 
             render: (order: any) => <span>{order.customer?.name || 'Guest'}</span>
-        },
-        { 
-            header: 'Status', 
-            key: 'status',
-            render: (order: any) => (
-                <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`}>
-                    {order.status}
-                </span>
-            )
         },
         { 
             header: 'Items', 
@@ -106,18 +103,32 @@ const Orders: React.FC = () => {
         { 
             header: 'Update', 
             key: 'update',
-            render: (order: any) => (
-                <Select
-                    value={order.status}
-                    onChange={(value: string) => updateStatus(order.id, value)}
-                    options={[
-                        { label: 'Pending', value: 'pending' },
-                        { label: 'Preparing', value: 'preparing' },
-                        { label: 'Completed', value: 'completed' }
-                    ]}
-                    style={{ width: '120px' }}
-                />
-            )
+            render: (order: any) => {
+                const isFinalized = order.status === 'cancelled' || order.status === 'completed';
+                
+                if (isFinalized) {
+                    return (
+                        <div style={{ padding: '8px 0' }}>
+                            <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`} style={{ opacity: 0.85, cursor: 'default' }}>
+                                {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
+                            </span>
+                        </div>
+                    );
+                }
+
+                return (
+                    <Select
+                        value={order.status}
+                        onChange={(value: string) => updateStatus(order.id, value)}
+                        options={[
+                            { label: 'Pending', value: 'pending' },
+                            { label: 'Preparing', value: 'preparing' },
+                            { label: 'Completed', value: 'completed' }
+                        ]}
+                        style={{ width: '120px' }}
+                    />
+                );
+            }
         }
     ];
 

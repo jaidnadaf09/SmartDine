@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '@components/icons/IconSystem';
-import api from '@utils/api';
+import api, { safeFetch } from '@utils/api';
 import { formatDate } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
@@ -11,24 +11,40 @@ const Payments: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+    const mountedRef = useRef(true);
 
     const fetchPayments = async () => {
-        setLoading(true);
-        setError(null);
         try {
-            const res = await api.get('/admin/payments');
-            setPayments(Array.isArray(res.data) ? res.data : []);
+            const res = await safeFetch(() => api.get('/admin/payments'));
+            if (mountedRef.current) {
+                setPayments(Array.isArray(res.data) ? res.data : []);
+                setError(null);
+            }
         } catch (err: any) {
             console.error('Failed to fetch payments:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to load payments.');
+            if (mountedRef.current && payments.length === 0) {
+                setError(err.response?.data?.message || err.message || 'Failed to load payments.');
+            }
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     };
 
     useEffect(() => {
+        mountedRef.current = true;
         fetchPayments();
+        return () => { mountedRef.current = false; };
     }, []);
+
+    const getPaymentMethodLabel = (payment: any) => {
+        if (payment.method === 'wallet' || payment.paymentId?.includes('wallet_txn')) {
+            return 'SmartDine Wallet';
+        }
+        if (payment.method === 'razorpay') {
+            return 'Razorpay / UPI';
+        }
+        return payment.method || 'Unknown';
+    };
 
     const columns = [
         { 
@@ -71,7 +87,7 @@ const Payments: React.FC = () => {
         { 
             header: 'Method', 
             key: 'method',
-            render: (payment: any) => <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{payment.method}</span>
+            render: (payment: any) => <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{getPaymentMethodLabel(payment)}</span>
         },
         { 
             header: 'Status', 

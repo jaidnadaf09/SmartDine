@@ -51,7 +51,8 @@ app.use((0, cors_1.default)({
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
 }));
-app.use(express_1.default.json());
+app.use(express_1.default.json({ limit: '10mb' }));
+app.use(express_1.default.urlencoded({ limit: '10mb', extended: true }));
 // Request logger
 app.use((req, res, next) => {
     console.log(`[REQUEST] ${req.method} ${req.originalUrl}`);
@@ -84,8 +85,8 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
     console.error("GLOBAL ERROR:", err);
     res.status(500).json({
-        message: "Internal Server Error",
-        error: process.env.NODE_ENV === "development" ? err.message : undefined
+        success: false,
+        message: "Server error"
     });
 });
 const PORT = process.env.PORT || 5000;

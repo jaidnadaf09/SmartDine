@@ -27,7 +27,7 @@ const MenuCard: React.FC<MenuCardProps> = ({
   onToggleFavourite,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [showAddAnimation, setShowAddAnimation] = useState(false);
+  const [qtyAnimation, setQtyAnimation] = useState<string | null>(null);
 
   const toggleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -59,10 +59,6 @@ const MenuCard: React.FC<MenuCardProps> = ({
 
       {/* Footer: Price + Actions */}
       <div className="menu-card-footer">
-        
-        {showAddAnimation && (
-          <span className="add-one-animation">+1</span>
-        )}
 
         <div className="price-row">
           <span className="dish-price">
@@ -91,12 +87,14 @@ const MenuCard: React.FC<MenuCardProps> = ({
         </div>
 
         {quantityInCart > 0 ? (
-          <div className="qty-stepper-full">
+          <div className="qty-stepper-full" style={{ position: 'relative' }}>
             <button 
               className="qty-step-btn-full"
               onClick={(e) => {
                 e.stopPropagation();
                 onUpdateQuantity(item.id, quantityInCart - 1);
+                setQtyAnimation("-1");
+                setTimeout(() => setQtyAnimation(null), 600);
             }}>−</button>
             <span className="qty-count-full">{quantityInCart}</span>
             <button 
@@ -104,20 +102,35 @@ const MenuCard: React.FC<MenuCardProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 onUpdateQuantity(item.id, quantityInCart + 1);
+                setQtyAnimation("+1");
+                setTimeout(() => setQtyAnimation(null), 600);
             }}>+</button>
+
+            {qtyAnimation && (
+              <span className={`qty-anim ${qtyAnimation === "+1" ? "plus" : "minus"}`}>
+                {qtyAnimation}
+              </span>
+            )}
           </div>
         ) : (
-          <button
-            className="add-btn-full"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddToCart(item, e);
-              setShowAddAnimation(true);
-              setTimeout(() => setShowAddAnimation(false), 700);
-            }}
-          >
-            Add
-          </button>
+          <div style={{ position: 'relative', width: '100%' }}>
+            <button
+              className="add-btn-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddToCart(item, e);
+                setQtyAnimation("+1");
+                setTimeout(() => setQtyAnimation(null), 600);
+              }}
+            >
+              Add
+            </button>
+            {qtyAnimation === "+1" && (
+              <span className="qty-anim plus" style={{ right: '12px' }}>
+                +1
+              </span>
+            )}
+          </div>
         )}
       </div>
     </div>

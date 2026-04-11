@@ -131,7 +131,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
 
   return (
     <>
-      <h1><Icons.utensils size={32} className="logo-icon" /> SmartDine</h1>
+      <div className="auth-brand">
+        <Icons.utensils size={32} className="logo-icon" /> 
+        <span className="auth-brand-text">SmartDine</span>
+      </div>
       <h2 className="auth-modal-title">Create Account</h2>
 
       <form onSubmit={handleSubmit} className="auth-form">

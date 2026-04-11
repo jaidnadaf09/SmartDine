@@ -9,6 +9,7 @@ import BookingReminder from '../../../components/BookingReminder';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import Modal from '@ui/Modal';
 import Button from '@ui/Button';
+import Select from '@ui/Select';
 import '@styles/portals/Portals.css';
 import '@styles/portals/CustomerPortal.css';
 
@@ -92,6 +93,12 @@ const MyOrders: React.FC = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+
+  // ── Filter & Search State ──
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState<'all' | 'food' | 'bookings'>('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const fetchUserData = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -297,6 +304,44 @@ const MyOrders: React.FC = () => {
     )
   }
 
+  // ── Filtering Logic ──
+  const q = searchQuery.toLowerCase().trim();
+
+  const filteredBookings = bookings
+    .filter(b => {
+      if (statusFilter !== 'all' && b.status?.toLowerCase() !== statusFilter) return false;
+      if (!q) return true;
+      const idStr = String(b.id).toLowerCase();
+      const dateStr = (formatDate(b.date) || '').toLowerCase();
+      const tableStr = (b.tableNumber || b.table?.tableNumber || '').toString();
+      return idStr.includes(q) || dateStr.includes(q) || tableStr.includes(q) || (b.customerName || '').toLowerCase().includes(q);
+    })
+    .sort((a, b) => {
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return sortOrder === 'newest' ? db - da : da - db;
+    });
+
+  const filteredOrders = orders
+    .filter(o => {
+      if (statusFilter !== 'all' && o.status?.toLowerCase() !== statusFilter) return false;
+      if (!q) return true;
+      const idStr = String(o.id).toLowerCase();
+      const dateStr = (formatDate(o.createdAt) || '').toLowerCase();
+      const itemNames = (o.items || []).map(i => (i.itemName || i.name || '').toLowerCase()).join(' ');
+      return idStr.includes(q) || dateStr.includes(q) || itemNames.includes(q);
+    })
+    .sort((a, b) => {
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return sortOrder === 'newest' ? db - da : da - db;
+    });
+
+  const showBookings = orderTypeFilter === 'all' || orderTypeFilter === 'bookings';
+  const showOrders = orderTypeFilter === 'all' || orderTypeFilter === 'food';
+  const totalFiltered = (showBookings ? filteredBookings.length : 0) + (showOrders ? filteredOrders.length : 0);
+  const hasActiveFilters = searchQuery || statusFilter !== 'all' || orderTypeFilter !== 'all';
+
   return (
     <div className="cp-page">
       <div className="cp-content">
@@ -315,6 +360,84 @@ const MyOrders: React.FC = () => {
           </button>
         </div>
 
+        {/* ── SEARCH & FILTER TOOLBAR ── */}
+        <div className="cp-filter-toolbar fade-up">
+          {/* Type Tabs */}
+          <div className="cp-type-tabs">
+            {(['all', 'food', 'bookings'] as const).map(tab => (
+              <button
+                key={tab}
+                className={`cp-type-tab ${orderTypeFilter === tab ? 'active' : ''}`}
+                onClick={() => setOrderTypeFilter(tab)}
+              >
+                {tab === 'all' && <Icons.list size={14} />}
+                {tab === 'food' && <Icons.shoppingBag size={14} />}
+                {tab === 'bookings' && <Icons.calendar size={14} />}
+                {tab === 'all' ? 'All' : tab === 'food' ? 'Food Orders' : 'Table Bookings'}
+              </button>
+            ))}
+          </div>
+
+          {/* Search + Filters Row */}
+          <div className="cp-filter-row">
+            <div className="cp-search-box">
+              <Icons.search size={16} className="cp-search-icon" />
+              <input
+                type="text"
+                placeholder="Search orders, items, IDs..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="cp-search-input"
+              />
+              {searchQuery && (
+                <button className="cp-search-clear" onClick={() => setSearchQuery('')}>
+                  <Icons.close size={14} />
+                </button>
+              )}
+            </div>
+
+            <div className="cp-filter-group">
+              <Select
+                options={[
+                  { label: 'All Status', value: 'all' },
+                  { label: 'Pending', value: 'pending' },
+                  { label: 'Confirmed', value: 'confirmed' },
+                  { label: 'Preparing', value: 'preparing' },
+                  { label: 'Ready', value: 'ready' },
+                  { label: 'Checked In', value: 'checked_in' },
+                  { label: 'Completed', value: 'completed' },
+                  { label: 'Cancelled', value: 'cancelled' },
+                ]}
+                value={statusFilter}
+                onChange={(val) => setStatusFilter(val)}
+                className="cp-filter-dropdown"
+              />
+            </div>
+
+            <div className="cp-filter-group">
+              <Select
+                options={[
+                  { label: 'Newest First', value: 'newest' },
+                  { label: 'Oldest First', value: 'oldest' },
+                ]}
+                value={sortOrder}
+                onChange={(val) => setSortOrder(val as 'newest' | 'oldest')}
+                className="cp-filter-dropdown"
+              />
+            </div>
+          </div>
+
+          {/* Active filters summary */}
+          {hasActiveFilters && (
+            <div className="cp-filter-summary">
+              <span>{totalFiltered} result{totalFiltered !== 1 ? 's' : ''} found</span>
+              <button className="cp-clear-filters" onClick={() => { setSearchQuery(''); setStatusFilter('all'); setOrderTypeFilter('all'); setSortOrder('newest'); }}>
+                <Icons.close size={12} /> Clear filters
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* ── UPCOMING REMINDER ── */}
         {upcomingBooking && (
           <BookingReminder 
@@ -330,24 +453,27 @@ const MyOrders: React.FC = () => {
         <div className="cp-sections-grid">
 
           {/* ── TABLE BOOKINGS ── */}
+          {showBookings && (
           <section className="cp-section" id="bookings-section">
             <h2 className="cp-section-title">
               <Icons.calendar size={18} style={{ color: 'var(--brand-primary)' }} />
               Table Bookings
-              <span className="cp-count">{bookings.length}</span>
+              <span className="cp-count">{filteredBookings.length}</span>
             </h2>
 
-            {bookings.length === 0 ? (
+            {filteredBookings.length === 0 ? (
               <div className="cp-empty">
                 <div className="cp-empty-icon"><Icons.calendar size={48} /></div>
-                <p>No bookings yet</p>
+                <p>{hasActiveFilters ? 'No bookings match your filters' : 'No bookings yet'}</p>
+                {!hasActiveFilters && (
                 <button className="cp-browse-btn" onClick={() => navigate('/book-table')}>
                   <Icons.calendar size={15} /> Book a Table
                 </button>
+                )}
               </div>
             ) : (
               <div className="cp-cards-grid single-col">
-                {Array.isArray(bookings) && bookings.map((booking) => {
+                {filteredBookings.map((booking) => {
                   if (!booking) return null;
 
                   return (
@@ -382,11 +508,19 @@ const MyOrders: React.FC = () => {
                         </div>
                       </div>
                       <div className="cp-detail-item">
-                        <Icons.table className="cp-detail-icon" size={16} />
+                        <Icons.utensilsCrossed className="cp-detail-icon" size={16} style={{ opacity: 0.8 }} />
                         <div>
                           <div className="cp-detail-label">Table</div>
                           <div className="cp-detail-value">
-                            {booking.tableNumber ? `Table ${booking.tableNumber}` : "Assigning table"}
+                            {booking.status?.toLowerCase() === "cancelled"
+                              ? "Booking Cancelled"
+                              : booking.tableNumber 
+                                ? `Table ${booking.tableNumber}` 
+                                : booking.table?.tableNumber 
+                                  ? `Table ${booking.table.tableNumber}` 
+                                  : (booking as any).Table?.tableNumber
+                                    ? `Table ${(booking as any).Table.tableNumber}`
+                                    : "Assigning table"}
                           </div>
                         </div>
                       </div>
@@ -434,26 +568,30 @@ const MyOrders: React.FC = () => {
               </div>
             )}
           </section>
+          )}
 
           {/* ── FOOD ORDERS ── */}
+          {showOrders && (
           <section className="cp-section">
             <h2 className="cp-section-title">
               <Icons.shoppingBag size={18} style={{ color: 'var(--brand-primary)' }} />
               Food Orders
-              <span className="cp-count">{orders.length}</span>
+              <span className="cp-count">{filteredOrders.length}</span>
             </h2>
 
-            {orders.length === 0 ? (
+            {filteredOrders.length === 0 ? (
               <div className="cp-empty">
                 <div className="cp-empty-icon"><Icons.cart size={48} /></div>
-                <p>You haven't placed any orders yet.</p>
+                <p>{hasActiveFilters ? 'No orders match your filters' : "You haven't placed any orders yet."}</p>
+                {!hasActiveFilters && (
                 <button className="cp-browse-btn" onClick={() => navigate('/order')}>
                   <Icons.utensilsCrossed size={15} /> Browse Menu
                 </button>
+                )}
               </div>
             ) : (
               <div className="cp-cards-grid single-col">
-                {orders.map((order) => (
+                {filteredOrders.map((order) => (
                   <div key={order.id} className="cp-card">
                     <div className="cp-card-header">
                       <span className="cp-card-id">#{String(order.id).slice(-6).toUpperCase()}</span>
@@ -568,6 +706,7 @@ const MyOrders: React.FC = () => {
               </div>
             )}
           </section>
+          )}
         </div>
 
         {/* ── REVIEW MODAL ── */}

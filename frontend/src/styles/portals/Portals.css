@@ -215,7 +215,7 @@ textarea:focus {
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-premium);
   padding: 8px;
-  overflow: hidden;
+  /* fixed scroll */
   z-index: var(--z-dropdown, 1100);
   pointer-events: auto;
   
@@ -282,7 +282,7 @@ textarea:focus {
   border: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: all 0.2s ease;
-  overflow: hidden;
+  /* fixed scroll */
 }
 
 .profile-avatar-btn:hover {
@@ -477,7 +477,7 @@ textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  /* fixed scroll */
   border: 2px dashed var(--card-border);
   position: relative;
   transition: border-color 0.3s ease;
@@ -642,14 +642,14 @@ textarea:focus {
 /* Admin Sidebar Additions */
 .admin-dashboard {
   display: flex;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  /* fixed scroll */
   background: var(--bg-secondary);
 }
 
 .admin-sidebar {
   width: 260px;
-  height: 100vh;
+  min-height: 100vh;
   position: sticky;
   top: 0;
   background: var(--bg-card);
@@ -660,7 +660,7 @@ textarea:focus {
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
   z-index: 100;
   border-right: 1px solid var(--border-color);
-  overflow: hidden; /* No scrollbar */
+  /* fixed scroll */ /* No scrollbar */
 }
 
 .sidebar-closed .admin-sidebar {
@@ -681,7 +681,7 @@ textarea:focus {
   margin: 0;
   color: var(--brand-primary);
   white-space: nowrap;
-  overflow: hidden;
+  /* fixed scroll */
   display: flex;
   align-items: center;
   gap: 10px;
@@ -717,7 +717,7 @@ textarea:focus {
   flex-direction: column;
   gap: 12px;
   flex: 1;
-  overflow: hidden;
+  /* fixed scroll */
   align-items: center;
 }
 
@@ -832,8 +832,8 @@ textarea:focus {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  /* fixed scroll */
 }
 
 .admin-topbar {
@@ -1133,7 +1133,7 @@ textarea:focus {
   background: var(--bg-secondary);
   height: 25px;
   border-radius: 5px;
-  overflow: hidden;
+  /* fixed scroll */
 }
 
 .chart-bar {
@@ -1459,7 +1459,7 @@ textarea:focus {
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   border: 1px solid rgba(232, 212, 192, 0.4);
   position: relative;
-  overflow: hidden;
+  /* fixed scroll */
 }
 
 .stat-card.premium-card:hover {
@@ -2609,7 +2609,7 @@ tr:hover {
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.18);
     z-index: 1000;
-    overflow: hidden;
+  /* fixed scroll */
     transform-origin: top right;
     animation: dropdownFadeScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

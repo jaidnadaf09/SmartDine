@@ -85,7 +85,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, isMo
 
   return (
     <>
-      <h1><Icons.utensils size={32} className="logo-icon" /> SmartDine</h1>
+      <div className="auth-brand">
+        <Icons.utensils size={32} className="logo-icon" /> 
+        <span className="auth-brand-text">SmartDine</span>
+      </div>
       <h2 className="auth-modal-title">Welcome Back</h2>
 
       <form onSubmit={handleSubmit} className="auth-form">

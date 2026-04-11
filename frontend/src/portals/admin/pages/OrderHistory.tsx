@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '@components/icons/IconSystem';
-import api from '@utils/api';
+import api, { safeFetch } from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable from '../components/DataTable';
 import Button from '@ui/Button';
@@ -10,23 +10,29 @@ const OrderHistory: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const mountedRef = useRef(true);
 
     const fetchOrderHistory = async () => {
-        setLoading(true);
-        setError(null);
         try {
-            const res = await api.get('/admin/orders/history');
-            setOrders(Array.isArray(res.data) ? res.data : []);
+            const res = await safeFetch(() => api.get('/admin/orders/history'));
+            if (mountedRef.current) {
+                setOrders(Array.isArray(res.data) ? res.data : []);
+                setError(null);
+            }
         } catch (err: any) {
             console.error('Failed to fetch order history:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to load order history.');
+            if (mountedRef.current && orders.length === 0) {
+                setError(err.response?.data?.message || err.message || 'Failed to load order history.');
+            }
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     };
 
     useEffect(() => {
+        mountedRef.current = true;
         fetchOrderHistory();
+        return () => { mountedRef.current = false; };
     }, []);
 
     const columns = [

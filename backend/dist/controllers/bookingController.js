@@ -101,14 +101,14 @@ const createBooking = async (req, res) => {
         }
         const booking = await Booking_1.default.create({
             ...req.body,
-            // Override customer details with verified user data – ignore any body values
+            // Override with verified server-side values — client cannot influence these
             customerName: user.name,
             email: user.email,
             phone: user.phone || 'Not provided',
             userId: user.id,
-            tableId: null,
-            tableNumber: null,
-            status: req.body.status || 'pending',
+            tableId: null, // no table assigned at creation
+            tableNumber: null, // no table number at creation
+            status: 'pending', // ✅ always start as pending — admin assigns table to confirm
         });
         // Create notification for new booking
         await models_1.Notification.create({
@@ -267,11 +267,18 @@ const getUpcomingBooking = async (req, res) => {
 exports.getUpcomingBooking = getUpcomingBooking;
 // @desc    Get user bookings
 // @route   GET /api/bookings/user/:userId
-// @access  Public (for now, based on frontend implementation)
+// @access  Public
 const getUserBookings = async (req, res) => {
     try {
         const bookings = await Booking_1.default.findAll({
             where: { userId: req.params.userId },
+            include: [
+                {
+                    model: models_1.Table,
+                    as: 'table',
+                    attributes: ['id', 'tableNumber', 'capacity'],
+                }
+            ],
             order: [['id', 'DESC']]
         });
         res.json(bookings);

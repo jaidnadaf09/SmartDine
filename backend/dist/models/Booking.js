@@ -53,7 +53,7 @@ Booking.init({
         }
     },
     status: {
-        type: sequelize_1.DataTypes.ENUM('pending', 'confirmed', 'cancelled', 'completed'),
+        type: sequelize_1.DataTypes.ENUM('pending', 'confirmed', 'checked_in', 'cancelled', 'completed'),
         defaultValue: 'pending',
     },
     specialRequests: {

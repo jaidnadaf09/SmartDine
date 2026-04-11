@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import api from '@utils/api';
+import api, { safeFetch } from '@utils/api';
 import { Icons } from '@components/icons/IconSystem';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import FormField from '../components/FormField';
@@ -25,24 +25,30 @@ const Tables: React.FC<TablesProps> = ({ hideHeader = false }) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+    const mountedRef = useRef(true);
 
     const fetchTables = async () => {
-        setLoading(true);
-        setError(null);
         try {
-            const res = await api.get('/admin/tables');
-            const data = res.data?.data || res.data;
-            setTables(Array.isArray(data) ? data : []);
+            const res = await safeFetch(() => api.get('/admin/tables'));
+            if (mountedRef.current) {
+                const data = res.data?.data || res.data;
+                setTables(Array.isArray(data) ? data : []);
+                setError(null);
+            }
         } catch (err: any) {
             console.error('Failed to fetch tables:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to load tables.');
+            if (mountedRef.current && tables.length === 0) {
+                setError(err.response?.data?.message || err.message || 'Failed to load tables.');
+            }
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     };
 
     useEffect(() => {
+        mountedRef.current = true;
         fetchTables();
+        return () => { mountedRef.current = false; };
     }, []);
 
     const handleSaveTable = async () => {

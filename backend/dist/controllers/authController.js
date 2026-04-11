@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMe = exports.changePassword = exports.updateProfile = exports.loginUser = exports.registerUser = void 0;
+exports.removeProfilePhoto = exports.getMe = exports.changePassword = exports.updateProfile = exports.loginUser = exports.registerUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const User_1 = __importDefault(require("../models/User"));
@@ -172,3 +172,21 @@ const getMe = async (req, res) => {
     }
 };
 exports.getMe = getMe;
+const removeProfilePhoto = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        await User_1.default.update({ profileImage: null }, { where: { id: userId } });
+        res.json({
+            success: true,
+            message: "Profile photo removed"
+        });
+    }
+    catch (error) {
+        console.error("Remove profile photo error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to remove photo"
+        });
+    }
+};
+exports.removeProfilePhoto = removeProfilePhoto;

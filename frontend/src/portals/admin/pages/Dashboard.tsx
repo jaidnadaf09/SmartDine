@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '@components/icons/IconSystem';
-import api from '@utils/api';
+import api, { safeFetch } from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import StatsCard from '../components/StatsCard';
 import Button from '@ui/Button';
@@ -12,20 +12,29 @@ const Dashboard: React.FC = () => {
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const mountedRef = useRef(true);
 
     const fetchStats = useCallback(async () => {
         try {
-            const res = await api.get('/admin/stats');
-            setStats(res.data);
+            const res = await safeFetch(() => api.get('/admin/stats'));
+            if (mountedRef.current) {
+                setStats(res.data);
+                setError(null); // Clear any previous error on success
+            }
         } catch (err: any) {
-            setError(err.response?.data?.message || err.message || 'Failed to load stats.');
+            // Only show error if we have no data at all (first load failure)
+            if (mountedRef.current && !stats) {
+                setError(err.response?.data?.message || err.message || 'Failed to load stats.');
+            }
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     }, []);
 
     useEffect(() => {
+        mountedRef.current = true;
         fetchStats();
+        return () => { mountedRef.current = false; };
     }, [fetchStats]);
 
     const statCards = [

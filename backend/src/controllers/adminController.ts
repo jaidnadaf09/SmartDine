@@ -300,7 +300,7 @@ export const completeBooking = async (req: Request, res: Response) => {
 
         booking.status = "completed";
         booking.tableId = null;
-        booking.tableNumber = null as any;
+        // NOTE: tableNumber is intentionally preserved for customer display history
 
         await booking.save();
 
@@ -552,7 +552,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
                 if (booking) {
                     booking.status = 'completed';
                     booking.tableId = null;
-                    booking.tableNumber = null as any;
+                    // NOTE: tableNumber preserved for customer display history
                     await booking.save();
                 }
             }
@@ -567,7 +567,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
                 // Also find any other active bookings for this table number and complete them
                 await Booking.update(
-                    { status: 'completed', tableId: null, tableNumber: null as any },
+                    { status: 'completed', tableId: null },
                     { 
                         where: { 
                             tableNumber: fullOrder.tableNumber,

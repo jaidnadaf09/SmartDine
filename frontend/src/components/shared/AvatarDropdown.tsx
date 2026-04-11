@@ -71,14 +71,14 @@ const AvatarDropdown: React.FC = () => {
       {open && (
         <div 
           ref={dropdownRef}
-          className={`sd-profile-dropdown ${open ? 'dropdown-enter' : ''}`}
+          className="sd-profile-dropdown"
         >
           <div className="sd-profile-header">
             <div className="sd-profile-name">{user.name}</div>
             <div className="sd-profile-email">{user.email}</div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <button 
               className="sd-profile-item" 
               onClick={() => { navigate('/profile'); setOpen(false); }}

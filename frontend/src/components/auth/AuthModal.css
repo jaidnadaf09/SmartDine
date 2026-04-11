@@ -92,10 +92,24 @@ body.modal-open {
 }
 
 /* Modal Content Reset for existing styles */
-.auth-modal h1 {
-    margin-bottom: 8px;
-    font-size: 26px !important;
-    text-align: center;
+.auth-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.auth-brand-text {
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    color: white;
+}
+
+/* Ensure logo text is soft white in light theme for better contrast on glass bg */
+body[data-theme="light"] .auth-modal .auth-brand-text {
+    color: rgba(255, 255, 255, 0.92) !important;
 }
 
 .auth-modal form {
@@ -106,11 +120,12 @@ body.modal-open {
 }
 
 .auth-modal h2, .auth-modal-title {
-    margin-bottom: 20px;
+    margin-bottom: 15px; /* Slightly reduced for better balance */
     font-size: 1.15rem !important;
     color: #E7D3A3 !important;
     font-weight: 600 !important;
     letter-spacing: 0.5px;
+    text-align: center;
 }
 
 /* Form labels contrast improvement */

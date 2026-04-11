@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '@components/icons/IconSystem';
-import api from '@utils/api';
+import api, { safeFetch } from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
@@ -12,6 +12,8 @@ const AdminBookingHistory: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+    const mountedRef = useRef(true);
+    const hasLoadedOnce = useRef(false);
 
     useEffect(() => {
         const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
@@ -19,28 +21,53 @@ const AdminBookingHistory: React.FC = () => {
     }, [searchTerm]);
 
     const fetchBookingHistory = async () => {
-        setLoading(true);
-        setError(null);
+        if (!hasLoadedOnce.current) setLoading(true);
         try {
             const params = new URLSearchParams();
             if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
-            if (activeFilters.status) params.append('status', activeFilters.status);
-            if (activeFilters.payment) params.append('payment', activeFilters.payment);
-            if (activeFilters.dateRange) params.append('dateRange', activeFilters.dateRange);
+            
+            // Map payment filter to status if 'refunded'
+            if (activeFilters.payment === 'refunded') {
+                params.append('status', 'cancelled');
+            } else if (activeFilters.payment && activeFilters.payment !== 'all') {
+                params.append('payment', activeFilters.payment);
+            }
 
-            const res = await api.get(`/admin/bookings/history?${params.toString()}`);
-            const data = res.data?.data || res.data;
-            setBookings(Array.isArray(data) ? data : []);
+            // Guard for valid statuses to prevent backend enum crashes
+            // Backend supported statuses: completed, cancelled, pending, confirmed, checked_in
+            const allowedStatuses = ['pending', 'confirmed', 'checked_in', 'cancelled', 'completed'];
+            if (activeFilters.status && allowedStatuses.includes(activeFilters.status)) {
+                // If payment was refunded, we've already set status=cancelled. 
+                // Only override if the user manually selected a status that isn't 'all'.
+                // If they did both, status filter takes precedence or they combine depending on API.
+                params.set('status', activeFilters.status);
+            }
+
+            if (activeFilters.dateRange && activeFilters.dateRange !== 'all') {
+                params.append('dateRange', activeFilters.dateRange);
+            }
+
+            const res = await safeFetch(() => api.get(`/admin/bookings/history?${params.toString()}`));
+            if (mountedRef.current) {
+                const data = res.data?.data || res.data;
+                setBookings(Array.isArray(data) ? data : []);
+                setError(null);
+                hasLoadedOnce.current = true;
+            }
         } catch (err: any) {
             console.error('Failed to fetch booking history:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to load booking history.');
+            if (mountedRef.current && !hasLoadedOnce.current) {
+                setError(err.response?.data?.message || err.message || 'Failed to load booking history.');
+            }
         } finally {
-            setLoading(false);
+            if (mountedRef.current) setLoading(false);
         }
     };
 
     useEffect(() => {
+        mountedRef.current = true;
         fetchBookingHistory();
+        return () => { mountedRef.current = false; };
     }, [debouncedSearchTerm, activeFilters]);
 
     const columns = [
@@ -113,11 +140,11 @@ const AdminBookingHistory: React.FC = () => {
             key: 'status',
             label: 'All Statuses',
             options: [
-                { label: 'Completed', value: 'completed' },
-                { label: 'Cancelled', value: 'cancelled' },
                 { label: 'Pending', value: 'pending' },
                 { label: 'Confirmed', value: 'confirmed' },
-                { label: 'No Show', value: 'no_show' }
+                { label: 'Checked In', value: 'checked_in' },
+                { label: 'Completed', value: 'completed' },
+                { label: 'Cancelled', value: 'cancelled' }
             ]
         },
         {
@@ -125,8 +152,6 @@ const AdminBookingHistory: React.FC = () => {
             label: 'All Payments',
             options: [
                 { label: 'Paid', value: 'paid' },
-                { label: 'Unpaid', value: 'unpaid' },
-                { label: 'Failed', value: 'failed' },
                 { label: 'Refunded', value: 'refunded' }
             ]
         },

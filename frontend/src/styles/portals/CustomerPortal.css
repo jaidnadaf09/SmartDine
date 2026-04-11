@@ -724,3 +724,204 @@
     align-items: flex-start;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   Search & Filter Toolbar
+═══════════════════════════════════════════════════ */
+
+.cp-filter-toolbar {
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Type Tabs (Segmented Control) ── */
+.cp-type-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.cp-type-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.cp-type-tab:hover {
+  color: var(--text-primary);
+  background: rgba(111, 78, 55, 0.06);
+}
+
+.cp-type-tab.active {
+  background: var(--brand-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(111, 78, 55, 0.3);
+}
+
+/* ── Filter Row (Search + Dropdowns) ── */
+.cp-filter-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Search Box */
+.cp-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.cp-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.cp-search-input {
+  width: 100%;
+  padding: 10px 38px 10px 40px;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.cp-search-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.cp-search-input:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(111, 78, 55, 0.1);
+}
+
+.cp-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(111, 78, 55, 0.1);
+  border: none;
+  border-radius: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.cp-search-clear:hover {
+  background: rgba(111, 78, 55, 0.2);
+  color: var(--text-primary);
+}
+
+/* Filter Dropdowns (Modern UI) */
+.cp-filter-group {
+  flex-shrink: 0;
+  min-width: 160px;
+}
+
+.cp-filter-dropdown {
+  width: 100%;
+}
+
+/* ── Filter Summary Strip ── */
+.cp-filter-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(111, 78, 55, 0.06);
+  border: 1px solid rgba(111, 78, 55, 0.1);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.cp-clear-filters {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--brand-primary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.cp-clear-filters:hover {
+  background: rgba(111, 78, 55, 0.1);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .cp-type-tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cp-type-tab {
+    padding: 7px 14px;
+    font-size: 0.78rem;
+  }
+
+  .cp-filter-row {
+    flex-direction: column;
+  }
+
+  .cp-search-box {
+    min-width: 100%;
+  }
+
+  .cp-filter-group {
+    width: 100%;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .cp-filter-row {
+    flex-wrap: wrap;
+  }
+  .cp-search-box {
+    min-width: 260px;
+  }
+}

@@ -40,7 +40,7 @@ const BookingReminder: React.FC<BookingReminderProps> = ({ booking, onView }) =>
               </div>
               <div className="rem-detail">
                 <UtensilsCrossed size={16} />
-                <span>{booking.tableNumber ? `Table ${booking.tableNumber}` : 'Table Assigned Soon'}</span>
+                <span>{(booking as any).tableNumber ? `Table ${(booking as any).tableNumber}` : (booking as any).table?.tableNumber ? `Table ${(booking as any).table.tableNumber}` : 'Table Assigned Soon'}</span>
               </div>
               <div className="rem-detail">
                 <Calendar size={16} />

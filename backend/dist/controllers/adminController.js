@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDashboardStats = exports.getStaffMembers = exports.getPayments = exports.updateOrderStatus = exports.getOrdersHistory = exports.getOrders = exports.deleteTable = exports.updateTable = exports.addTable = exports.getAvailableTables = exports.getTables = exports.updateBookingTable = exports.completeBooking = exports.cancelBooking = exports.updateBookingStatus = exports.getBookingsHistory = exports.getBookings = exports.deleteUser = exports.updateUserRole = exports.getUsers = exports.getAllReviews = void 0;
+exports.getDashboardStats = exports.getStaffMembers = exports.getPayments = exports.updateOrderStatus = exports.getOrdersHistory = exports.getOrders = exports.deleteTable = exports.updateTable = exports.addTable = exports.getAvailableTables = exports.getTables = exports.updateBookingTable = exports.unassignTable = exports.completeBooking = exports.cancelBooking = exports.updateBookingStatus = exports.getBookingsHistory = exports.checkInBooking = exports.assignTable = exports.getBookings = exports.deleteUser = exports.updateUserRole = exports.getUsers = exports.getAllReviews = void 0;
 const sequelize_1 = require("sequelize");
 const models_1 = require("../models");
 const reviewController_1 = require("./reviewController");
@@ -61,17 +61,24 @@ const deleteUser = async (req, res) => {
     }
 };
 exports.deleteUser = deleteUser;
-// @desc    Get all bookings
+// @desc    Get all bookings (pending + confirmed), pending sorted newest first
 // @route   GET /api/admin/bookings
 // @access  Private/Admin
 const getBookings = async (req, res) => {
-    console.log("Admin: Fetching active bookings");
+    console.log("Admin: Fetching active bookings (pending + confirmed)");
     try {
         const bookings = await models_1.Booking.findAll({
             where: {
-                status: 'confirmed'
+                status: { [sequelize_1.Op.in]: ['pending', 'confirmed', 'checked_in'] }
             },
-            order: [['createdAt', 'DESC']]
+            include: [
+                {
+                    model: models_1.Table,
+                    as: 'table',
+                    attributes: ['id', 'tableNumber', 'capacity']
+                }
+            ],
+            order: [['createdAt', 'DESC']] // Improvement #1: newest first
         });
         res.json(bookings);
     }
@@ -80,21 +87,127 @@ const getBookings = async (req, res) => {
     }
 };
 exports.getBookings = getBookings;
+// @desc    Assign a table to a booking with capacity validation
+// @route   PATCH /api/admin/bookings/:id/assign-table
+// @access  Private/Admin
+const assignTable = async (req, res) => {
+    try {
+        const { tableId } = req.body;
+        const booking = await models_1.Booking.findByPk(req.params.id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+        const table = await models_1.Table.findByPk(tableId);
+        if (!table) {
+            return res.status(404).json({ message: 'Table not found' });
+        }
+        // Capacity validation
+        if (table.capacity < booking.guests) {
+            return res.status(400).json({
+                message: `Table ${table.tableNumber} only has ${table.capacity} seats, but booking requires ${booking.guests}.`
+            });
+        }
+        // Prevent assigning already-reserved table (excluding current booking)
+        const existingBooking = await models_1.Booking.findOne({
+            where: {
+                tableId,
+                status: { [sequelize_1.Op.in]: ['pending', 'confirmed'] },
+                id: { [sequelize_1.Op.ne]: booking.id }
+            }
+        });
+        if (existingBooking) {
+            return res.status(409).json({
+                message: `Table ${table.tableNumber} is already assigned to another active booking.`
+            });
+        }
+        booking.tableId = table.id;
+        // IMPORTANT: Directly syncing tableNumber ensures frontend MyOrders displays it safely
+        booking.tableNumber = table.tableNumber;
+        booking.status = 'confirmed';
+        await booking.save();
+        res.json({ message: 'Table assigned successfully', booking });
+    }
+    catch (error) {
+        console.error('Error assigning table:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+exports.assignTable = assignTable;
+// @desc    Check-in a booking
+// @route   PATCH /api/admin/bookings/:id/check-in
+// @access  Private/Admin
+const checkInBooking = async (req, res) => {
+    try {
+        const booking = await models_1.Booking.findByPk(req.params.id);
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+        if (!booking.tableId) {
+            return res.status(400).json({ message: 'Assign table before check-in' });
+        }
+        booking.status = 'checked_in';
+        await booking.save();
+        res.json({ message: 'Customer checked in successfully', booking });
+    }
+    catch (error) {
+        console.error('Error checking in booking:', error);
+        res.status(500).json({ message: 'Check-in failed' });
+    }
+};
+exports.checkInBooking = checkInBooking;
 // @desc    Get booking history
 // @route   GET /api/admin/bookings/history
 // @access  Private/Admin
 const getBookingsHistory = async (req, res) => {
     console.log("Admin: Fetching booking history");
     try {
+        const { search, status, payment, dateRange } = req.query;
+        const whereClause = {};
+        if (status) {
+            whereClause.status = status;
+        }
+        else {
+            whereClause.status = { [sequelize_1.Op.in]: ['completed', 'cancelled'] };
+        }
+        if (search && typeof search === 'string') {
+            whereClause.customerName = {
+                [sequelize_1.Op.iLike]: `%${search}%`
+            };
+        }
+        if (payment) {
+            whereClause.paymentStatus = payment;
+        }
+        if (dateRange) {
+            const now = new Date();
+            let calculatedDate = new Date();
+            if (dateRange === '1d') {
+                calculatedDate.setHours(0, 0, 0, 0);
+                whereClause.createdAt = { [sequelize_1.Op.gte]: calculatedDate };
+            }
+            else if (dateRange === '7d') {
+                calculatedDate.setDate(now.getDate() - 7);
+                whereClause.createdAt = { [sequelize_1.Op.gte]: calculatedDate };
+            }
+            else if (dateRange === '30d') {
+                calculatedDate.setDate(now.getDate() - 30);
+                whereClause.createdAt = { [sequelize_1.Op.gte]: calculatedDate };
+            }
+        }
         const bookings = await models_1.Booking.findAll({
-            where: {
-                status: { [sequelize_1.Op.in]: ['completed', 'cancelled'] }
-            },
+            where: whereClause,
+            include: [
+                {
+                    model: models_1.Table,
+                    as: 'table',
+                    attributes: ['id', 'tableNumber', 'capacity']
+                }
+            ],
             order: [['createdAt', 'DESC']]
         });
         res.json(bookings);
     }
     catch (error) {
+        console.error("Error fetching booking history:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -170,7 +283,7 @@ const completeBooking = async (req, res) => {
         }
         booking.status = "completed";
         booking.tableId = null;
-        booking.tableNumber = null;
+        // NOTE: tableNumber is intentionally preserved for customer display history
         await booking.save();
         res.json({ message: "Booking completed and table released successfully", booking });
     }
@@ -180,6 +293,27 @@ const completeBooking = async (req, res) => {
     }
 };
 exports.completeBooking = completeBooking;
+// @desc    Unassign table from a booking
+// @route   PATCH /api/admin/bookings/:id/unassign-table
+// @access  Private/Admin
+const unassignTable = async (req, res) => {
+    console.log(`Admin: Unassigning table from booking ${req.params.id}`);
+    try {
+        const booking = await models_1.Booking.findByPk(req.params.id);
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+        booking.tableId = null;
+        booking.tableNumber = null;
+        await booking.save();
+        res.json({ message: "Table unassigned successfully", booking });
+    }
+    catch (error) {
+        console.error("Error unassigning table:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+exports.unassignTable = unassignTable;
 // @desc    Update table for booking (Assign, Change, Unassign)
 // @route   PUT /api/admin/bookings/:id/table
 // @access  Private/Admin
@@ -247,15 +381,24 @@ exports.getTables = getTables;
 const getAvailableTables = async (req, res) => {
     console.log("Admin: Fetching available tables");
     try {
-        const bookings = await models_1.Booking.findAll({
-            where: { tableId: { [sequelize_1.Op.ne]: null } }
+        // Only exclude tables that have an ACTIVE booking (pending/confirmed/checked_in)
+        const activeBookings = await models_1.Booking.findAll({
+            where: {
+                tableId: { [sequelize_1.Op.ne]: null },
+                status: { [sequelize_1.Op.in]: ['pending', 'confirmed', 'checked_in'] }
+            }
         });
-        const assignedTableIds = bookings.map(b => b.tableId);
+        const assignedTableIds = activeBookings
+            .map(b => b.tableId)
+            .filter((id) => id !== null);
         let whereClause = {};
         if (assignedTableIds.length > 0) {
             whereClause = { id: { [sequelize_1.Op.notIn]: assignedTableIds } };
         }
-        const tables = await models_1.Table.findAll({ where: whereClause });
+        const tables = await models_1.Table.findAll({
+            where: whereClause,
+            order: [['tableNumber', 'ASC']]
+        });
         res.json(tables);
     }
     catch (error) {
@@ -383,7 +526,7 @@ const updateOrderStatus = async (req, res) => {
                 if (booking) {
                     booking.status = 'completed';
                     booking.tableId = null;
-                    booking.tableNumber = null;
+                    // NOTE: tableNumber preserved for customer display history
                     await booking.save();
                 }
             }
@@ -395,7 +538,7 @@ const updateOrderStatus = async (req, res) => {
                     await table.save();
                 }
                 // Also find any other active bookings for this table number and complete them
-                await models_1.Booking.update({ status: 'completed', tableId: null, tableNumber: null }, {
+                await models_1.Booking.update({ status: 'completed', tableId: null }, {
                     where: {
                         tableNumber: fullOrder.tableNumber,
                         status: { [sequelize_1.Op.in]: ['pending', 'confirmed'] }

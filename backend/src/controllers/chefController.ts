@@ -86,7 +86,7 @@ export const updateChefOrderStatus = async (req: Request, res: Response) => {
                 if (booking) {
                     booking.status = 'completed';
                     booking.tableId = null; 
-                    booking.tableNumber = null as any; 
+                    // NOTE: tableNumber preserved for customer display history
                     await booking.save();
                     console.log(`Booking ${order.bookingId} marked as completed and unassigned from Table.`);
                 }

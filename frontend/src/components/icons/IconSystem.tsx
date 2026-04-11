@@ -64,7 +64,8 @@ import {
   CheckSquare,
   Users,
   Minus,
-  Lock
+  Lock,
+  LayoutList
 } from "lucide-react";
 
 export const Icons = {
@@ -136,4 +137,5 @@ export const Icons = {
   x: X,
   checkSquare: CheckSquare,
   lock: Lock,
+  list: LayoutList,
 };

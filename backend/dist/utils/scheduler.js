@@ -56,22 +56,7 @@ const initScheduler = () => {
         }
     });
     console.log('Scheduler: Auto Table Release Job scheduled to run every 5 minutes.');
-    // Run every minute for restaurant auto-resume
-    node_cron_1.default.schedule('* * * * *', async () => {
-        try {
-            const now = new Date();
-            const settings = await models_1.RestaurantSetting.findOne();
-            if (settings && settings.status === 'PAUSED' && settings.pauseUntil && now > settings.pauseUntil) {
-                console.log('--- Restaurant Pause Session Expired. Resuming to OPEN ---');
-                settings.status = 'OPEN';
-                settings.pauseUntil = null;
-                await settings.save();
-            }
-        }
-        catch (error) {
-            console.error('Error in Restaurant Auto-Resume Job:', error);
-        }
-    });
-    console.log('Scheduler: Restaurant Auto-Resume Job scheduled to run every minute.');
+    // Removed Restaurant Auto-Resume Job
+    // This job was running every minute and causing backend instability
 };
 exports.initScheduler = initScheduler;

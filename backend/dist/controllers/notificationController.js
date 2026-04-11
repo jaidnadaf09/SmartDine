@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.markAsRead = exports.getNotifications = void 0;
+exports.clearNotifications = exports.deleteNotification = exports.markAsRead = exports.getNotifications = void 0;
 const models_1 = require("../models");
 // @desc    Get user notifications
 // @route   GET /api/notifications
@@ -41,3 +41,38 @@ const markAsRead = async (req, res) => {
     }
 };
 exports.markAsRead = markAsRead;
+// @desc    Delete single notification
+// @route   DELETE /api/notifications/:id
+// @access  Private
+const deleteNotification = async (req, res) => {
+    try {
+        const deleted = await models_1.Notification.destroy({
+            where: { id: req.params.id, userId: req.user.id }
+        });
+        if (!deleted) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+        res.json({ message: 'Notification deleted' });
+    }
+    catch (error) {
+        console.error('Error deleting notification:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+exports.deleteNotification = deleteNotification;
+// @desc    Clear all notifications for user
+// @route   DELETE /api/notifications/clear
+// @access  Private
+const clearNotifications = async (req, res) => {
+    try {
+        await models_1.Notification.destroy({
+            where: { userId: req.user.id }
+        });
+        res.json({ message: 'All notifications cleared' });
+    }
+    catch (error) {
+        console.error('Error clearing notifications:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+exports.clearNotifications = clearNotifications;

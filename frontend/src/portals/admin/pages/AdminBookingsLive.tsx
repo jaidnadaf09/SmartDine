@@ -55,7 +55,6 @@ const AdminBookingsLive: React.FC = () => {
     // ── Core data fetch ──────────────────────────────────
     const loadData = useCallback(async (isInitial = false) => {
         if (isInitial) setLoading(true);
-        setError(null);
         try {
             const [active, history, tables] = await Promise.all([
                 fetchAdminBookings(),
@@ -90,8 +89,13 @@ const AdminBookingsLive: React.FC = () => {
             setConfirmedBookings(confirmed);
             setCompletedToday(todayCompleted);
             setAvailableTables(tables);
+            setError(null); // Clear error on successful fetch
         } catch (err: any) {
-            setError(err.response?.data?.message || err.message || 'Failed to load bookings.');
+            // Only show error on initial load or if we have no data at all
+            const hasData = pendingBookings.length > 0 || confirmedBookings.length > 0;
+            if (isInitial || !hasData) {
+                setError(err.response?.data?.message || err.message || 'Failed to load bookings.');
+            }
         } finally {
             if (isInitial) setLoading(false);
         }

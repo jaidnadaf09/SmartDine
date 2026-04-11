@@ -470,10 +470,7 @@ const OrderPage: React.FC = () => {
         </aside>
 
         <div className="menu-content-area">
-          <div className="menu-top-row">
-            <div className="menu-title-area">
-            </div>
-
+          <div className="view-cart-sticky">
             {cart.length > 0 && !isCartOpen && (
               <button
                 className={`top-view-cart-btn sd-cart-icon ${cartPulse ? 'pulse' : ''} ${cartBump ? 'bump' : ''}`}

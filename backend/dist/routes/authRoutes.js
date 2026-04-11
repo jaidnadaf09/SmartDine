@@ -37,4 +37,5 @@ router.post('/login', loginLimiter, [
 router.put('/profile', authMiddleware_1.protect, authController_1.updateProfile);
 router.put('/change-password', authMiddleware_1.protect, authController_1.changePassword);
 router.get('/me', authMiddleware_1.protect, authController_1.getMe);
+router.delete('/profile/photo', authMiddleware_1.protect, authController_1.removeProfilePhoto);
 exports.default = router;

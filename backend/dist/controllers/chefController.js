@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getChefOrderHistory = exports.updateChefOrderStatus = exports.getKitchenOrders = exports.getChefDashboardStats = void 0;
+exports.getChefReviews = exports.updateChefOrderStatus = exports.getKitchenOrders = exports.getChefDashboardStats = void 0;
 const sequelize_1 = require("sequelize");
 const models_1 = require("../models");
 // @desc    Get chef dashboard stats
@@ -46,7 +46,7 @@ const getKitchenOrders = async (req, res) => {
             include: [{
                     model: models_1.User,
                     as: 'customer',
-                    attributes: ['name']
+                    attributes: ['id', 'name']
                 }],
             order: [['createdAt', 'ASC']]
         });
@@ -70,6 +70,7 @@ const updateChefOrderStatus = async (req, res) => {
         }
         order.status = status;
         await order.save();
+        console.log("[ORDER COMPLETE]", order.id, "status:", order.status);
         // Table Management Logic: When order is completed
         if (status === 'completed') {
             console.log(`Order ${order.id} completed. Releasing table and booking...`);
@@ -79,7 +80,7 @@ const updateChefOrderStatus = async (req, res) => {
                 if (booking) {
                     booking.status = 'completed';
                     booking.tableId = null;
-                    booking.tableNumber = null;
+                    // NOTE: tableNumber preserved for customer display history
                     await booking.save();
                     console.log(`Booking ${order.bookingId} marked as completed and unassigned from Table.`);
                 }
@@ -116,30 +117,33 @@ const updateChefOrderStatus = async (req, res) => {
     }
 };
 exports.updateChefOrderStatus = updateChefOrderStatus;
-// @desc    Get completed orders for today
-// @route   GET /api/chef/order-history
+// @desc    Get all reviews for chef
+// @route   GET /api/chef/reviews
 // @access  Private/Chef
-const getChefOrderHistory = async (req, res) => {
+const getChefReviews = async (req, res) => {
     try {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const orders = await models_1.Order.findAll({
-            where: {
-                status: 'completed',
-                updatedAt: { [sequelize_1.Op.gte]: today }
-            },
-            include: [{
+        const reviews = await models_1.Review.findAll({
+            include: [
+                {
+                    model: models_1.Order,
+                    as: 'order',
+                    attributes: ["id"]
+                },
+                {
                     model: models_1.User,
-                    as: 'customer',
-                    attributes: ['name']
-                }],
-            order: [['updatedAt', 'DESC']]
+                    as: 'user',
+                    attributes: ["name"]
+                }
+            ],
+            order: [["createdAt", "DESC"]]
         });
-        res.json(orders);
+        res.json(reviews);
     }
     catch (error) {
-        console.error("Error fetching chef order history:", error);
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Chef reviews error:", error);
+        res.status(500).json({
+            message: "Failed to fetch reviews"
+        });
     }
 };
-exports.getChefOrderHistory = getChefOrderHistory;
+exports.getChefReviews = getChefReviews;

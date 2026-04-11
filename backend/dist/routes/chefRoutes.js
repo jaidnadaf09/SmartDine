@@ -15,6 +15,6 @@ router.get('/stats', chefController_1.getChefDashboardStats);
 // Active Kitchen Orders
 router.get('/orders', chefController_1.getKitchenOrders);
 router.put('/orders/:id/status', chefController_1.updateChefOrderStatus);
-// Order History (Completed Today)
-router.get('/order-history', chefController_1.getChefOrderHistory);
+// Feedback
+router.get('/reviews', chefController_1.getChefReviews);
 exports.default = router;

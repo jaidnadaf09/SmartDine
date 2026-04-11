@@ -120,18 +120,12 @@ const LandingPage: React.FC = () => {
                 <motion.button 
                   className="cta-btn" 
                   onClick={() => navigate('/order')}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 300 }}
                 >
                   Order Online Now
                 </motion.button>
                 <motion.button 
                   className="cta-btn secondary" 
                   onClick={() => navigate('/book-table')}
-                  whileHover={{ scale: 1.04 }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 300 }}
                 >
                   Table Reservation
                 </motion.button>

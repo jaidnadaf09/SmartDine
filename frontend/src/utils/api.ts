@@ -32,4 +32,22 @@ api.interceptors.response.use(
   }
 );
 
+/**
+ * Wraps an API call with a single automatic retry.
+ * Prevents transient network errors from immediately surfacing as UI errors.
+ */
+export async function safeFetch<T>(apiCall: () => Promise<T>): Promise<T> {
+  try {
+    return await apiCall();
+  } catch (firstError) {
+    // Wait briefly before retrying to let transient issues resolve
+    await new Promise((r) => setTimeout(r, 800));
+    try {
+      return await apiCall();
+    } catch (finalError) {
+      throw finalError;
+    }
+  }
+}
+
 export default api;

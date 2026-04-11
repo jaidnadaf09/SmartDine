@@ -14,8 +14,6 @@ import ScrollProgress from './components/utils/ScrollProgress';
 import './App.css';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
-const SignupPage = lazy(() => import('./pages/SignupPage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
 const BookTablePage = lazy(() => import('./pages/BookTablePage'));
 const OrderPage = lazy(() => import('./pages/OrderPage'));
 const CustomerPortal = lazy(() => import('./portals/customer/pages/CustomerPortal'));
@@ -35,9 +33,9 @@ const ContactUs = lazy(() => import('./pages/ContactUs'));
 const OrderSuccessPage = lazy(() => import('./portals/customer/pages/OrderSuccessPage'));
 
 const PageLoader = () => (
-    <div style={{ height: '70vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <DotLoader size={12} color="var(--brand-primary, #A67B5B)" />
-    </div>
+  <div style={{ height: '70vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <DotLoader size={12} color="var(--brand-primary, #A67B5B)" />
+  </div>
 );
 
 const AppContent = () => {
@@ -52,6 +50,9 @@ const AppContent = () => {
           {/* Customer Facing Routes with Persistent Navbar */}
           <Route element={<CustomerLayout />}>
             <Route path="/" element={<LandingPage />} />
+            {/* Redirect auth URLs to homepage */}
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/signup" element={<Navigate to="/" replace />} />
             <Route
               path="/book-table"
               element={
@@ -120,9 +121,7 @@ const AppContent = () => {
             />
           </Route>
 
-          {/* Auth Pages */}
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/login" element={<LoginPage />} />
+
 
           {/* Other Portals */}
           <Route path="/waiter" element={<WaiterPortal />} />
@@ -145,7 +144,7 @@ const AppContent = () => {
         </Routes>
       </Suspense>
       <ThemeToggleButton />
-      
+
       <AuthModal
         isOpen={!!authType}
         type={authType || 'login'}

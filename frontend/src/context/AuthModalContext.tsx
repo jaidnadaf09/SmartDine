@@ -9,6 +9,7 @@ export interface AuthModalOptions {
 interface AuthModalContextType {
   authType: AuthType;
   authOptions?: AuthModalOptions;
+  isOpen: boolean;
   openAuthModal: (type: 'login' | 'signup', options?: AuthModalOptions) => void;
   closeAuthModal: () => void;
   setAuthType: (type: AuthType) => void;
@@ -35,8 +36,10 @@ export const AuthModalProvider: React.FC<{ children: ReactNode }> = ({ children 
     setTimeout(() => setAuthOptions(undefined), 300);
   };
 
+  const isOpen = !!authType;
+
   return (
-    <AuthModalContext.Provider value={{ authType, authOptions, openAuthModal, closeAuthModal, setAuthType }}>
+    <AuthModalContext.Provider value={{ authType, authOptions, isOpen, openAuthModal, closeAuthModal, setAuthType }}>
       {children}
     </AuthModalContext.Provider>
   );
