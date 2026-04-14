@@ -43,6 +43,31 @@
   --radius-xl: 24px;
 }
 
+/* Smooth theme transition — optimized & scoped */
+html.theme-transition body,
+html.theme-transition #root {
+  transition: 
+    background-color 240ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Common UI surfaces optimized transition */
+html.theme-transition .card,
+html.theme-transition .panel,
+html.theme-transition .surface,
+html.theme-transition .modal,
+html.theme-transition .dropdown,
+html.theme-transition button,
+html.theme-transition input,
+html.theme-transition textarea,
+html.theme-transition select {
+  transition:
+    background-color 240ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 200ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 240ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 240ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Global Accessibility Focus States */
 :focus-visible {
   outline: none;
@@ -391,4 +416,61 @@ body {
 /* subtle click feedback */
 .sd-icon-btn:active {
   transform: scale(0.96);
+}
+
+/* ═══════════════════════════════════════════
+   GLOBAL PREMIUM UI: SHOW SCROLLBAR ON HOVER
+   ═══════════════════════════════════════════ */
+
+/* Base hidden scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+/* Chrome, Edge, Safari */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+  transition: background 0.3s ease;
+}
+
+/* Reveal on hover */
+*:hover {
+  scrollbar-color: rgba(180, 140, 90, 0.35) transparent;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: rgba(180, 140, 90, 0.35);
+}
+
+/* Dark mode refinement */
+body[data-theme="dark"] *:hover {
+  scrollbar-color: rgba(224, 185, 122, 0.35) transparent;
+}
+
+body[data-theme="dark"] *:hover::-webkit-scrollbar-thumb {
+  background: rgba(224, 185, 122, 0.35);
+}
+
+/* Interaction feedback */
+*::-webkit-scrollbar-thumb:active {
+  background: rgba(180, 140, 90, 0.55);
+}
+
+body[data-theme="dark"] *::-webkit-scrollbar-thumb:active {
+  background: rgba(224, 185, 122, 0.55);
+}
+
+html, body {
+  overflow-y: auto;
 }

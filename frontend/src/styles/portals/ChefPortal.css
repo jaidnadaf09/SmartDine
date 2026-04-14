@@ -1383,27 +1383,43 @@ body.dark .new-order-glow {
   transform: translateY(-1px);
 }
 
+/* Layout Wrapper only - Removes nesting borders */
 .status-select {
   min-width: 150px;
+  height: auto;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  display: block;
+}
+
+/* Single Stylized Pill Surface */
+.status-select .select-control {
+  background: rgba(28, 25, 23, 0.95) !important;
+  border: 1px solid rgba(224, 185, 122, 0.35) !important;
+  border-radius: 999px !important;
+  padding: 8px 14px;
+  box-shadow: 
+    0 4px 10px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.05);
   height: 44px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  padding: 0 14px;
-  font-weight: 500;
-  transition: 0.2s;
-  color: var(--text-primary);
+  display: flex;
+  align-items: center;
 }
 
-.status-select:hover {
-  border-color: rgba(198, 146, 91, 0.4);
+/* Hover & Focus Interaction Tuning */
+.status-select .select-control:hover {
+  border-color: rgba(198, 146, 91, 0.6) !important;
 }
 
-.status-select:focus {
+.status-select .select-control.is-open,
+.status-select:focus-within .select-control {
   outline: none;
-  border-color: #C6925B;
-  box-shadow: 0 0 0 2px rgba(198, 146, 91, 0.2);
+  border-color: #C6925B !important;
+  box-shadow: 
+    0 0 0 2px rgba(198, 146, 91, 0.25),
+    0 4px 10px rgba(0,0,0,0.25) !important;
 }
 
 /* ═══════════════════════════════════════════

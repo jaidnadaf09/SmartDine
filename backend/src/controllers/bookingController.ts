@@ -6,6 +6,8 @@ import { findAvailableTable } from '../utils/bookingUtils';
 import WalletTransaction from '../models/WalletTransaction';
 import { isRestaurantOpen, isValidWorkingHour } from '../utils/workingHours';
 import { Notification, RestaurantSetting, Table } from '../models';
+import sequelize from '../config/db';
+import { findBestAvailableTable } from '../services/tableAssignmentService';
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
@@ -55,17 +57,35 @@ export const getBookings = async (req: AuthRequest, res: Response) => {
 // @access  Public
 export const checkAvailability = async (req: AuthRequest, res: Response) => {
     try {
-        const { date, time } = req.body;
-        console.log('Backend: Checking availability for:', date, time);
+        const { date, time, guests } = req.body;
+        console.log('Backend: Checking availability for:', date, time, 'guests:', guests);
 
-        const availableTable = await findAvailableTable(date, time);
+        let availableTableNumber = null;
 
-        if (availableTable) {
-            console.log('Backend: Table available:', availableTable);
-            res.json({ available: true, tableNumber: availableTable });
+        if (guests) {
+            // New capacity-aware logic if guests passed
+            const availableTable = await findBestAvailableTable({
+                guestCount: parseInt(guests, 10),
+                date,
+                timeSlot: time
+            });
+            if (availableTable) {
+                availableTableNumber = availableTable.tableNumber;
+            }
         } else {
-            console.warn('Backend: No tables available for this slot');
-            res.json({ available: false, message: 'No tables available for this time slot.' });
+            // Legacy fallback if no guests provided
+            const fallbackTable = await findAvailableTable(date, time);
+            if (fallbackTable) {
+                availableTableNumber = fallbackTable;
+            }
+        }
+
+        if (availableTableNumber !== null) {
+            console.log('Backend: Table available:', availableTableNumber);
+            res.json({ available: true, tableNumber: availableTableNumber });
+        } else {
+            console.warn('Backend: No tables available for this slot/capacity');
+            res.json({ available: false, message: 'No suitable tables available for this time slot.' });
         }
     } catch (error: any) {
         console.error('Backend: Error checking availability:', error);
@@ -104,26 +124,42 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: dateTimeError });
         }
 
-        const booking = await Booking.create({
-            ...req.body,
-            // Override with verified server-side values — client cannot influence these
-            customerName: user.name,
-            email: user.email,
-            phone: user.phone || 'Not provided',
-            userId: user.id,
-            tableId: null,        // no table assigned at creation
-            tableNumber: null,    // no table number at creation
-            status: 'pending',    // ✅ always start as pending — admin assigns table to confirm
+        // Use a transaction to prevent race conditions during table assignment
+        const result = await sequelize.transaction(async (t) => {
+            const bestTable = await findBestAvailableTable({
+                guestCount: parseInt(req.body.guests, 10),
+                date: req.body.date,
+                timeSlot: req.body.time,
+                transaction: t
+            });
+
+            const assignedTableId = bestTable ? bestTable.id : null;
+            const assignedTableNumber = bestTable ? bestTable.tableNumber : null;
+            const bookingStatus = bestTable ? 'confirmed' : 'pending';
+
+            const booking = await Booking.create({
+                ...req.body,
+                // Override with verified server-side values — client cannot influence these
+                customerName: user.name,
+                email: user.email,
+                phone: user.phone || 'Not provided',
+                userId: user.id,
+                tableId: assignedTableId,
+                tableNumber: assignedTableNumber,
+                status: bookingStatus,
+            }, { transaction: t });
+
+            // Create notification for new booking
+            await Notification.create({
+                userId: user.id,
+                message: `Your table booking request #${booking.id} has been received.`,
+                type: 'booking'
+            }, { transaction: t });
+
+            return booking;
         });
 
-        // Create notification for new booking
-        await Notification.create({
-            userId: user.id,
-            message: `Your table booking request #${booking.id} has been received.`,
-            type: 'booking'
-        });
-
-        res.status(201).json(booking);
+        res.status(201).json(result);
     } catch (error: any) {
         console.error('CRITICAL BOOKING ERROR:', error);
         res.status(400).json({

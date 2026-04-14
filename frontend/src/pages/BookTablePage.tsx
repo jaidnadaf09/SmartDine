@@ -3,6 +3,7 @@ import { Icons } from '@components/icons/IconSystem';
 import GuestStepper from '@shared/GuestStepper';
 import BookingCalendar from '@shared/BookingCalendar';
 import TimeDropdown from '@shared/TimeDropdown';
+import AvailabilitySidePanel from '@components/shared/AvailabilitySidePanel';
 import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '@context/AuthContext';
@@ -14,6 +15,14 @@ import '@styles/pages/Profile.css';
 
 
 // Using centralized api instance
+
+const parse12HrTo24Hr = (time12h: string) => {
+  const [time, period] = time12h.split(' ');
+  let [hours, minutes] = time.split(':').map(Number);
+  if (period === 'PM' && hours < 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
 
 const loadRazorpayScript = () => {
   return new Promise((resolve) => {
@@ -83,10 +92,52 @@ const BookTablePage: React.FC = () => {
   }, [isGuest, user]);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [availability, setAvailability] = useState<boolean | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+
+  React.useEffect(() => {
+    const checkAvailability = async () => {
+      // Avoid firing if any field is missing
+      if (formData.date && formData.time && formData.guests) {
+        try {
+          const res = await api.post('/bookings/check-availability', {
+            date: formData.date,
+            time: formData.time,
+            guests: formData.guests
+          });
+          setAvailability(res.data.available);
+        } catch {
+          setAvailability(false); // If check fails entirely, treat as unavailable
+        }
+      } else {
+        setAvailability(null);
+      }
+    };
+    checkAvailability();
+  }, [formData.date, formData.time, formData.guests]);
+
+  React.useEffect(() => {
+    if (availability === false) {
+      toast.error('No suitable tables available for selected guest count', {
+        duration: 3000,
+        position: 'top-center',
+        style: {
+          borderRadius: "12px",
+          background: "#2b2118",
+          color: "#f5efe7",
+          border: "1px solid rgba(224,185,122,0.25)"
+        },
+        iconTheme: {
+          primary: "#e0b97a",
+          secondary: "#2b2118"
+        }
+      });
+    }
+  }, [availability]);
 
   // ── New booking extras state ──
   const [preference, setPreference] = useState('');
@@ -135,7 +186,6 @@ const BookTablePage: React.FC = () => {
   };
 
   const handleAdminBook = async () => {
-    setError('');
     if (isGuest) {
         toast.error('Session expired. Please login again.');
         openAuthModal('login', { redirectTo: location.pathname });
@@ -159,7 +209,6 @@ const BookTablePage: React.FC = () => {
       }
       showSuccessAndFinish(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Admin booking failed');
       toast.error(err.response?.data?.message || err.message || 'Admin booking failed');
     } finally {
       setLoading(false);
@@ -182,11 +231,9 @@ const BookTablePage: React.FC = () => {
     bookingInProgress.current = true;
 
     try {
-      setError('');
       setLoading(true);
 
       if (!user) {
-        setError('You must be logged in to book a table.');
         toast.error('You must be logged in to book a table.');
         setLoading(false);
         bookingInProgress.current = false;
@@ -199,7 +246,6 @@ const BookTablePage: React.FC = () => {
       // Verify not past date/time
       const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
       if (selectedDateTime < new Date()) {
-        setError('Booking time cannot be in the past.');
         toast.error('Booking time cannot be in the past.');
         setLoading(false);
         bookingInProgress.current = false;
@@ -207,7 +253,8 @@ const BookTablePage: React.FC = () => {
       }
       const availRes = await api.post('/bookings/check-availability', { 
         date: formData.date, 
-        time: formData.time 
+        time: formData.time,
+        guests: formData.guests
       });
 
       const availData = availRes.data;
@@ -220,7 +267,6 @@ const BookTablePage: React.FC = () => {
       // -- BRAND NEW: WALLET PAYMENT BRANCH --
       if (paymentMethod === 'wallet') {
         if (Number(user.walletBalance || 0) < paymentAmount) {
-          setError(`Insufficient wallet balance. Required: ₹${paymentAmount}. Current: ₹${Number(user.walletBalance || 0)}.`);
           toast.error('Insufficient wallet balance.');
           setLoading(false);
           bookingInProgress.current = false;
@@ -274,7 +320,6 @@ const BookTablePage: React.FC = () => {
       const scriptLoaded = await loadRazorpayScript();
 
       if (!scriptLoaded) {
-        setError("Failed to load Razorpay checkout.");
         toast.error("Failed to load Razorpay checkout.");
         setLoading(false);
         return;
@@ -315,7 +360,6 @@ const BookTablePage: React.FC = () => {
             showSuccessAndFinish(result.booking);
           } catch (err: any) {
             console.error('VERIFICATION ERROR:', err);
-            setError(err.message);
             toast.error(err.message || 'Booking Error');
           } finally {
             setLoading(false);
@@ -331,7 +375,6 @@ const BookTablePage: React.FC = () => {
           ondismiss: function () {
             console.log('Razorpay modal closed by user');
             setLoading(false);
-            setError('Payment cancelled. Table not booked.');
           }
         }
       };
@@ -340,20 +383,30 @@ const BookTablePage: React.FC = () => {
       const rzp = new (window as any).Razorpay(options);
       rzp.on('payment.failed', function (response: any) {
         console.error('Razorpay Payment Failed Detailed:', response.error);
-        if (response.error.code === 'BAD_REQUEST' || response.error.description.includes('cancel')) {
-          setError('Payment was cancelled — your table has not been reserved.');
-        } else {
-          setError(`Payment Failed: ${response.error.description}`);
-        }
         setLoading(false);
       });
       rzp.open();
     } catch (err: any) {
       console.error('BOOKING FLOW ERROR:', err);
       if (err.message && err.message.toLowerCase().includes('cancel')) {
-        setError('Payment was cancelled — your table has not been reserved.');
+        toast.error('Payment was cancelled — your table has not been reserved.');
+      } else if (err.message && err.message.includes('No tables')) {
+        toast.error('No suitable tables available for selected guest count', {
+          duration: 3000,
+          position: 'top-center',
+          style: {
+            borderRadius: "12px",
+            background: "#2b2118",
+            color: "#f5efe7",
+            border: "1px solid rgba(224,185,122,0.25)"
+          },
+          iconTheme: {
+            primary: "#e0b97a",
+            secondary: "#2b2118"
+          }
+        });
       } else {
-        setError(err.message || 'Booking failed');
+        toast.error(err.message || 'Booking failed');
       }
       setLoading(false);
     } finally {
@@ -362,7 +415,9 @@ const BookTablePage: React.FC = () => {
   };
 
   return (
-    <div className="book-table-container">
+    <div className="book-table-layout">
+      <div className={`book-table-wrapper ${isPanelOpen ? 'shift-left' : ''}`}>
+        <div className="book-table-container">
       <div className="book-table-box">
         <div className="book-table-header">
           <div className="premium-label-wrapper">
@@ -371,13 +426,6 @@ const BookTablePage: React.FC = () => {
           <h1 className="reserve-title">Reserve Your Table</h1>
           <p className="reserve-subtitle">Premium Dining Experience</p>
         </div>
-
-        {error && (
-          <div className="error-msg-banner">
-            <span className="icon-box"><Icons.alertCircle size={20} className="lucide" /></span>
-            <span>{error}</span>
-          </div>
-        )}
 
         {/* Success micro-interaction overlay */}
         {showSuccess && (
@@ -505,6 +553,11 @@ const BookTablePage: React.FC = () => {
               </div>
             </div>
 
+            <div className="panel-trigger" onClick={() => setIsPanelOpen(true)}>
+              <Icons.calendar size={18} />
+              <span>View Availability for Selected Date</span>
+            </div>
+
             {/* ── BOOKING EXTRAS ── */}
             <div className="bt-extras-section">
               {/* Seating Preference */}
@@ -623,6 +676,24 @@ const BookTablePage: React.FC = () => {
           </form>
         )}
       </div>
+    </div>
+    </div>
+      <AvailabilitySidePanel 
+        isOpen={isPanelOpen} 
+        onClose={() => setIsPanelOpen(false)} 
+        date={formData.date}
+        selectedTime={formData.time} 
+        selectedTableId={selectedTableId as number}
+        onSelectTime={(slot, tableId) => {
+          if (isGuest) {
+            openAuthModal('login', { redirectTo: location.pathname });
+            return;
+          }
+          setSelectedTableId(tableId);
+          const time24 = parse12HrTo24Hr(slot);
+          setFormData(prev => ({ ...prev, time: time24 }));
+        }} 
+      />
     </div>
   );
 };

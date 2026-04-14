@@ -17,15 +17,48 @@
 }
 
 body[data-theme="dark"] {
-  --pf-card-bg: #1A1A1A;
+  --pf-card-bg: rgba(28, 25, 23, 0.92); /* Optimized glass surface */
   --pf-card-border: rgba(255, 255, 255, 0.06);
   --pf-card-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
-  --pf-gold: #D6B37A;
-  --pf-gold-end: #C49A5A;
+  --pf-gold: #e0b97a; /* Brightened for dark mode */
+  --pf-gold-end: #cfa46a;
   --pf-input-bg: #121212;
   --pf-input-border: rgba(255, 255, 255, 0.08);
-  --pf-input-focus-ring: rgba(214, 179, 122, 0.15);
+  --pf-input-focus-ring: rgba(224, 185, 122, 0.15);
   --pf-hover-bg: #222222;
+}
+
+/* Micro-Refinements for Identity & Hierarchy */
+body[data-theme="dark"] .page-header h1 {
+  color: #f8f4ee; /* Improved title contrast */
+}
+
+body[data-theme="dark"] .profile-name {
+  color: #ecd3a2 !important; /* Highlighting user identity */
+}
+
+body[data-theme="dark"] .info-group-label,
+body[data-theme="dark"] .wallet-credit-label {
+  color: #c9b79c;
+  letter-spacing: 0.04em;
+  opacity: 1; /* Remove opacity reduction to improve scanning */
+}
+
+body[data-theme="dark"] .info-group-value {
+  color: #e6dccf; /* Easier scanning for metadata values */
+}
+
+body[data-theme="dark"] .pf-primary-btn {
+  color: #2b2118; /* Solid contrast on gold background */
+}
+
+body[data-theme="dark"] .wallet-amount {
+  color: #f1d6a8;
+  font-weight: 600;
+}
+
+body[data-theme="dark"] .divider {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 body[data-theme="dark"] .management-page {

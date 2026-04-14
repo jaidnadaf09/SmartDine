@@ -80,9 +80,9 @@
     --border: var(--border-subtle);
 
     /* Text hierarchy */
-    --text-primary: #e5e7eb;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-primary: #f5efe7;
+    --text-secondary: #d6c6b2;
+    --text-muted: #a89782;
 
     /* Brand/Accent */
     --accent: #3b82f6;

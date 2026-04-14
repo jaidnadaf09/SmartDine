@@ -216,6 +216,18 @@ body[data-theme="dark"] .booking-card {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
+/* Remove hover grow/glow only for Date-Time-Guests container within the form */
+.booking-form .booking-card:hover {
+  transform: none !important;
+  box-shadow: var(--shadow-sm);
+  border-color: var(--bt-border-soft);
+}
+
+body[data-theme="dark"] .booking-form .booking-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border-color: var(--bt-border-soft);
+}
+
 /* ── Booking Grid ── */
 .booking-row-horizontal {
   display: grid !important;
@@ -289,37 +301,40 @@ body[data-theme="dark"] .booking-card {
 
 /* ── Shared Popup Animation ── */
 .popup-animation {
-  animation: popupIn 0.18s ease-out;
-  transform-origin: top center;
+  animation: dropdownFade 0.30s ease;
+  transform-origin: top;
 }
 
-@keyframes popupIn {
+@keyframes dropdownFade {
   from {
     opacity: 0;
-    transform: scale(0.96) translateY(-4px);
+    transform: translateY(-6px) scale(0.98);
   }
+
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 /* ── Time Picker Grid Popup ── */
 .time-popup {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   left: 0;
-  margin-top: 6px;
   width: 100%;
   min-width: 280px;
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  background: var(--glass-bg);
-  border-radius: var(--radius-md);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  background: rgba(255, 248, 240, 0.94);
+  border-radius: 18px;
   padding: 16px;
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--card-shadow-lg);
-  z-index: 11000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  z-index: 80 !important;
   max-height: 320px;
   overflow-y: auto;
   scroll-behavior: smooth;
@@ -340,11 +355,12 @@ body[data-theme="dark"] .time-popup::-webkit-scrollbar-thumb {
 }
 
 body[data-theme="dark"] .time-popup {
-  background: rgba(42, 36, 32, 0.88);
-  border-color: rgba(215, 180, 122, 0.12);
+  background: rgba(28, 25, 23, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .time-section {
@@ -396,21 +412,23 @@ body[data-theme="dark"] .time-slot {
 
 .time-slot:hover {
   transform: translateY(-2px);
+  background: rgba(180, 120, 60, 0.12);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-  border-color: rgba(198, 167, 105, 0.3);
+  border-color: rgba(180, 120, 60, 0.2);
 }
 
 .time-slot.selected {
-  background: linear-gradient(135deg, #C6A769, #E7D3A3);
-  color: #1a1a1a;
-  font-weight: 600;
-  border-color: transparent;
-  box-shadow: 0 4px 14px rgba(198, 167, 105, 0.25);
+  background: rgba(180, 120, 60, 0.18);
+  color: var(--bt-text-main);
+  font-weight: 700;
+  border-color: rgba(180, 120, 60, 0.35);
+  box-shadow: 0 4px 14px rgba(180, 120, 60, 0.12);
 }
 
 body[data-theme="dark"] .time-slot.selected {
-  background: linear-gradient(135deg, #d7b47a, #e8c98f);
-  color: #1a1210;
+  background: rgba(215, 180, 122, 0.15);
+  color: #e8c98f;
+  border-color: rgba(215, 180, 122, 0.3);
 }
 
 .time-slot-text {
@@ -424,31 +442,40 @@ body[data-theme="dark"] .time-slot.selected {
   left: 0;
   margin-top: 6px;
   width: 300px;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  background: rgba(255, 248, 240, 0.94);
   border-radius: 18px;
   padding: 16px;
-  border: 1px solid rgba(198, 167, 105, 0.2);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
-  z-index: 11000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.12),
+    0 4px 14px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  z-index: 80 !important;
 }
 
-/* ── Smart Positioning Utility ── */
-.open-upward {
-  top: auto !important;
-  bottom: 100% !important;
-  margin-top: 0 !important;
-  margin-bottom: 6px !important;
-  transform-origin: bottom center !important;
-}
+/* Removed smart positioning utility as dropdown is now fixed downward */
 
 body[data-theme="dark"] .calendar-popup {
-  background: rgba(42, 36, 32, 0.88);
-  border-color: rgba(215, 180, 122, 0.12);
+  background: rgba(28, 25, 23, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Scoped transitions for glassmorphic components */
+html.theme-transition .calendar-popup,
+html.theme-transition .time-popup,
+html.theme-transition .booking-card,
+html.theme-transition .selector-box {
+  transition:
+    background-color 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 260ms cubic-bezier(0.4, 0, 0.2, 1),
+    backdrop-filter 260ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .calendar-popup-header {
@@ -803,8 +830,13 @@ body[data-theme="dark"] .reserve-btn {
   font-weight: 500;
 }
 
-body[data-theme="dark"] .recommended-slot { color: #34d399; }
-body[data-theme="dark"] .fast-filling { color: #fb923c; }
+body[data-theme="dark"] .recommended-slot {
+  color: #34d399;
+}
+
+body[data-theme="dark"] .fast-filling {
+  color: #fb923c;
+}
 
 /* ── Slot Dot ── */
 .slot-dot {
@@ -943,33 +975,67 @@ body[data-theme="dark"] .bt-chip.selected {
 
 /* ── Keyframes ── */
 @keyframes bt-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes bt-fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes bt-fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes fadeUpIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ── Responsive — Tablet ── */

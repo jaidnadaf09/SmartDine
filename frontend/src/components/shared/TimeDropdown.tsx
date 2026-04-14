@@ -7,31 +7,24 @@ interface TimeDropdownProps {
   minTime?: string;
 }
 
-const RECOMMENDED_SLOTS = ['19:30', '20:00'];
-const FAST_FILLING_SLOTS = ['21:00'];
-
-// Slot sections with 24h internal values
+// Slot sections with 24h internal values (60-minute intervals, 11 AM – 10 PM)
 const SLOT_SECTIONS = [
   {
     label: 'Lunch',
-    slots: [
-      '13:00', '13:30', '14:00', '14:30', 
-      '15:00', '15:30', '16:00', '16:30', '17:00'
-    ],
+    slots: ['11:00', '12:00', '13:00', '14:00', '15:00'],
+  },
+  {
+    label: 'Evening',
+    slots: ['16:00', '17:00', '18:00', '19:00'],
   },
   {
     label: 'Dinner',
-    slots: [
-      '18:00', '18:30', '19:00', '19:30',
-      '20:00', '20:30', '21:00', '21:30',
-      '22:00', '22:30',
-    ],
+    slots: ['20:00', '21:00', '22:00'],
   },
 ];
 
 const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,14 +35,6 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
     };
     if (isOpen) {
       window.addEventListener('click', handleClick);
-      
-      // Smart Positioning Logic
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        // If less than 320px (max-height) + margin
-        setOpenUpward(spaceBelow < 350);
-      }
     }
     return () => window.removeEventListener('click', handleClick);
   }, [isOpen]);
@@ -74,7 +59,7 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
       </div>
 
       {isOpen && (
-        <div className={`time-popup popup-animation ${openUpward ? 'open-upward' : ''}`}>
+        <div className="time-popup popup-animation">
           {SLOT_SECTIONS.map(section => {
             const filteredSlots = minTime
               ? section.slots.filter(t => t >= minTime)
@@ -88,8 +73,6 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
                 <div className="time-grid">
                   {filteredSlots.map(time => {
                     const isSelected = value === time;
-                    const isRecommended = RECOMMENDED_SLOTS.includes(time);
-                    const isFastFilling = FAST_FILLING_SLOTS.includes(time);
                     return (
                       <button
                         key={time}
@@ -98,8 +81,6 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
                         onClick={() => { onChange(time); setIsOpen(false); }}
                       >
                         <span className="time-slot-text">{formatTo12Hr(time)}</span>
-                        {isRecommended && <span className="recommended-slot">⭐</span>}
-                        {isFastFilling && <span className="fast-filling">• fast</span>}
                       </button>
                     );
                   })}
