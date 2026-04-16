@@ -165,23 +165,7 @@ const NotificationPanel: React.FC = () => {
           }}
         >
           <div className="notification-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h3>Notifications</h3>
-              <button 
-                onClick={(e) => { e.stopPropagation(); playNotificationSound(); }}
-                style={{ 
-                  fontSize: '10px', 
-                  padding: '2px 6px', 
-                  background: 'rgba(255,255,255,0.1)', 
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  color: '#fff',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Test Sound
-              </button>
-            </div>
+            <h3>Notifications</h3>
             {notifications.length > 0 && (
               <button className="clear-all-btn" onClick={clearAllNotifications}>
                 Clear All
