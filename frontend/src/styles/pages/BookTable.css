@@ -59,7 +59,10 @@ body[data-theme="dark"],
 .book-table-container {
   min-height: calc(100vh - 64px);
   background: var(--bg-primary);
-  padding: 20px 16px;
+  padding-top: 32px;
+  padding-bottom: 40px;
+  padding-left: 16px;
+  padding-right: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -70,8 +73,8 @@ body[data-theme="dark"],
 /* ── Main Card — Glassmorphic ── */
 .book-table-box {
   background: var(--bg-card);
-  border-radius: 18px;
-  padding: 22px 24px;
+  border-radius: 20px;
+  padding: 26px 28px;
   box-shadow: var(--card-shadow);
   width: 100%;
   max-width: 680px;
@@ -89,7 +92,7 @@ body[data-theme="dark"] .book-table-box {
 /* ── Header ── */
 .book-table-header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .premium-label-wrapper {
@@ -113,7 +116,7 @@ body[data-theme="dark"] .book-table-box {
   font-size: 32px;
   font-weight: 700;
   color: var(--bt-text-main);
-  margin: 2px 0 0;
+  margin: 2px 0 4px;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -123,6 +126,7 @@ body[data-theme="dark"] .book-table-box {
   color: var(--bt-text-muted);
   font-weight: 500;
   opacity: 0.7;
+  margin-bottom: 16px;
 }
 
 /* ── Icon Stability ── */
@@ -161,7 +165,7 @@ body[data-theme="dark"] .book-table-box {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .user-info-pill {
@@ -205,9 +209,9 @@ body[data-theme="dark"] .book-table-box {
   background: var(--bt-card-bg);
   border: 1px solid var(--bt-border-soft);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 16px 18px;
   box-shadow: var(--shadow-sm);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   transition: 0.2s ease;
   overflow: visible !important;
 }
@@ -232,14 +236,14 @@ body[data-theme="dark"] .booking-form .booking-card:hover {
 .booking-row-horizontal {
   display: grid !important;
   grid-template-columns: 1fr 1fr 1fr !important;
-  gap: 12px !important;
+  gap: 14px !important;
   align-items: flex-start !important;
 }
 
 .booking-field-compact {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* ── Section Labels ── */
@@ -261,8 +265,8 @@ body[data-theme="dark"] .booking-form .booking-card:hover {
 .field-helper {
   font-size: 11px;
   color: var(--bt-text-muted);
-  opacity: 0.7;
-  margin-top: 2px;
+  opacity: 0.65;
+  margin-top: 4px;
 }
 
 /* ── Payment Label ── */
@@ -274,6 +278,7 @@ body[data-theme="dark"] .booking-form .booking-card:hover {
   text-transform: uppercase;
   margin-bottom: 8px;
   display: block;
+  margin-top: 8px; /* Matching form-group margin-top */
 }
 
 /* ── Selector Box ── */
@@ -1091,5 +1096,84 @@ body[data-theme="dark"] .bt-chip.selected {
 
   .booking-card {
     padding: 14px;
+  }
+}
+
+/* ── Panel Trigger Button (View Availability) ── */
+.panel-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 14px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(245, 239, 231, 0.7);
+  border: 1px dashed rgba(202, 164, 107, 0.45);
+  color: #7a5c34;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.panel-trigger:hover {
+  background: rgba(245, 239, 231, 0.95);
+  border: 1px dashed rgba(202, 164, 107, 0.7);
+  transform: translateY(-1px);
+}
+
+.panel-trigger svg {
+  opacity: 0.8;
+}
+
+.panel-trigger span {
+  letter-spacing: 0.2px;
+}
+
+.bt-extras-section {
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+
+.bt-extras-field {
+  margin-bottom: 10px;
+}
+
+.bt-section-header {
+  margin-bottom: 6px;
+}
+
+.bt-chip-group {
+  gap: 8px;
+}
+
+.bt-chip {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.payment-methods {
+  gap: 12px;
+}
+
+.payment-option {
+  padding: 12px 14px;
+}
+
+.booking-actions-group {
+  margin-top: 10px;
+}
+
+.reserve-btn {
+  height: 46px;
+  font-size: 15px;
+}
+
+@media (min-height: 900px) {
+  .book-table-container {
+    padding-top: 42px;
   }
 }

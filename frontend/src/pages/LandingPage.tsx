@@ -147,6 +147,8 @@ const LandingPage: React.FC = () => {
         </div>
       </motion.section>
 
+      <div className="section-divider"></div>
+
       {/* Featured Dishes Section */}
       <section className="menu-section" id="featured-menu">
         <div className="section-header">
@@ -169,6 +171,8 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      <div className="section-divider"></div>
+
       {/* Book Table Section - 2-Column Grid */}
       <section className="book-table-section">
         <div className="book-table-grid">
@@ -184,6 +188,8 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <div className="section-divider"></div>
 
       {/* Experience & Features - Simplified */}
       <section className="showcase">
@@ -229,6 +235,7 @@ const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      <div className="section-divider"></div>
 
       <footer className="footer">
         <div className="footer-content">

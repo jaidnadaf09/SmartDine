@@ -187,9 +187,9 @@ const BookTablePage: React.FC = () => {
 
   const handleAdminBook = async () => {
     if (isGuest) {
-        toast.error('Session expired. Please login again.');
-        openAuthModal('login', { redirectTo: location.pathname });
-        return;
+      toast.error('Session expired. Please login again.');
+      openAuthModal('login', { redirectTo: location.pathname });
+      return;
     }
     setLoading(true);
     try {
@@ -251,8 +251,8 @@ const BookTablePage: React.FC = () => {
         bookingInProgress.current = false;
         return;
       }
-      const availRes = await api.post('/bookings/check-availability', { 
-        date: formData.date, 
+      const availRes = await api.post('/bookings/check-availability', {
+        date: formData.date,
         time: formData.time,
         guests: formData.guests
       });
@@ -263,7 +263,7 @@ const BookTablePage: React.FC = () => {
       }
 
       const paymentAmount = 10;
-      
+
       // -- BRAND NEW: WALLET PAYMENT BRANCH --
       if (paymentMethod === 'wallet') {
         if (Number(user.walletBalance || 0) < paymentAmount) {
@@ -287,17 +287,17 @@ const BookTablePage: React.FC = () => {
         const walletData = walletRes.data;
 
         if (walletData.walletBalance !== undefined && user) {
-           updateUser({ walletBalance: walletData.walletBalance });
+          updateUser({ walletBalance: walletData.walletBalance });
         }
 
         console.log('Wallet Payment verified and booking created:', walletData.booking);
-        
+
         if (walletData.booking?.tableNumber) {
           toast.success(`Booking Confirmed! Assigned Table: ${walletData.booking.tableNumber}`);
         } else {
           toast.success('Booking Confirmed! (Table pending assignment)');
         }
-        
+
         showSuccessAndFinish(walletData.booking);
         setLoading(false);
         bookingInProgress.current = false;
@@ -307,8 +307,8 @@ const BookTablePage: React.FC = () => {
       // -- ORIGINAL RAZORPAY PAYMENT BRANCH --
       console.log('Creating Razorpay Order for amount:', paymentAmount);
 
-      const orderResponse = await api.post('/payment/create-order', { 
-        amount: paymentAmount 
+      const orderResponse = await api.post('/payment/create-order', {
+        amount: paymentAmount
       });
 
       const orderData = orderResponse.data;
@@ -418,271 +418,270 @@ const BookTablePage: React.FC = () => {
     <div className="book-table-layout">
       <div className={`book-table-wrapper ${isPanelOpen ? 'shift-left' : ''}`}>
         <div className="book-table-container">
-      <div className="book-table-box">
-        <div className="book-table-header">
-          <div className="premium-label-wrapper">
-             <span className="logo-small"><span className="icon-box"><Icons.utensils size={18} className="lucide" /></span> SMARTDINE</span>
-          </div>
-          <h1 className="reserve-title">Reserve Your Table</h1>
-          <p className="reserve-subtitle">Premium Dining Experience</p>
-        </div>
+          <div className="book-table-box">
+            <div className="book-table-header">
+              <div className="premium-label-wrapper">
+                <span className="logo-small"><span className="icon-box"><Icons.utensils size={18} className="lucide" /></span> SMARTDINE</span>
+              </div>
+              <h1 className="reserve-title">Reserve Your Table</h1>
+              <p className="reserve-subtitle">Premium Dining Experience</p>
+            </div>
 
-        {/* Success micro-interaction overlay */}
-        {showSuccess && (
-          <div className="bt-success-overlay">
-            <div className="bt-success-icon">
-              <span style={{ fontSize: 26, color: '#fff' }}>✓</span>
-            </div>
-            <span className="bt-success-text">Table reserved successfully</span>
-          </div>
-        )}
-
-        {submitted ? (
-          <div className="booking-success-card">
-            <div className="success-icon">
-              <Icons.check size={28} />
-            </div>
-            <h3 className="success-title">Booking Confirmed</h3>
-            <p className="success-subtitle">We look forward to serving you.</p>
-            <div className="success-details">
-              <div className="success-detail-row">
-                <span className="success-detail-label">Table</span>
-                <span className="success-detail-value">{bookingDetails?.tableNumber || 'Pending'}</span>
-              </div>
-              <div className="success-detail-row">
-                <span className="success-detail-label">Date</span>
-                <span className="success-detail-value">{formatDate(bookingDetails?.date)}</span>
-              </div>
-              <div className="success-detail-row">
-                <span className="success-detail-label">Time</span>
-                <span className="success-detail-value">{formatTime(bookingDetails?.time)}</span>
-              </div>
-              <div className="success-detail-row">
-                <span className="success-detail-label">Guests</span>
-                <span className="success-detail-value">{bookingDetails?.guests || formData.guests}</span>
-              </div>
-              {formData.preference && (
-                <div className="success-detail-row">
-                  <span className="success-detail-label">Preference</span>
-                  <span className="success-detail-value">{formData.preference}</span>
+            {/* Success micro-interaction overlay */}
+            {showSuccess && (
+              <div className="bt-success-overlay">
+                <div className="bt-success-icon">
+                  <span style={{ fontSize: 26, color: '#fff' }}>✓</span>
                 </div>
-              )}
-              {formData.occasion && (
-                <div className="success-detail-row">
-                  <span className="success-detail-label">Occasion</span>
-                  <span className="success-detail-value">{formData.occasion}</span>
-                </div>
-              )}
-            </div>
-            {bookingDetails?.paymentId && (
-              <div className="success-ref">Ref: {bookingDetails.paymentId}</div>
+                <span className="bt-success-text">Table reserved successfully</span>
+              </div>
             )}
-            <button onClick={() => navigate('/')} className="pf-primary-btn">Go Home</button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="booking-form">
 
-            {/* User Info Row */}
-            <div className="user-info-row" style={{ marginBottom: "14px" }}>
-              <div className="user-info-pill">
-                <Icons.user size={16} className="pill-icon"/>
-                <span className="pill-label">Name:</span>
-                <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
-                  {isGuest ? "Login required" : user?.name || "tester"}
-                </span>
+            {submitted ? (
+              <div className="booking-success-card">
+                <div className="success-icon">
+                  <Icons.check size={28} />
+                </div>
+                <h3 className="success-title">Booking Confirmed</h3>
+                <p className="success-subtitle">We look forward to serving you.</p>
+                <div className="success-details">
+                  <div className="success-detail-row">
+                    <span className="success-detail-label">Table</span>
+                    <span className="success-detail-value">{bookingDetails?.tableNumber || 'Pending'}</span>
+                  </div>
+                  <div className="success-detail-row">
+                    <span className="success-detail-label">Date</span>
+                    <span className="success-detail-value">{formatDate(bookingDetails?.date)}</span>
+                  </div>
+                  <div className="success-detail-row">
+                    <span className="success-detail-label">Time</span>
+                    <span className="success-detail-value">{formatTime(bookingDetails?.time)}</span>
+                  </div>
+                  <div className="success-detail-row">
+                    <span className="success-detail-label">Guests</span>
+                    <span className="success-detail-value">{bookingDetails?.guests || formData.guests}</span>
+                  </div>
+                  {formData.preference && (
+                    <div className="success-detail-row">
+                      <span className="success-detail-label">Preference</span>
+                      <span className="success-detail-value">{formData.preference}</span>
+                    </div>
+                  )}
+                  {formData.occasion && (
+                    <div className="success-detail-row">
+                      <span className="success-detail-label">Occasion</span>
+                      <span className="success-detail-value">{formData.occasion}</span>
+                    </div>
+                  )}
+                </div>
+                {bookingDetails?.paymentId && (
+                  <div className="success-ref">Ref: {bookingDetails.paymentId}</div>
+                )}
+                <button onClick={() => navigate('/')} className="pf-primary-btn">Go Home</button>
               </div>
-              <div className="user-info-pill">
-                <Icons.mail size={16} className="pill-icon"/>
-                <span className="pill-label">Email:</span>
-                <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
-                  {isGuest ? "Login required" : user?.email || "test@gmail.com"}
-                </span>
-              </div>
-              <div className="user-info-pill">
-                <Icons.phone size={16} className="pill-icon"/>
-                <span className="pill-label">Phone:</span>
-                <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
-                  {isGuest ? "Login required" : user?.phone || "9823743793"}
-                </span>
-             </div>
-            </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="booking-form">
 
-            <div className="booking-card">
-              <div className="booking-row-horizontal">
-                <div className="booking-field-compact">
-                  <label><span className="icon-box"><Icons.calendar size={14} className="lucide" /></span> DATE</label>
-                  <BookingCalendar 
-                    selectedDate={formData.date} 
-                    onChange={handleDateChange} 
-                  />
-                  <span className="field-helper">Book up to 30 days ahead</span>
+                {/* User Info Row */}
+                <div className="user-info-row" style={{ marginBottom: "14px" }}>
+                  <div className="user-info-pill">
+                    <Icons.user size={16} className="pill-icon" />
+                    <span className="pill-label">Name:</span>
+                    <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
+                      {isGuest ? "Login required" : user?.name || "tester"}
+                    </span>
+                  </div>
+                  <div className="user-info-pill">
+                    <Icons.mail size={16} className="pill-icon" />
+                    <span className="pill-label">Email:</span>
+                    <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
+                      {isGuest ? "Login required" : user?.email || "test@gmail.com"}
+                    </span>
+                  </div>
+                  <div className="user-info-pill">
+                    <Icons.phone size={16} className="pill-icon" />
+                    <span className="pill-label">Phone:</span>
+                    <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
+                      {isGuest ? "Login required" : user?.phone || "9823743793"}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="booking-field-compact time-field-auto">
-                  <label><span className="icon-box"><Icons.clock size={14} className="lucide" /></span> TIME</label>
-                  {isLoadingSlots ? (
-                    <div className="skeleton"></div>
-                  ) : (
-                    <TimeDropdown 
-                      value={formData.time} 
-                      onChange={(time) => {
+                <div className="booking-card">
+                  <div className="booking-row-horizontal">
+                    <div className="booking-field-compact">
+                      <label><span className="icon-box"><Icons.calendar size={14} className="lucide" /></span> DATE</label>
+                      <BookingCalendar
+                        selectedDate={formData.date}
+                        onChange={handleDateChange}
+                      />
+                    </div>
+
+                    <div className="booking-field-compact time-field-auto">
+                      <label><span className="icon-box"><Icons.clock size={14} className="lucide" /></span> TIME</label>
+                      {isLoadingSlots ? (
+                        <div className="skeleton"></div>
+                      ) : (
+                        <TimeDropdown
+                          value={formData.time}
+                          onChange={(time) => {
+                            if (isGuest) {
+                              openAuthModal('login', { redirectTo: location.pathname });
+                              return;
+                            }
+                            setFormData(prev => ({ ...prev, time }));
+                          }}
+                          minTime={minTimeForToday}
+                        />
+                      )}
+                    </div>
+
+                    <div className="booking-field-compact">
+                      <label><span className="icon-box"><Icons.user size={14} className="lucide" /></span> GUESTS</label>
+                      {isLoadingSlots ? (
+                        <div className="skeleton"></div>
+                      ) : (
+                        <GuestStepper
+                          value={parseInt(formData.guests, 10)}
+                          onChange={(guests) => setFormData(prev => ({ ...prev, guests: guests.toString() }))}
+                          min={1}
+                          max={20}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="panel-trigger" onClick={() => setIsPanelOpen(true)}>
+                  <Icons.calendar size={18} />
+                  <span>View Availability of Tables</span>
+                </div>
+
+                {/* ── BOOKING EXTRAS ── */}
+                <div className="bt-extras-section">
+                  {/* Seating Preference */}
+                  <div className="bt-extras-field">
+                    <span className="bt-section-header">
+                      <Icons.armchair size={16} className="bt-section-icon" />
+                      Seating Preference
+                    </span>
+                    <div className="bt-chip-group">
+                      {seatPreferences.map(opt => (
+                        <button
+                          key={opt}
+                          type="button"
+                          className={`bt-chip ${preference === opt ? 'selected' : ''}`}
+                          onClick={() => setPreference(preference === opt ? '' : opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Occasion */}
+                  <div className="bt-extras-field">
+                    <span className="bt-section-header">
+                      <Icons.star size={16} className="bt-section-icon" />
+                      Occasion
+                    </span>
+                    <div className="bt-chip-group">
+                      {occasionOptions.map(opt => (
+                        <button
+                          key={opt}
+                          type="button"
+                          className={`bt-chip ${occasion === opt ? 'selected' : ''}`}
+                          onClick={() => setOccasion(occasion === opt ? '' : opt)}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <span className="bt-section-label">Payment Method</span>
+                  <div className="payment-methods">
+                    <div
+                      className={`payment-option ${paymentMethod === 'online' ? 'active' : ''}`}
+                      onClick={() => setPaymentMethod('online')}
+                    >
+                      <div className="payment-card-icon"><span className="icon-box"><Icons.card size={24} className="lucide" /></span></div>
+                      <div className="payment-card-info">
+                        <span className="payment-card-title">Online Payment</span>
+                        <span className="payment-card-subtitle">Pay via Razorpay</span>
+                      </div>
+                    </div>
+
+                    <div
+                      className={`payment-option ${paymentMethod === 'wallet' ? 'active' : ''}`}
+                      onClick={() => {
                         if (isGuest) {
                           openAuthModal('login', { redirectTo: location.pathname });
                           return;
                         }
-                        setFormData(prev => ({ ...prev, time }));
-                      }} 
-                      minTime={minTimeForToday}
-                    />
-                  )}
-                </div>
-
-                <div className="booking-field-compact">
-                  <label><span className="icon-box"><Icons.user size={14} className="lucide" /></span> GUESTS</label>
-                  {isLoadingSlots ? (
-                    <div className="skeleton"></div>
-                  ) : (
-                    <GuestStepper 
-                      value={parseInt(formData.guests, 10)} 
-                      onChange={(guests) => setFormData(prev => ({ ...prev, guests: guests.toString() }))} 
-                      min={1} 
-                      max={20} 
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="panel-trigger" onClick={() => setIsPanelOpen(true)}>
-              <Icons.calendar size={18} />
-              <span>View Availability for Selected Date</span>
-            </div>
-
-            {/* ── BOOKING EXTRAS ── */}
-            <div className="bt-extras-section">
-              {/* Seating Preference */}
-              <div className="bt-extras-field">
-                <span className="bt-section-header">
-                  <Icons.armchair size={16} className="bt-section-icon" />
-                  Seating Preference
-                </span>
-                <div className="bt-chip-group">
-                  {seatPreferences.map(opt => (
-                    <button
-                      key={opt}
-                      type="button"
-                      className={`bt-chip ${preference === opt ? 'selected' : ''}`}
-                      onClick={() => setPreference(preference === opt ? '' : opt)}
+                        setPaymentMethod('wallet');
+                      }}
                     >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Occasion */}
-              <div className="bt-extras-field">
-                <span className="bt-section-header">
-                  <Icons.star size={16} className="bt-section-icon" />
-                  Occasion
-                </span>
-                <div className="bt-chip-group">
-                  {occasionOptions.map(opt => (
-                    <button
-                      key={opt}
-                      type="button"
-                      className={`bt-chip ${occasion === opt ? 'selected' : ''}`}
-                      onClick={() => setOccasion(occasion === opt ? '' : opt)}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="form-group">
-              <span className="bt-section-label">Payment Method</span>
-              <div className="payment-methods">
-                <div 
-                  className={`payment-option ${paymentMethod === 'online' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('online')}
-                >
-                  <div className="payment-card-icon"><span className="icon-box"><Icons.card size={24} className="lucide" /></span></div>
-                  <div className="payment-card-info">
-                    <span className="payment-card-title">Online Payment</span>
-                    <span className="payment-card-subtitle">Pay via Razorpay</span>
+                      <div className="payment-card-icon"><span className="icon-box"><Icons.wallet size={24} className="lucide" /></span></div>
+                      <div className="payment-card-info">
+                        <span className="payment-card-title">SmartDine Wallet</span>
+                        <span className="payment-card-subtitle">
+                          {user ? `Balance: ₹${Number(user.walletBalance || 0)}` : 'Login to view'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div 
-                  className={`payment-option ${paymentMethod === 'wallet' ? 'active' : ''}`}
-                  onClick={() => {
-                    if (isGuest) {
-                      openAuthModal('login', { redirectTo: location.pathname });
-                      return;
-                    }
-                    setPaymentMethod('wallet');
-                  }}
-                >
-                  <div className="payment-card-icon"><span className="icon-box"><Icons.wallet size={24} className="lucide" /></span></div>
-                  <div className="payment-card-info">
-                    <span className="payment-card-title">SmartDine Wallet</span>
-                    <span className="payment-card-subtitle">
-                      {user ? `Balance: ₹${Number(user.walletBalance || 0)}` : 'Login to view'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="booking-actions-group" style={{ position: 'relative' }}>
-              {isGuest ? (
-                <button
-                  type="button"
-                  className="premium-login-cta"
-                  onClick={() => openAuthModal('login', { redirectTo: location.pathname })}
-                >
-                  <Icons.lock size={16} />
-                  Unlock Reservation Experience
-                </button>
-              ) : (
-                <button type="submit" className={`reserve-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                  {loading ? (
-                    <>
-                      <span className="icon-box" style={{ marginRight: 10 }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
-                          <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="10" />
-                        </svg>
-                      </span>
-                      Processing...
-                    </>
+                <div className="booking-actions-group" style={{ position: 'relative' }}>
+                  {isGuest ? (
+                    <button
+                      type="button"
+                      className="premium-login-cta"
+                      onClick={() => openAuthModal('login', { redirectTo: location.pathname })}
+                    >
+                      <Icons.lock size={16} />
+                      Unlock Reservation Experience
+                    </button>
                   ) : (
-                    <>
-                      <span className="icon-box" style={{ marginRight: 10 }}>
-                        <Icons.card size={20} className="lucide" />
-                      </span>
-                      Pay ₹10 & Reserve Table
-                    </>
+                    <button type="submit" className={`reserve-btn ${loading ? 'loading' : ''}`} disabled={loading}>
+                      {loading ? (
+                        <>
+                          <span className="icon-box" style={{ marginRight: 10 }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                              <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="10" />
+                            </svg>
+                          </span>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <span className="icon-box" style={{ marginRight: 10 }}>
+                            <Icons.card size={20} className="lucide" />
+                          </span>
+                          Pay ₹10 & Reserve Table
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-              )}
-              
-              {!isGuest && isAdmin && (
-                <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn">
-                  Admin: Instant Booking
-                </button>
-              )}
-            </div>
-          </form>
-        )}
+
+                  {!isGuest && isAdmin && (
+                    <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn">
+                      Admin: Instant Booking
+                    </button>
+                  )}
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
-    </div>
-      <AvailabilitySidePanel 
-        isOpen={isPanelOpen} 
-        onClose={() => setIsPanelOpen(false)} 
+      <AvailabilitySidePanel
+        isOpen={isPanelOpen}
+        onClose={() => setIsPanelOpen(false)}
         date={formData.date}
-        selectedTime={formData.time} 
+        selectedTime={formData.time}
         selectedTableId={selectedTableId as number}
         onSelectTime={(slot, tableId) => {
           if (isGuest) {
@@ -692,7 +691,7 @@ const BookTablePage: React.FC = () => {
           setSelectedTableId(tableId);
           const time24 = parse12HrTo24Hr(slot);
           setFormData(prev => ({ ...prev, time: time24 }));
-        }} 
+        }}
       />
     </div>
   );

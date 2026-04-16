@@ -3,6 +3,7 @@ import { useAuth } from '@context/AuthContext';
 import { Icons } from '../icons/IconSystem';
 import { formatTime } from '@utils/dateFormatter';
 import { createPortal } from 'react-dom';
+import { playNotificationSound } from '@utils/notificationSound';
 import '../../App.css';
 
 const NotificationPanel: React.FC = () => {
@@ -21,7 +22,12 @@ const NotificationPanel: React.FC = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data);
+        setNotifications(prev => {
+          if (data.length > prev.length) {
+            playNotificationSound();
+          }
+          return data;
+        });
       }
     } catch (err) {
       console.error('Error fetching notifications:', err);
@@ -133,6 +139,7 @@ const NotificationPanel: React.FC = () => {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+
   if (!isAuthenticated) return null;
 
   return (
@@ -158,7 +165,23 @@ const NotificationPanel: React.FC = () => {
           }}
         >
           <div className="notification-header">
-            <h3>Notifications</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3>Notifications</h3>
+              <button 
+                onClick={(e) => { e.stopPropagation(); playNotificationSound(); }}
+                style={{ 
+                  fontSize: '10px', 
+                  padding: '2px 6px', 
+                  background: 'rgba(255,255,255,0.1)', 
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Test Sound
+              </button>
+            </div>
             {notifications.length > 0 && (
               <button className="clear-all-btn" onClick={clearAllNotifications}>
                 Clear All

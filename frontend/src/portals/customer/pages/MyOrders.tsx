@@ -99,6 +99,7 @@ const MyOrders: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<'all' | 'food' | 'bookings'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [showFilters, setShowFilters] = useState(false);
 
   const fetchUserData = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -140,9 +141,9 @@ const MyOrders: React.FC = () => {
           } catch (e) {
             items = [];
           }
-          return { 
-            ...o, 
-            items: Array.isArray(items) ? items : [] ,
+          return {
+            ...o,
+            items: Array.isArray(items) ? items : [],
             review: reviewsData.find((r: any) => r.orderId === o.id)
           };
         });
@@ -219,7 +220,7 @@ const MyOrders: React.FC = () => {
         rating,
         comment
       });
-      
+
       toast.success('Thank you for your feedback!');
       setReviewOrder(null);
       setRating(5);
@@ -242,9 +243,9 @@ const MyOrders: React.FC = () => {
 
   const isCancellable = (booking: Booking) => {
     const status = booking.status?.toLowerCase();
-    return (status === 'pending' || status === 'confirmed') && 
-           booking.tableId === null && 
-           isWithinCancelWindow(booking.createdAt);
+    return (status === 'pending' || status === 'confirmed') &&
+      booking.tableId === null &&
+      isWithinCancelWindow(booking.createdAt);
   };
 
   const getStatusClass = (status: string) => `status-badge status-${status?.toLowerCase()}`;
@@ -283,11 +284,11 @@ const MyOrders: React.FC = () => {
   if (!user) return (
     <div className="cp-loading">
       <p>Please log in first</p>
-      <button 
+      <button
         onClick={() => {
           navigate('/');
           openAuthModal('login');
-        }} 
+        }}
         className="cp-retry-btn"
       >
         Go to Login
@@ -346,24 +347,98 @@ const MyOrders: React.FC = () => {
     <div className="cp-page">
       <div className="cp-content">
 
-        {/* ── WELCOME HEADER ── */}
-        <div className="cp-welcome fade-up">
-          <div>
-            <h1 className="cp-title">My Orders</h1>
-            <p className="cp-subtitle">
-              Welcome back, <strong>{user.name}</strong>! Here's everything in one place.
-            </p>
-          </div>
-          <button className="cp-browse-btn" onClick={() => navigate('/order')}>
-            <Icons.utensilsCrossed size={16} />
-            Browse Menu
-          </button>
-        </div>
+        {/* ── ORDERS TOOLBAR (SINGLE ROW) ── */}
+        <div className="orders-toolbar fade-up">
+          <div className="search-filter-group">
+            <div className="orders-search">
+              <div className="cp-search-box">
+                <Icons.search size={16} className="cp-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search orders, items..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="cp-search-input"
+                />
+                {searchQuery && (
+                  <button className="cp-search-clear" onClick={() => setSearchQuery('')}>
+                    <Icons.close size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
 
-        {/* ── SEARCH & FILTER TOOLBAR ── */}
-        <div className="cp-filter-toolbar fade-up">
-          {/* Type Tabs */}
-          <div className="cp-type-tabs">
+            <div className="filter-wrapper">
+              <button
+                className={`orders-filter-icon-btn ${showFilters ? 'active' : ''}`}
+                onClick={() => setShowFilters(!showFilters)}
+                title="Filter & Sort"
+              >
+                <Icons.filter size={18} />
+                {hasActiveFilters && statusFilter !== 'all' && <span className="filter-dot"></span>}
+              </button>
+
+              {/* ── FILTER POPUP (Anchored to Icon) ── */}
+              {showFilters && (
+                <div className="orders-filter-popup fade-in">
+                  <div className="filter-popup-header">
+                    <span>Filter & Sort</span>
+                    <button onClick={() => setShowFilters(false)}><Icons.close size={14} /></button>
+                  </div>
+
+                  <div className="filter-popup-content">
+                    <div className="filter-group">
+                      <label>Status</label>
+                      <Select
+                        options={[
+                          { label: 'All Status', value: 'all' },
+                          { label: 'Pending', value: 'pending' },
+                          { label: 'Confirmed', value: 'confirmed' },
+                          { label: 'Preparing', value: 'preparing' },
+                          { label: 'Ready', value: 'ready' },
+                          { label: 'Checked In', value: 'checked_in' },
+                          { label: 'Completed', value: 'completed' },
+                          { label: 'Cancelled', value: 'cancelled' },
+                        ]}
+                        value={statusFilter}
+                        onChange={(val) => setStatusFilter(val)}
+                        className="popup-select"
+                      />
+                    </div>
+
+                    <div className="filter-group">
+                      <label>Sort By</label>
+                      <Select
+                        options={[
+                          { label: 'Newest First', value: 'newest' },
+                          { label: 'Oldest First', value: 'oldest' },
+                        ]}
+                        value={sortOrder}
+                        onChange={(val) => setSortOrder(val as 'newest' | 'oldest')}
+                        className="popup-select"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="filter-popup-footer">
+                    <button
+                      className="clear-all-btn"
+                      onClick={() => {
+                        setStatusFilter('all');
+                        setSortOrder('newest');
+                        setSearchQuery('');
+                      }}
+                    >
+                      Reset
+                    </button>
+                    <button className="apply-btn" onClick={() => setShowFilters(false)}>Done</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="orders-tabs">
             {(['all', 'food', 'bookings'] as const).map(tab => (
               <button
                 key={tab}
@@ -378,74 +453,30 @@ const MyOrders: React.FC = () => {
             ))}
           </div>
 
-          {/* Search + Filters Row */}
-          <div className="cp-filter-row">
-            <div className="cp-search-box">
-              <Icons.search size={16} className="cp-search-icon" />
-              <input
-                type="text"
-                placeholder="Search orders, items, IDs..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="cp-search-input"
-              />
-              {searchQuery && (
-                <button className="cp-search-clear" onClick={() => setSearchQuery('')}>
-                  <Icons.close size={14} />
-                </button>
-              )}
-            </div>
-
-            <div className="cp-filter-group">
-              <Select
-                options={[
-                  { label: 'All Status', value: 'all' },
-                  { label: 'Pending', value: 'pending' },
-                  { label: 'Confirmed', value: 'confirmed' },
-                  { label: 'Preparing', value: 'preparing' },
-                  { label: 'Ready', value: 'ready' },
-                  { label: 'Checked In', value: 'checked_in' },
-                  { label: 'Completed', value: 'completed' },
-                  { label: 'Cancelled', value: 'cancelled' },
-                ]}
-                value={statusFilter}
-                onChange={(val) => setStatusFilter(val)}
-                className="cp-filter-dropdown"
-              />
-            </div>
-
-            <div className="cp-filter-group">
-              <Select
-                options={[
-                  { label: 'Newest First', value: 'newest' },
-                  { label: 'Oldest First', value: 'oldest' },
-                ]}
-                value={sortOrder}
-                onChange={(val) => setSortOrder(val as 'newest' | 'oldest')}
-                className="cp-filter-dropdown"
-              />
-            </div>
-          </div>
-
-          {/* Active filters summary */}
-          {hasActiveFilters && (
-            <div className="cp-filter-summary">
-              <span>{totalFiltered} result{totalFiltered !== 1 ? 's' : ''} found</span>
-              <button className="cp-clear-filters" onClick={() => { setSearchQuery(''); setStatusFilter('all'); setOrderTypeFilter('all'); setSortOrder('newest'); }}>
-                <Icons.close size={12} /> Clear filters
-              </button>
-            </div>
-          )}
+          <button className="cp-browse-btn" onClick={() => navigate('/order')}>
+            <Icons.utensilsCrossed size={16} />
+            Browse Menu
+          </button>
         </div>
+
+        {/* Active filters summary */}
+        {hasActiveFilters && (
+          <div className="cp-filter-summary" style={{ marginTop: '-12px', marginBottom: '20px' }}>
+            <span>{totalFiltered} result{totalFiltered !== 1 ? 's' : ''} found</span>
+            <button className="cp-clear-filters" onClick={() => { setSearchQuery(''); setStatusFilter('all'); setOrderTypeFilter('all'); setSortOrder('newest'); }}>
+              <Icons.close size={12} /> Clear filters
+            </button>
+          </div>
+        )}
 
         {/* ── UPCOMING REMINDER ── */}
         {upcomingBooking && (
-          <BookingReminder 
-            booking={upcomingBooking} 
+          <BookingReminder
+            booking={upcomingBooking}
             onView={() => {
               const el = document.getElementById('bookings-section');
               el?.scrollIntoView({ behavior: 'smooth' });
-            }} 
+            }}
           />
         )}
 
@@ -454,258 +485,259 @@ const MyOrders: React.FC = () => {
 
           {/* ── TABLE BOOKINGS ── */}
           {showBookings && (
-          <section className="cp-section" id="bookings-section">
-            <h2 className="cp-section-title">
-              <Icons.calendar size={18} style={{ color: 'var(--brand-primary)' }} />
-              Table Bookings
-              <span className="cp-count">{filteredBookings.length}</span>
-            </h2>
+            <section className="cp-section" id="bookings-section">
+              <h2 className="cp-section-title">
+                <Icons.calendar size={18} style={{ color: 'var(--brand-primary)' }} />
+                Table Bookings
+                <span className="cp-count">{filteredBookings.length}</span>
+              </h2>
 
-            {filteredBookings.length === 0 ? (
-              <div className="cp-empty">
-                <div className="cp-empty-icon"><Icons.calendar size={48} /></div>
-                <p>{hasActiveFilters ? 'No bookings match your filters' : 'No bookings yet'}</p>
-                {!hasActiveFilters && (
-                <button className="cp-browse-btn" onClick={() => navigate('/book-table')}>
-                  <Icons.calendar size={15} /> Book a Table
-                </button>
-                )}
-              </div>
-            ) : (
-              <div className="cp-cards-grid single-col">
-                {filteredBookings.map((booking) => {
-                  if (!booking) return null;
+              {filteredBookings.length === 0 ? (
+                <div className="cp-empty">
+                  <div className="cp-empty-icon"><Icons.calendar size={48} /></div>
+                  <p>{hasActiveFilters ? 'No bookings match your filters' : 'No bookings yet'}</p>
+                  {!hasActiveFilters && (
+                    <button className="cp-browse-btn" onClick={() => navigate('/book-table')}>
+                      <Icons.calendar size={15} /> Book a Table
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="cp-cards-grid single-col">
+                  {filteredBookings.map((booking) => {
+                    if (!booking) return null;
 
-                  return (
-                    <div key={booking.id} className="cp-card">
-                      <div className="cp-card-header">
-                      <span className="cp-card-id">#{String(booking.id).slice(-6).toUpperCase()}</span>
-                      <span className={getStatusClass(booking.status)}>{booking.status}</span>
-                    </div>
+                    return (
+                      <div key={booking.id} className="cp-card">
+                        <div className="cp-card-header">
+                          <span className="cp-card-id">#{String(booking.id).slice(-6).toUpperCase()}</span>
+                          <span className={getStatusClass(booking.status)}>{booking.status}</span>
+                        </div>
 
-                    <div className="cp-details-row booking-info-grid">
-                      <div className="cp-detail-item">
-                        <Icons.calendar className="cp-detail-icon" size={16} />
-                        <div>
-                          <div className="cp-detail-label">Date</div>
-                          <div className="cp-detail-value">
-                            {formatDate(booking.date)}
+                        <div className="cp-details-row booking-info-grid">
+                          <div className="cp-detail-item">
+                            <Icons.calendar className="cp-detail-icon" size={16} />
+                            <div>
+                              <div className="cp-detail-label">Date</div>
+                              <div className="cp-detail-value">
+                                {formatDate(booking.date)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="cp-detail-item">
+                            <Icons.clock className="cp-detail-icon" size={16} />
+                            <div>
+                              <div className="cp-detail-label">Time</div>
+                              <div className="cp-detail-value">{formatTime(booking.time)}</div>
+                            </div>
+                          </div>
+                          <div className="cp-detail-item">
+                            <Icons.user className="cp-detail-icon" size={16} />
+                            <div>
+                              <div className="cp-detail-label">Guests</div>
+                              <div className="cp-detail-value">{booking.guests}</div>
+                            </div>
+                          </div>
+                          <div className="cp-detail-item">
+                            <Icons.utensilsCrossed className="cp-detail-icon" size={16} style={{ opacity: 0.8 }} />
+                            <div>
+                              <div className="cp-detail-label">Table</div>
+                              <div className="cp-detail-value">
+                                {booking.status?.toLowerCase() === "cancelled"
+                                  ? "Booking Cancelled"
+                                  : booking.tableNumber
+                                    ? `Table ${booking.tableNumber}`
+                                    : booking.table?.tableNumber
+                                      ? `Table ${booking.table.tableNumber}`
+                                      : (booking as any).Table?.tableNumber
+                                        ? `Table ${(booking as any).Table.tableNumber}`
+                                        : "Assigning table"}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="cp-detail-item">
-                        <Icons.clock className="cp-detail-icon" size={16} />
-                        <div>
-                          <div className="cp-detail-label">Time</div>
-                          <div className="cp-detail-value">{formatTime(booking.time)}</div>
-                        </div>
-                      </div>
-                      <div className="cp-detail-item">
-                        <Icons.user className="cp-detail-icon" size={16} />
-                        <div>
-                          <div className="cp-detail-label">Guests</div>
-                          <div className="cp-detail-value">{booking.guests}</div>
-                        </div>
-                      </div>
-                      <div className="cp-detail-item">
-                        <Icons.utensilsCrossed className="cp-detail-icon" size={16} style={{ opacity: 0.8 }} />
-                        <div>
-                          <div className="cp-detail-label">Table</div>
-                          <div className="cp-detail-value">
-                            {booking.status?.toLowerCase() === "cancelled"
-                              ? "Booking Cancelled"
-                              : booking.tableNumber 
-                                ? `Table ${booking.tableNumber}` 
-                                : booking.table?.tableNumber 
-                                  ? `Table ${booking.table.tableNumber}` 
-                                  : (booking as any).Table?.tableNumber
-                                    ? `Table ${(booking as any).Table.tableNumber}`
-                                    : "Assigning table"}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    {(booking.preference || booking.occasion) && (
-                      <div className="cp-extra-info" style={{ marginTop: '12px', padding: '12px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-                        {booking.preference && (
-                          <div style={{ fontSize: '0.85rem' }}>
-                            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Preference: </span>
-                            <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{booking.preference}</span>
+                        {(booking.preference || booking.occasion) && (
+                          <div className="cp-extra-info" style={{ marginTop: '12px', padding: '12px', background: 'rgba(0,0,0,0.02)', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                            {booking.preference && (
+                              <div style={{ fontSize: '0.85rem' }}>
+                                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Preference: </span>
+                                <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{booking.preference}</span>
+                              </div>
+                            )}
+                            {booking.occasion && (
+                              <div style={{ fontSize: '0.85rem' }}>
+                                <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Occasion: </span>
+                                <span style={{ color: 'var(--brand-primary)', fontWeight: 700 }}>{booking.occasion}</span>
+                              </div>
+                            )}
                           </div>
                         )}
-                        {booking.occasion && (
-                          <div style={{ fontSize: '0.85rem' }}>
-                            <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Occasion: </span>
-                            <span style={{ color: 'var(--brand-primary)', fontWeight: 700 }}>{booking.occasion}</span>
+
+                        {booking.specialRequests && (
+                          <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(198, 167, 105, 0.08)', borderRadius: '10px', fontSize: '0.85rem', color: 'var(--text-primary)', borderLeft: '3px solid var(--brand-primary)' }}>
+                            <strong>Note:</strong> {booking.specialRequests}
+                          </div>
+                        )}
+
+                        {isCancellable(booking) ? (
+                          <button
+                            className="cp-cancel-btn"
+                            onClick={() => setBookingToCancel(booking)}
+                            disabled={cancellingId === booking.id}
+                          >
+                            {cancellingId === booking.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : <><Icons.close size={14} className="inline-icon" /> Cancel Booking</>}
+                          </button>
+                        ) : (booking.status?.toLowerCase() === 'pending' || booking.status?.toLowerCase() === 'confirmed') && booking.tableId === null && (
+                          <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Icons.alertCircle size={14} />
+                            Cancellation window expired
                           </div>
                         )}
                       </div>
-                    )}
-                    
-                    {booking.specialRequests && (
-                      <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(198, 167, 105, 0.08)', borderRadius: '10px', fontSize: '0.85rem', color: 'var(--text-primary)', borderLeft: '3px solid var(--brand-primary)' }}>
-                        <strong>Note:</strong> {booking.specialRequests}
-                      </div>
-                    )}
-
-                    {isCancellable(booking) ? (
-                      <button
-                        className="cp-cancel-btn"
-                        onClick={() => setBookingToCancel(booking)}
-                        disabled={cancellingId === booking.id}
-                      >
-                        {cancellingId === booking.id ? <><Icons.loader size={14} className="inline-icon" /> Cancelling…</> : <><Icons.close size={14} className="inline-icon" /> Cancel Booking</>}
-                      </button>
-                    ) : (booking.status?.toLowerCase() === 'pending' || booking.status?.toLowerCase() === 'confirmed') && booking.tableId === null && (
-                      <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Icons.alertCircle size={14} />
-                        Cancellation window expired
-                      </div>
-                    )}
-                  </div>
-                )})}
-              </div>
-            )}
-          </section>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
           )}
 
           {/* ── FOOD ORDERS ── */}
           {showOrders && (
-          <section className="cp-section">
-            <h2 className="cp-section-title">
-              <Icons.shoppingBag size={18} style={{ color: 'var(--brand-primary)' }} />
-              Food Orders
-              <span className="cp-count">{filteredOrders.length}</span>
-            </h2>
+            <section className="cp-section">
+              <h2 className="cp-section-title">
+                <Icons.shoppingBag size={18} style={{ color: 'var(--brand-primary)' }} />
+                Food Orders
+                <span className="cp-count">{filteredOrders.length}</span>
+              </h2>
 
-            {filteredOrders.length === 0 ? (
-              <div className="cp-empty">
-                <div className="cp-empty-icon"><Icons.cart size={48} /></div>
-                <p>{hasActiveFilters ? 'No orders match your filters' : "You haven't placed any orders yet."}</p>
-                {!hasActiveFilters && (
-                <button className="cp-browse-btn" onClick={() => navigate('/order')}>
-                  <Icons.utensilsCrossed size={15} /> Browse Menu
-                </button>
-                )}
-              </div>
-            ) : (
-              <div className="cp-cards-grid single-col">
-                {filteredOrders.map((order) => (
-                  <div key={order.id} className="cp-card">
-                    <div className="cp-card-header">
-                      <span className="cp-card-id">#{String(order.id).slice(-6).toUpperCase()}</span>
-                      {order.status && (
-                        <span className={getStatusClass(order.status)}>{order.status}</span>
-                      )}
-                    </div>
-
-                    <div className="cp-order-total">
-                      {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
-                        Number(order.totalAmount || order.total || 0)
-                      )}
-                    </div>
-
-                    <div className="cp-details-row" style={{ marginBottom: 12 }}>
-                      <div className="cp-detail-item">
-                        <Icons.calendar className="cp-detail-icon" size={16} />
-                        <div>
-                          <div className="cp-detail-label">Date</div>
-                          <div className="cp-detail-value">
-                            {formatDate(order.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="cp-detail-item">
-                        <Icons.clock className="cp-detail-icon" size={16} />
-                        <div>
-                          <div className="cp-detail-label">Time</div>
-                          <div className="cp-detail-value">
-                            {formatTime(order.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="cp-items-list">
-                      <div className="cp-items-label">
-                        <Icons.utensilsCrossed size={13} /> Items Ordered
-                      </div>
-                      {order.items && Array.isArray(order.items)
-                        ? order.items.map((item: any, idx: number) => (
-                          <React.Fragment key={idx}>
-                            <div className="cp-item-row">
-                              <span className="cp-item-name">{item.itemName || item.name}</span>
-                              <span className="cp-item-qty">× {item.quantity}</span>
-                              {item.price && (
-                                <span className="cp-item-price">
-                                  {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
-                                </span>
-                              )}
-                            </div>
-                            {item.specialInstructions && (
-                              <div className="cp-item-instruction" style={{ marginTop: '4px', marginLeft: '0', padding: '6px 10px', borderRadius: '8px', background: 'rgba(198, 167, 105, 0.08)', fontSize: '0.8rem', color: '#8b5a2b', borderLeft: '2px solid var(--brand-primary)' }}>
-                                <span style={{ fontWeight: 700, fontSize: '0.7rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px', opacity: 0.7 }}>Special Instruction</span>
-                                {item.specialInstructions}
-                              </div>
-                            )}
-                          </React.Fragment>
-                        ))
-                        : <p className="cp-pending-text" style={{ fontSize: '0.85rem', padding: '4px 0' }}>No item details available</p>
-                      }
-                    </div>
-
-                    {order.status?.toLowerCase() === 'pending' && isWithinCancelWindow(order.createdAt) ? (
-                      <button
-                        className="cp-cancel-btn"
-                        onClick={() => setOrderToCancel(order)}
-                        style={{ marginTop: 14 }}
-                      >
-                        <Icons.close size={14} className="inline-icon" /> Cancel Order
-                      </button>
-                    ) : order.status?.toLowerCase() === 'pending' && !isWithinCancelWindow(order.createdAt) ? (
-                      <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Icons.alertCircle size={14} />
-                        Cancellation window expired
-                      </div>
-                    ) : order.status?.toLowerCase() === 'preparing' || order.status?.toLowerCase() === 'ready' ? (
-                      <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Icons.alertCircle size={14} />
-                        Cannot cancel order once preparation starts
-                      </div>
-                    ) : null}
-
-                    {order.status?.toLowerCase() === 'completed' && (
-                      <div className="cp-review-section" style={{ marginTop: 14, borderTop: '1px solid var(--card-border)', paddingTop: 14 }}>
-                        {order.review ? (
-                          <div className="cp-submitted-review">
-                            <div className="cp-review-stars">
-                              {[1, 2, 3, 4, 5].map(s => (
-                                <Icons.star key={s} size={14} fill={s <= order.review!.rating ? 'var(--brand-primary)' : 'none'} color={s <= order.review!.rating ? 'var(--brand-primary)' : 'var(--text-dim)'} />
-                              ))}
-                            </div>
-                            <p className="cp-review-comment">"{order.review.comment}"</p>
-                          </div>
-                        ) : (
-                          <button
-                            className="cp-review-btn"
-                            onClick={() => {
-                              setReviewOrder(order);
-                              setRating(5);
-                              setComment('');
-                            }}
-                            style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--brand-primary-light)', color: 'var(--brand-primary)', border: '1px solid var(--card-border)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                          >
-                            <Icons.star size={16} /> Rate & Review
-                          </button>
+              {filteredOrders.length === 0 ? (
+                <div className="cp-empty">
+                  <div className="cp-empty-icon"><Icons.cart size={48} /></div>
+                  <p>{hasActiveFilters ? 'No orders match your filters' : "You haven't placed any orders yet."}</p>
+                  {!hasActiveFilters && (
+                    <button className="cp-browse-btn" onClick={() => navigate('/order')}>
+                      <Icons.utensilsCrossed size={15} /> Browse Menu
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="cp-cards-grid single-col">
+                  {filteredOrders.map((order) => (
+                    <div key={order.id} className="cp-card">
+                      <div className="cp-card-header">
+                        <span className="cp-card-id">#{String(order.id).slice(-6).toUpperCase()}</span>
+                        {order.status && (
+                          <span className={getStatusClass(order.status)}>{order.status}</span>
                         )}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+
+                      <div className="cp-order-total">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
+                          Number(order.totalAmount || order.total || 0)
+                        )}
+                      </div>
+
+                      <div className="cp-details-row" style={{ marginBottom: 12 }}>
+                        <div className="cp-detail-item">
+                          <Icons.calendar className="cp-detail-icon" size={16} />
+                          <div>
+                            <div className="cp-detail-label">Date</div>
+                            <div className="cp-detail-value">
+                              {formatDate(order.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="cp-detail-item">
+                          <Icons.clock className="cp-detail-icon" size={16} />
+                          <div>
+                            <div className="cp-detail-label">Time</div>
+                            <div className="cp-detail-value">
+                              {formatTime(order.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="cp-items-list">
+                        <div className="cp-items-label">
+                          <Icons.utensilsCrossed size={13} /> Items Ordered
+                        </div>
+                        {order.items && Array.isArray(order.items)
+                          ? order.items.map((item: any, idx: number) => (
+                            <React.Fragment key={idx}>
+                              <div className="cp-item-row">
+                                <span className="cp-item-name">{item.itemName || item.name}</span>
+                                <span className="cp-item-qty">× {item.quantity}</span>
+                                {item.price && (
+                                  <span className="cp-item-price">
+                                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
+                                  </span>
+                                )}
+                              </div>
+                              {item.specialInstructions && (
+                                <div className="cp-item-instruction" style={{ marginTop: '4px', marginLeft: '0', padding: '6px 10px', borderRadius: '8px', background: 'rgba(198, 167, 105, 0.08)', fontSize: '0.8rem', color: '#8b5a2b', borderLeft: '2px solid var(--brand-primary)' }}>
+                                  <span style={{ fontWeight: 700, fontSize: '0.7rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px', opacity: 0.7 }}>Special Instruction</span>
+                                  {item.specialInstructions}
+                                </div>
+                              )}
+                            </React.Fragment>
+                          ))
+                          : <p className="cp-pending-text" style={{ fontSize: '0.85rem', padding: '4px 0' }}>No item details available</p>
+                        }
+                      </div>
+
+                      {order.status?.toLowerCase() === 'pending' && isWithinCancelWindow(order.createdAt) ? (
+                        <button
+                          className="cp-cancel-btn"
+                          onClick={() => setOrderToCancel(order)}
+                          style={{ marginTop: 14 }}
+                        >
+                          <Icons.close size={14} className="inline-icon" /> Cancel Order
+                        </button>
+                      ) : order.status?.toLowerCase() === 'pending' && !isWithinCancelWindow(order.createdAt) ? (
+                        <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Icons.alertCircle size={14} />
+                          Cancellation window expired
+                        </div>
+                      ) : order.status?.toLowerCase() === 'preparing' || order.status?.toLowerCase() === 'ready' ? (
+                        <div className="cp-cancel-blocked" style={{ marginTop: 14, color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Icons.alertCircle size={14} />
+                          Cannot cancel order once preparation starts
+                        </div>
+                      ) : null}
+
+                      {order.status?.toLowerCase() === 'completed' && (
+                        <div className="cp-review-section" style={{ marginTop: 14, borderTop: '1px solid var(--card-border)', paddingTop: 14 }}>
+                          {order.review ? (
+                            <div className="cp-submitted-review">
+                              <div className="cp-review-stars">
+                                {[1, 2, 3, 4, 5].map(s => (
+                                  <Icons.star key={s} size={14} fill={s <= order.review!.rating ? 'var(--brand-primary)' : 'none'} color={s <= order.review!.rating ? 'var(--brand-primary)' : 'var(--text-dim)'} />
+                                ))}
+                              </div>
+                              <p className="cp-review-comment">"{order.review.comment}"</p>
+                            </div>
+                          ) : (
+                            <button
+                              className="cp-review-btn"
+                              onClick={() => {
+                                setReviewOrder(order);
+                                setRating(5);
+                                setComment('');
+                              }}
+                              style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--brand-primary-light)', color: 'var(--brand-primary)', border: '1px solid var(--card-border)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                            >
+                              <Icons.star size={16} /> Rate & Review
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           )}
         </div>
 
@@ -723,10 +755,10 @@ const MyOrders: React.FC = () => {
                 onClick={() => setRating(s)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
-                <Icons.star 
-                  size={32} 
-                  fill={s <= rating ? 'var(--brand-primary)' : 'none'} 
-                  color={s <= rating ? 'var(--brand-primary)' : 'var(--text-dim)'} 
+                <Icons.star
+                  size={32}
+                  fill={s <= rating ? 'var(--brand-primary)' : 'none'}
+                  color={s <= rating ? 'var(--brand-primary)' : 'var(--text-dim)'}
                   style={{ transition: 'all 0.2s' }}
                 />
               </button>
@@ -737,15 +769,15 @@ const MyOrders: React.FC = () => {
             placeholder="Share your experience (optional)..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            style={{ 
-              width: '100%', 
-              padding: '14px', 
-              borderRadius: '14px', 
-              background: 'var(--bg-secondary)', 
-              border: '1px solid var(--border-color)', 
-              color: 'var(--text-primary)', 
-              minHeight: '120px', 
-              marginBottom: '24px', 
+            style={{
+              width: '100%',
+              padding: '14px',
+              borderRadius: '14px',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)',
+              minHeight: '120px',
+              marginBottom: '24px',
               resize: 'none',
               outline: 'none',
               fontSize: '0.95rem'

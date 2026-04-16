@@ -515,11 +515,12 @@
   background: var(--bg-footer-hardcoded);
   color: white;
   text-align: center;
-  padding: 4rem 2rem 2rem;
-  margin: 4rem auto 2rem auto;
+  padding: 4rem 2rem 28px; /* Adjusted bottom padding */
+  margin: 4rem auto 0 auto; /* Removed bottom margin to blend */
   max-width: 1200px;
   border-radius: 20px;
-  box-shadow: var(--card-shadow);
+  border-top: none !important;
+  box-shadow: none !important;
 }
 
 .footer-content {
@@ -574,7 +575,7 @@ body[data-theme="light"] .footer-btn {
   font-size: 0.85rem;
   opacity: 0.6;
   margin-top: 2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: none !important; /* Removed faint separator */
   padding-top: 1.5rem;
 }
 
@@ -786,4 +787,57 @@ body[data-theme="light"] .footer-btn {
 .menu-item:hover .menu-item-image img,
 .hero-image-wrapper:hover .hero-side-image {
   transform: scale(1.04);
-}
+}
+
+/* ═══════════════════════════════════════════
+   PREMIUM SECTION DIVIDERS
+   ═══════════════════════════════════════════ */
+
+.section-divider {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 48px 0 42px 0;
+  pointer-events: none;
+}
+
+.section-divider::before {
+  content: "";
+  width: 160px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(202, 164, 107, 0.35),
+    rgba(212, 175, 55, 0.65),
+    rgba(202, 164, 107, 0.35),
+    transparent
+  );
+  box-shadow:
+    0 0 10px rgba(212, 175, 55, 0.25),
+    0 0 20px rgba(212, 175, 55, 0.15);
+  opacity: 0.9;
+}
+
+.dark .section-divider::before {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.35),
+    rgba(212, 175, 55, 0.75),
+    rgba(212, 175, 55, 0.35),
+    transparent
+  );
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.35);
+}
+
+.section-divider.large {
+  margin: 64px 0 56px 0;
+}
+
+.section-divider.small {
+  margin: 28px 0 24px 0;
+}
+
