@@ -6,6 +6,7 @@ import { formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
 import Select from '@ui/Select';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const Orders: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -178,10 +179,11 @@ const Orders: React.FC = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Fetching all orders...</p>
                 </div>
             ) : error ? (
-                <div className="error-state">
-                    <p><span><Icons.alertCircle size={16} className="inline-icon" /></span> {error}</p>
-                    <Button variant="primary" onClick={fetchOrders}>Retry</Button>
-                </div>
+                <GlobalErrorState 
+                    title="Failed to load orders" 
+                    description={error} 
+                    onRetry={fetchOrders} 
+                />
             ) : (
                 <DataTable 
                     columns={columns} 

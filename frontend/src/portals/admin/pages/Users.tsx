@@ -6,6 +6,7 @@ import api from '@utils/api';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
 import Select from '@ui/Select';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -161,10 +162,11 @@ const Users: React.FC = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Loading users...</p>
                 </div>
             ) : error ? (
-                <div className="error-state">
-                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
-                    <Button variant="primary" onClick={fetchUsers}>Retry</Button>
-                </div>
+                <GlobalErrorState 
+                    title="Failed to load users" 
+                    description={error} 
+                    onRetry={fetchUsers} 
+                />
             ) : (
                 <DataTable 
                     columns={columns} 

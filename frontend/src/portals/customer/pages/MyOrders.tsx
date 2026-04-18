@@ -5,7 +5,7 @@ import { useAuthModal } from '@context/AuthModalContext';
 import toast from 'react-hot-toast';
 import { Icons } from '@components/icons/IconSystem';
 import api from '@utils/api';
-import BookingReminder from '../../../components/BookingReminder';
+import BookingReminder from '../../../components/feedback/BookingReminder';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import Modal from '@ui/Modal';
 import Button from '@ui/Button';
@@ -399,6 +399,7 @@ const MyOrders: React.FC = () => {
                           { label: 'Checked In', value: 'checked_in' },
                           { label: 'Completed', value: 'completed' },
                           { label: 'Cancelled', value: 'cancelled' },
+                          { label: 'No Show', value: 'no_show' },
                         ]}
                         value={statusFilter}
                         onChange={(val) => setStatusFilter(val)}

@@ -4,8 +4,8 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
 import { Toaster } from "react-hot-toast";
-import ProtectedRoute from './components/ProtectedRoute';
-import ThemeToggleButton from './components/ThemeToggleButton';
+import ProtectedRoute from './components/layout/ProtectedRoute';
+import ThemeToggleButton from './components/ui/ThemeToggleButton';
 import ScrollToTop from './components/utils/ScrollToTop';
 import CustomerLayout from './components/layout/CustomerLayout';
 import DotLoader from './components/feedback/DotLoader';
@@ -168,7 +168,7 @@ function App() {
               zIndex: 9999,
             }}
             toastOptions={{
-              duration: 4000,
+              duration: 2000,
               style: {
                 zIndex: 9999,
               },

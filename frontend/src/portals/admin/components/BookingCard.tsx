@@ -9,6 +9,7 @@ interface BookingCardProps {
     onCheckIn: (bookingId: number) => void;
     onReject: (booking: any) => void;
     onAssign: (bookingId: number) => void;
+    onNoShow: (bookingId: number) => void;
     onUnassign?: (bookingId: number) => void;
     onChangeTable?: (bookingId: number) => void;
 }
@@ -28,12 +29,13 @@ const getTimeAgo = (date?: string | Date): string => {
 };
 
 // Map internal status to Premium CSS classes
-const statusConfig: Record<string, { label: string; className: string }> = {
-    pending: { label: 'Pending', className: 'badge-pending' },
-    confirmed: { label: 'Confirmed', className: 'badge-success' },
-    checked_in: { label: 'Checked-in', className: 'badge-success' },
-    completed: { label: 'Completed', className: 'badge-premium' },
-    cancelled: { label: 'Cancelled', className: 'badge-danger' },
+const statusConfig: Record<string, { label: string; className: string; tooltip?: string }> = {
+    pending: { label: 'Pending', className: 'badge-pending', tooltip: 'Waiting for table assignment' },
+    confirmed: { label: 'Confirmed', className: 'badge-success', tooltip: 'Table assigned and guest expected' },
+    checked_in: { label: 'Checked-in', className: 'badge-success', tooltip: 'Guest has arrived and is seated' },
+    completed: { label: 'Completed', className: 'badge-premium', tooltip: 'Dining experience finished and table released' },
+    cancelled: { label: 'Cancelled', className: 'badge-danger', tooltip: 'Booking was cancelled by user or staff' },
+    no_show: { label: 'No Show', className: 'badge-no-show', tooltip: 'Customer did not arrive for the reserved time slot. Table has been released automatically.' },
 };
 
 const BookingCard: React.FC<BookingCardProps> = ({
@@ -42,12 +44,14 @@ const BookingCard: React.FC<BookingCardProps> = ({
     onCheckIn,
     onReject,
     onAssign,
+    onNoShow,
     onUnassign: _onUnassign,
     onChangeTable: _onChangeTable,
 }) => {
     const [assigning, setAssigning] = useState(false);
     const [completing, setCompleting] = useState(false);
     const [checkingIn, setCheckingIn] = useState(false);
+    const [markingNoShow, setMarkingNoShow] = useState(false);
 
     const isNew = isNewBooking(booking.createdAt);
     const status = booking.status || 'pending';
@@ -70,6 +74,12 @@ const BookingCard: React.FC<BookingCardProps> = ({
         if (checkingIn) return;
         setCheckingIn(true);
         try { await onCheckIn(booking.id); } finally { setCheckingIn(false); }
+    };
+
+    const handleNoShow = async () => {
+        if (markingNoShow) return;
+        setMarkingNoShow(true);
+        try { await onNoShow(booking.id); } finally { setMarkingNoShow(false); }
     };
 
     return (
@@ -99,7 +109,7 @@ const BookingCard: React.FC<BookingCardProps> = ({
                             Table No - {booking.table.tableNumber}
                         </div>
                     )}
-                    <div className={`badge ${badge.className}`}>
+                    <div className={`badge ${badge.className}`} title={badge.tooltip}>
                         {badge.label}
                     </div>
                 </div>
@@ -134,47 +144,56 @@ const BookingCard: React.FC<BookingCardProps> = ({
             )}
 
             {/* ── Premium Glass Actions ── */}
+            {/* Premium Glass Actions */}
             <div className="booking-actions">
-                {/* Pending: Assign Table */}
-                {status === 'pending' && !booking.table && (
-                    <button 
-                        className="primary-btn" 
-                        onClick={handleAssign}
-                        disabled={assigning}
-                    >
-                        {assigning ? 'Opening...' : 'Assign Table'}
-                    </button>
+                {/* 1. SEED STATE: Pending */}
+                {status === 'pending' && (
+                    <>
+                        <button 
+                            className="primary-btn" 
+                            onClick={handleAssign}
+                            disabled={assigning}
+                        >
+                            {assigning ? 'Opening...' : (booking.tableId ? 'Confirm' : 'Assign Table')}
+                        </button>
+                        <button 
+                            className="danger-text-btn" 
+                            onClick={() => onReject(booking)}
+                        >
+                            Reject
+                        </button>
+                    </>
                 )}
 
-                {/* Confirmed: Check-in */}
+                {/* 2. ENGAGED STATE: Confirmed */}
                 {status === 'confirmed' && (
-                    <button 
-                        className="primary-btn" 
-                        onClick={handleCheckIn}
-                        disabled={checkingIn}
-                    >
-                        {checkingIn ? '...' : 'Check-in'}
-                    </button>
+                    <>
+                        <button 
+                            className="primary-btn" 
+                            onClick={handleCheckIn}
+                            disabled={checkingIn}
+                        >
+                            {checkingIn ? '...' : 'Check-in'}
+                        </button>
+                        <button 
+                            className="no-show-btn" 
+                            onClick={handleNoShow}
+                            disabled={markingNoShow}
+                        >
+                            {markingNoShow ? '...' : 'No-show'}
+                        </button>
+                    </>
                 )}
 
-                {/* Active States: Complete */}
-                {(status === 'pending' || status === 'confirmed' || status === 'checked_in') && (
+                {/* 3. ACTIVE STATE: Checked-in */}
+                {status === 'checked_in' && (
                     <button 
                         className="secondary-btn" 
                         onClick={handleComplete}
                         disabled={completing}
+                        style={{ width: '100%' }}
                     >
-                        {completing ? '...' : 'Complete'}
-                    </button>
-                )}
-
-                {/* Cancellable: Reject */}
-                {(status === 'pending' || status === 'confirmed') && (
-                    <button 
-                        className="danger-text-btn" 
-                        onClick={() => onReject(booking)}
-                    >
-                        Reject
+                        {completing ? 'Completing...' : 'Complete Visit'}
                     </button>
                 )}
             </div>

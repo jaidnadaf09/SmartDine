@@ -593,16 +593,16 @@ body.dark .chef-main {
 
 body.dark .chef-card {
   background: #1e1e1e;
-  border-color: #333;
+  border-color: var(--text-primary);
 }
 
 body.dark .chef-card-header {
-  border-color: #333;
+  border-color: var(--text-primary);
 }
 
 body.dark .chef-items-container {
   background: #161616;
-  border-color: #333;
+  border-color: var(--text-primary);
 }
 
 body.dark .chef-item-row {
@@ -649,7 +649,7 @@ body.dark .btn-secondary-chef:hover {
 
 body.dark .status-dropdown-chef {
   background: #2a2a2a;
-  border-color: #444;
+  border-color: var(--text-secondary);
   color: #fff;
 }
 
@@ -767,7 +767,7 @@ body.dark .btn-secondary-chef {
 
 body.dark .chef-tabs {
   background: #1e1e1e;
-  border-color: #333;
+  border-color: var(--text-primary);
 }
 
 /* ═══════════════════════════════════════════

@@ -138,6 +138,7 @@
 .booking-card.status-checked_in::before { background: linear-gradient(90deg, #10b981, #3b82f6); }
 .booking-card.status-completed::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .booking-card.status-cancelled::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+.booking-card.status-no_show::before { background: linear-gradient(90deg, #94a3b8, #64748b); }
 
 /* Improvement: New booking pulse */
 .booking-card.is-new {
@@ -220,6 +221,7 @@
 .badge-success { background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.15); }
 .badge-premium { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.15); }
 .badge-danger { background: rgba(239, 68, 68, 0.08); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.15); }
+.badge-no-show { background: rgba(255, 120, 120, 0.12); color: #ff6b6b; border: 1px solid rgba(255, 120, 120, 0.35); }
 
 /* ── Cleaner Info Row ───────────────────────────────── */
 .booking-info {
@@ -342,6 +344,28 @@
 .danger-text-btn:hover {
     opacity: 0.7;
     text-decoration: underline;
+}
+
+.no-show-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.no-show-btn:hover {
+    background: rgba(148, 163, 184, 0.08);
+    border-color: rgba(148, 163, 184, 0.6);
+    color: #475569;
 }
 
 .footer-text {

@@ -12,6 +12,7 @@ import { useAuthModal } from '@context/AuthModalContext';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import '@styles/pages/BookTable.css';
 import '@styles/pages/Profile.css';
+import { loadRazorpayScript } from '@utils/loadRazorpay';
 
 
 // Using centralized api instance
@@ -24,21 +25,6 @@ const parse12HrTo24Hr = (time12h: string) => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 };
 
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if ((window as any).Razorpay) {
-      resolve(true);
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-
-    document.body.appendChild(script);
-  });
-};
 
 const BookTablePage: React.FC = () => {
   const navigate = useNavigate();

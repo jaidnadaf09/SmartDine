@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import api from '@utils/api';
+import socket from '@socket/socketClient';
 
 export type UserRole = 'customer' | 'waiter' | 'chef' | 'admin' | null;
 
@@ -34,6 +35,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Connect socket and authenticate with the stored JWT
+  const connectSocket = (token: string) => {
+    if (!socket.connected) {
+      socket.connect();
+    }
+    socket.emit('authenticate', token);
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     
@@ -57,6 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           walletBalance: data.walletBalance || 0,
         };
         setUser(fetchedUser);
+        connectSocket(token); // re-authenticate socket on page refresh
       } catch (e) {
         console.error('Auth Hydration failed');
         localStorage.removeItem('token');
@@ -79,6 +89,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const data = response.data;
       console.log('AuthContext DEBUG: Raw API Response:', data);
 
+      if (!data || !data.token || !data.id) {
+        throw new Error(data?.message || 'Invalid email or password');
+      }
+
       const loggedInUser: User = {
         id: data.id,
         name: data.name,
@@ -97,15 +111,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem('token');
       
       localStorage.setItem('smartdine_user', JSON.stringify(loggedInUser));
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
+      localStorage.setItem('token', data.token);
       setUser(loggedInUser);
+      connectSocket(data.token); // connect socket after successful login
 
       return loggedInUser;
     } catch (error: any) {
-      console.error('Login error:', error);
-      throw new Error(error.response?.data?.message || 'Wrong email or password.');
+      console.error('LOGIN FAILED:', error);
+      
+      /* IMPORTANT: ensure failed login does not persist state */
+      setUser(null);
+      localStorage.removeItem('token');
+      
+      throw new Error(
+        error?.response?.data?.message ||
+        error?.message ||
+        "Invalid email or password"
+      );
     }
   };
 
@@ -137,6 +159,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('smartdine_user', JSON.stringify(newUser));
       if (data.token) {
         localStorage.setItem('token', data.token);
+        connectSocket(data.token); // connect socket after signup
       }
       setUser(newUser);
 
@@ -151,6 +174,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     localStorage.removeItem('smartdine_user');
     localStorage.removeItem('token');
+    socket.disconnect(); // clean up socket on logout
   };
 
   const updateUser = (newData: Partial<User>) => {

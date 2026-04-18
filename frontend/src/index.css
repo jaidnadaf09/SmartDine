@@ -89,6 +89,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  color: var(--text-primary);
 }
 
 /* Reusable Status Badge Classes */
@@ -473,4 +474,102 @@ body[data-theme="dark"] *::-webkit-scrollbar-thumb:active {
 
 html, body {
   overflow-y: auto;
+}
+
+.global-error-wrapper {
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.global-error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 34px 42px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
+  animation: fadeInUp 0.35s ease;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.dark .global-error-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.3);
+}
+
+.global-error-card h2 {
+  font-size: 1.35rem;
+  margin: 0;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.global-error-card p {
+  margin: 0 0 10px 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.global-error-wrapper .error-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 170, 0, 0.12);
+  animation: floatIcon 2.5s ease-in-out infinite;
+  margin-bottom: 8px;
+}
+
+.dark .global-error-wrapper .error-icon-wrapper {
+  background: rgba(255, 170, 0, 0.2);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatIcon {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+
+/* Fix browser autofill white background destroying glassmorphism */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #fff !important;
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px rgba(255,255,255,0.06) inset !important;
+  backdrop-filter: blur(8px);
+  border: inherit;
+}
+
+/* Dark mode compatibility */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark textarea:-webkit-autofill,
+.dark select:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px rgba(255,255,255,0.04) inset !important;
 }

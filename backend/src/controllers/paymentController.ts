@@ -6,6 +6,7 @@ import Order from "../models/Order";
 import WalletTransaction from "../models/WalletTransaction";
 import { AuthRequest } from "../middleware/authMiddleware";
 import crypto from "crypto";
+import { sequelize } from "../models";
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
@@ -106,6 +107,17 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
 
         console.log('Backend: Signature verified.');
 
+        const existingPayment = await Booking.findOne({
+            where: { paymentId: razorpay_payment_id }
+        });
+
+        if (existingPayment) {
+            return res.status(200).json({
+                success: true,
+                booking: existingPayment
+            });
+        }
+
         // If bookingData exists, create the booking using the authenticated user's data
         if (bookingData) {
             // Fetch authenticated user from DB (ignore any name/email/phone from frontend)
@@ -186,85 +198,96 @@ export const processWalletPayment = async (req: AuthRequest, res: Response) => {
         let newOrder = null;
         const transactionRef = `wallet_txn_${Date.now()}_${Math.random().toString(36).substring(7)}`;
 
-        if (bookingData) {
-            // Validate booking past-time check
-            const dateTimeError = validateBookingDateTime(bookingData.date, bookingData.time);
-            if (dateTimeError) {
-                return res.status(400).json({ message: dateTimeError });
+        const t = await sequelize.transaction();
+
+        try {
+            if (bookingData) {
+                // Validate booking past-time check
+                const dateTimeError = validateBookingDateTime(bookingData.date, bookingData.time);
+                if (dateTimeError) {
+                    await t.rollback();
+                    return res.status(400).json({ message: dateTimeError });
+                }
+
+                // Create Booking
+                newBooking = await Booking.create({
+                    ...bookingData,
+                    customerName: user.name,
+                    email: user.email,
+                    phone: user.phone || 'Not provided',
+                    userId: user.id,
+                    date: new Date(bookingData.date),
+                    tableNumber: null,
+                    tableId: null,
+                    amount: totalAmount,
+                    paymentId: transactionRef,
+                    paymentStatus: "paid",
+                    status: "pending"   // ✅ pending until admin assigns a table
+                }, { transaction: t });
+                console.log('Backend: Booking created via Wallet:', newBooking.id);
             }
 
-            // Create Booking
-            newBooking = await Booking.create({
-                ...bookingData,
-                customerName: user.name,
-                email: user.email,
-                phone: user.phone || 'Not provided',
-                userId: user.id,
-                date: new Date(bookingData.date),
-                tableNumber: null,
-                tableId: null,
-                amount: totalAmount,
-                paymentId: transactionRef,
-                paymentStatus: "paid",
-                status: "pending"   // ✅ pending until admin assigns a table
-            });
-            console.log('Backend: Booking created via Wallet:', newBooking.id);
-        }
+            if (orderData) {
+                 let assignedTableNumber = null;
+                 let activeBookingId = null;
 
-        if (orderData) {
-             let assignedTableNumber = null;
-             let activeBookingId = null;
+                 const activeBooking = await Booking.findOne({
+                     where: {
+                         userId: user.id,
+                         status: 'confirmed'
+                     },
+                     order: [['createdAt', 'DESC']]
+                 });
 
-             const activeBooking = await Booking.findOne({
-                 where: {
+                 if (activeBooking && activeBooking.tableNumber) {
+                     assignedTableNumber = activeBooking.tableNumber;
+                     activeBookingId = activeBooking.id;
+                 }
+                 const orderType = assignedTableNumber ? 'DINE_IN' : 'TAKEAWAY';
+
+                 newOrder = await Order.create({
+                     tableNumber: assignedTableNumber,
                      userId: user.id,
-                     status: 'confirmed'
-                 },
-                 order: [['createdAt', 'DESC']]
-             });
+                     bookingId: activeBookingId,
+                     items: orderData.items, 
+                     totalAmount: totalAmount,
+                     status: 'pending',
+                     paymentId: transactionRef,
+                     paymentStatus: 'paid',
+                     orderType: orderType
+                 }, { transaction: t });
+                 console.log('Backend: Order created via Wallet:', newOrder.id);
+            }
 
-             if (activeBooking && activeBooking.tableNumber) {
-                 assignedTableNumber = activeBooking.tableNumber;
-                 activeBookingId = activeBooking.id;
-             }
-             const orderType = assignedTableNumber ? 'DINE_IN' : 'TAKEAWAY';
+            // Deduct from wallet securely
+            await user.decrement('walletBalance', { by: totalAmount, transaction: t });
+            await user.reload({ transaction: t });
+            
+            let desc = "Wallet Payment";
+            if (newBooking) desc = `Payment for Booking #${newBooking.id}`;
+            if (newOrder) desc = `Payment for Order #${newOrder.id}`;
 
-             newOrder = await Order.create({
-                 tableNumber: assignedTableNumber,
-                 userId: user.id,
-                 bookingId: activeBookingId,
-                 items: orderData.items, 
-                 totalAmount: totalAmount,
-                 status: 'pending',
-                 paymentId: transactionRef,
-                 paymentStatus: 'paid',
-                 orderType: orderType
-             });
-             console.log('Backend: Order created via Wallet:', newOrder.id);
+            await WalletTransaction.create({
+                userId: user.id,
+                amount: totalAmount,
+                type: 'debit',
+                description: desc
+            }, { transaction: t });
+
+            await t.commit();
+
+            return res.json({
+                success: true,
+                message: "Wallet payment processed successfully",
+                walletBalance: Number(user.walletBalance),
+                booking: newBooking,
+                order: newOrder
+            });
+
+        } catch (err: any) {
+            await t.rollback();
+            throw err;
         }
-
-        // Deduct from wallet securely
-        await user.decrement('walletBalance', { by: totalAmount });
-        await user.reload();
-        
-        let desc = "Wallet Payment";
-        if (newBooking) desc = `Payment for Booking #${newBooking.id}`;
-        if (newOrder) desc = `Payment for Order #${newOrder.id}`;
-
-        await WalletTransaction.create({
-            userId: user.id,
-            amount: totalAmount,
-            type: 'debit',
-            description: desc
-        });
-
-        return res.json({
-            success: true,
-            message: "Wallet payment processed successfully",
-            walletBalance: Number(user.walletBalance),
-            booking: newBooking,
-            order: newOrder
-        });
 
     } catch (error: any) {
          console.error("Backend: Error processing wallet payment:", error);

@@ -23,10 +23,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only auto-logout and redirect if we were already logged in (token exists)
+    // and the error is a 401 Unauthorized. Login failures shouldn't redirect.
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("smartdine_user");
-      window.location.href = "/login";
+      const wasLoggedIn = !!localStorage.getItem("token");
+      if (wasLoggedIn) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("smartdine_user");
+        window.location.href = "/"; // Redirect to landing page instead of potentially non-existent /login
+      }
     }
     return Promise.reject(error);
   }

@@ -10,6 +10,7 @@ import ConfirmModal from '@ui/ConfirmModal';
 import {
 } from 'lucide-react';
 import '@styles/portals/ChefPortal.css';
+import socket from '@socket/socketClient';
 
 const ORDER_STATUS = {
     PENDING: 'pending',
@@ -72,8 +73,9 @@ const KitchenOrders: React.FC = () => {
     }, []);
 
     const fetchOrders = async () => {
-        const token = localStorage.getItem('token');
-        if (!token) return;
+    const fetchToken = localStorage.getItem('token');
+        if (!fetchToken) return;
+        if (document.hidden) return; // skip when tab is hidden
         try {
             const ordersRes = await api.get('/chef/orders');
 
@@ -105,11 +107,48 @@ const KitchenOrders: React.FC = () => {
         }
     };
 
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
     useEffect(() => {
         fetchOrders();
-        const interval = setInterval(fetchOrders, 5000);
-        return () => clearInterval(interval);
+        if (intervalRef.current) return; // prevent stacking
+        intervalRef.current = setInterval(fetchOrders, 15000);
+        return () => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
     }, [token]);
+
+    // Real-time: receive instant order updates via WebSocket
+    useEffect(() => {
+        const handleNewOrder = (newOrder: any) => {
+            setOrders(prev => {
+                // Deduplicate
+                if (prev.some(o => o.id === newOrder.id)) return prev;
+                return [newOrder, ...prev];
+            });
+            // Visual/Audio feedback for chef
+            if (soundRef.current) soundRef.current.play().catch(() => {});
+        };
+
+        const handleOrderUpdated = (updatedOrder: any) => {
+            setOrders(prev => {
+                // If it's cancelled or completed, it might need to be moved to history
+                // But for now, just update the existing item and let the component filter it
+                return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+            });
+        };
+
+        socket.on('order:new', handleNewOrder);
+        socket.on('order:updated', handleOrderUpdated);
+        
+        return () => {
+            socket.off('order:new', handleNewOrder);
+            socket.off('order:updated', handleOrderUpdated);
+        };
+    }, []);
 
     const handleUpdateStatus = async (id: number, status: string) => {
         try {

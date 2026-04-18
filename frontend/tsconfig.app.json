@@ -35,6 +35,7 @@
       "@portals/*": ["src/portals/*"],
       "@services/*": ["src/services/*"],
       "@shared/*": ["src/components/shared/*"],
+      "@socket/*": ["src/socket/*"],
       "@styles/*": ["src/styles/*"],
       "@ui/*": ["src/components/ui/*"],
       "@utils/*": ["src/utils/*"]

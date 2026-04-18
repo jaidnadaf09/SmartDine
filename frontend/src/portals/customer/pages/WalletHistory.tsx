@@ -7,6 +7,7 @@ import api from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import '@styles/portals/Portals.css';
 import '@styles/portals/CustomerPortal.css';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 
 // Using centralized api instance
@@ -86,7 +87,11 @@ const WalletHistory: React.FC = () => {
         <section className="cp-section">
           <div className="cp-cards-grid single-col">
             {error ? (
-              <div className="cp-error">⚠️ {error}</div>
+              <GlobalErrorState 
+                    title="Failed to load wallet history" 
+                    description={error} 
+                    onRetry={fetchHistory} 
+              />
             ) : transactions.length === 0 ? (
               <div className="cp-empty">
                 <div className="cp-empty-icon"><Icons.card size={48} className="icon-muted" /></div>

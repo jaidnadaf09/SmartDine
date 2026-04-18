@@ -135,12 +135,72 @@ textarea:focus {
 /* Status Badges */
 .status-pill-modern {
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
   padding: 4px 10px;
   font-size: 11px;
   border-radius: 999px;
   font-weight: 600;
   letter-spacing: 0.3px;
   text-transform: uppercase;
+}
+
+.status-pill-modern span:first-child {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translateY(-0.5px);
+}
+
+.tables-bookings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 10px;
+}
+
+.tables-bookings-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.menu-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.menu-controls-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.menu-controls-left input {
+  min-width: 280px;
+}
+
+.add-dish-btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .menu-controls-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .menu-controls-left {
+    width: 100%;
+    flex-wrap: wrap;
+  }
 }
 
 .status-modern-pending {
@@ -649,7 +709,7 @@ textarea:focus {
 
 .admin-sidebar {
   width: 260px;
-  min-height: 100vh;
+  height: 100vh;
   position: sticky;
   top: 0;
   background: var(--bg-card);
@@ -660,7 +720,8 @@ textarea:focus {
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
   z-index: 100;
   border-right: 1px solid var(--border-color);
-  /* fixed scroll */ /* No scrollbar */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .sidebar-closed .admin-sidebar {
@@ -942,7 +1003,7 @@ textarea:focus {
 .tab-btn {
   background: transparent;
   border: none;
-  color: #999;
+  color: var(--text-muted);
   padding: 1rem 1.5rem;
   font-size: 1rem;
   font-weight: 500;
@@ -980,7 +1041,7 @@ textarea:focus {
   text-align: right;
   padding-right: 1rem;
   font-size: 0.9rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .y-label {
@@ -1035,7 +1096,7 @@ textarea:focus {
 
 .bar-label {
   font-weight: 600;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -1047,7 +1108,7 @@ textarea:focus {
   text-align: left;
   padding-left: 1rem;
   font-size: 0.9rem;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .chart-legend {
@@ -1199,7 +1260,7 @@ textarea:focus {
 }
 
 .legend-label {
-  color: #999;
+  color: var(--text-muted);
   font-weight: 400;
   font-size: 1.1rem;
   flex: 1;
@@ -1254,7 +1315,7 @@ textarea:focus {
 }
 
 .order-time {
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.85rem;
   margin-top: 0.5rem;
 }
@@ -1265,7 +1326,7 @@ textarea:focus {
 }
 
 .order-items {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   margin-bottom: 0.25rem;
 }
@@ -1396,7 +1457,7 @@ textarea:focus {
 }
 
 .portal-card p {
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -1435,7 +1496,7 @@ textarea:focus {
 }
 
 .admin-card p {
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.95rem;
 }
 
@@ -1744,7 +1805,7 @@ textarea:focus {
 }
 
 .stat-card p {
-  color: #999;
+  color: var(--text-muted);
   margin: 0;
   font-size: 0.9rem;
 }
@@ -1863,7 +1924,7 @@ tr:hover {
 
 .table-capacity,
 .table-status {
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 0.3rem;
 }
@@ -1921,7 +1982,7 @@ tr:hover {
 }
 
 .order-items {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
@@ -1993,7 +2054,7 @@ tr:hover {
 
 .empty {
   text-align: center;
-  color: #999;
+  color: var(--text-muted);
   padding: 2rem 0;
 }
 
@@ -2033,13 +2094,13 @@ tr:hover {
 }
 
 .time {
-  color: #999;
+  color: var(--text-muted);
   font-size: 0.85rem;
 }
 
 .order-items {
   margin-bottom: 1rem;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.95rem;
 }
 
@@ -2108,7 +2169,7 @@ tr:hover {
     gap: 0.5rem;
     font-size: 0.9rem;
     font-weight: 500;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .dot {
@@ -2191,7 +2252,7 @@ tr:hover {
 
 .order-items-preview .more {
     font-style: italic;
-    color: #999;
+    color: var(--text-muted);
     font-size: 0.8rem;
 }
 
@@ -2333,7 +2394,7 @@ tr:hover {
     gap: 0.5rem;
     font-size: 0.9rem;
     font-weight: 500;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .dot {
@@ -2416,7 +2477,7 @@ tr:hover {
 
 .order-items-preview .more {
     font-style: italic;
-    color: #999;
+    color: var(--text-muted);
     font-size: 0.8rem;
 }
 
@@ -2505,7 +2566,7 @@ tr:hover {
 }
 
 .item-details {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.9rem;
 }
 
@@ -2677,7 +2738,7 @@ body.dark .admin-topbar {
 }
 
 body.dark .breadcrumb {
-  color: #aaa;
+  color: var(--text-muted);
 }
 
 body.dark .admin-user {
@@ -2696,7 +2757,7 @@ body.dark .dropdown-menu {
 
 body.dark .dropdown-item {
   color: #ddd;
-  border-bottom-color: #333;
+  border-bottom-color: var(--text-primary);
 }
 
 body.dark .dropdown-item:hover {
@@ -2740,7 +2801,7 @@ body.dark .admin-content select,
 body.dark .admin-content textarea {
     background: #1a1a1a;
     color: #fff;
-    border-color: #444;
+    border-color: var(--text-secondary);
 }
 
 body.dark .admin-content input:focus,
@@ -2838,7 +2899,7 @@ body.dark .item-details-list {
 body.dark .status-dropdown-mini {
     background: #1a1a1a;
     color: #eee;
-    border-color: #444;
+    border-color: var(--text-secondary);
 }
 
 body.dark .status-dropdown-mini option {
@@ -2857,7 +2918,7 @@ body.dark .order-items-preview {
 }
 
 body.dark .order-items-preview .more {
-    color: #888;
+    color: var(--text-secondary);
 }
 
 body.dark .clickable {
@@ -2873,7 +2934,7 @@ body.dark .item-qty {
 }
 
 body.dark .chef-item {
-    border-bottom-color: #333;
+    border-bottom-color: var(--text-primary);
 }
 
 /* Kitchen page header and legend dark mode */
@@ -2886,7 +2947,7 @@ body.dark .kitchen-legend {
 }
 
 body.dark .text-center {
-    color: #aaa;
+    color: var(--text-muted);
 }
 
 .sidebar-footer {
@@ -3820,4 +3881,73 @@ body.dark .cancel-booking-btn:hover {
   gap: 14px;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.menu-error-state {
+  height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 32px 40px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  animation: fadeInUp 0.35s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.dark .menu-error-card {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.error-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(217, 119, 6, 0.12);
+  animation: floatIcon 2.5s ease-in-out infinite;
+}
+
+.dark .error-icon-wrapper {
+  background: rgba(217, 119, 6, 0.2);
+}
+
+.retry-btn {
+  margin-top: 6px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.retry-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatIcon {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
 }

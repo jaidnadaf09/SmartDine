@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { smartToast } from '@utils/toastConfig';
 import api from '@utils/api';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
 import { Icons } from '@components/icons/IconSystem';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 import FormField from '../components/FormField';
 import Modal from '@ui/Modal';
 import Select from '@ui/Select';
@@ -66,17 +67,17 @@ const AdminMenu: React.FC = () => {
             const res = await api.put(`/menu/${item.id}`, { status: newStatus });
             if (res.data) {
                 setMenuItems(prev => prev.map(m => m.id === item.id ? { ...m, ...res.data } : m));
-                toast.success(`${item.name} is now ${newStatus === 'available' ? 'visible' : 'hidden'}`);
+                smartToast.success(`${item.name} is now ${newStatus === 'available' ? 'visible' : 'hidden'}`);
             }
         } catch (err: any) {
             console.error('Failed to update status:', err);
-            toast.error('Failed to update availability.');
+            smartToast.error('Failed to update availability.');
         }
     };
 
     const handleSaveDish = async () => {
         if (!newItem.name || !newItem.category || !newItem.price) {
-            toast.error('Please fill in all required fields');
+            smartToast.error('Please fill in all required fields');
             return;
         }
 
@@ -90,17 +91,17 @@ const AdminMenu: React.FC = () => {
             if (editingItem) {
                 const res = await api.put(`/menu/${editingItem.id}`, payload);
                 setMenuItems(prev => prev.map(m => m.id === editingItem.id ? { ...m, ...res.data } : m));
-                toast.success('Dish updated successfully');
+                smartToast.success('Dish updated successfully');
             } else {
                 const res = await api.post('/menu', payload);
                 setMenuItems(prev => [...prev, res.data]);
-                toast.success('Dish added successfully');
+                smartToast.success('Dish added successfully');
             }
             setIsModalOpen(false);
             resetForm();
         } catch (err: any) {
             console.error('Failed to save dish:', err);
-            toast.error(err.response?.data?.message || 'Failed to save dish');
+            smartToast.error(err.response?.data?.message || 'Failed to save dish');
         } finally {
             setIsSubmitting(false);
         }
@@ -273,26 +274,17 @@ const AdminMenu: React.FC = () => {
 
     return (
         <div className="management-page">
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
-                <Button 
-                    variant="primary" 
-                    icon={<Icons.plus size={18} />}
-                    onClick={openAddModal}
-                >
-                    Add New Dish
-                </Button>
-            </div>
-
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>
                     <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
                     <p style={{ color: 'var(--text-muted)' }}>Loading menu items...</p>
                 </div>
             ) : error ? (
-                <div className="error-state">
-                    <p>⚠️ {error}</p>
-                    <Button variant="primary" onClick={fetchMenu}>Retry</Button>
-                </div>
+                <GlobalErrorState 
+                    title="Unable to load menu" 
+                    description="Something went wrong while fetching dishes. Please try again." 
+                    onRetry={fetchMenu} 
+                />
             ) : (
                 <DataTable 
                     columns={columns} 
@@ -304,6 +296,16 @@ const AdminMenu: React.FC = () => {
                     onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
                     onClearAll={clearAllFilters}
                     searchPlaceholder="Search dishes and descriptions..."
+                    headerActions={
+                        <Button 
+                            variant="primary" 
+                            icon={<Icons.plus size={18} />}
+                            onClick={openAddModal}
+                            className="add-dish-btn"
+                        >
+                            Add New Dish
+                        </Button>
+                    }
                 />
             )}
 

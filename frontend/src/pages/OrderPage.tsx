@@ -8,7 +8,9 @@ import api from '@utils/api';
 import MenuCard from '@shared/MenuCard';
 import ConfirmDialog from '@ui/ConfirmModal';
 import SearchInput from '@ui/SearchInput';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 import '@styles/pages/Order.css';
+import { loadRazorpayScript } from '@utils/loadRazorpay';
 
 const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
 
@@ -40,19 +42,6 @@ interface OrderItem {
   specialInstructions?: string;
 }
 
-const loadRazorpayScript = () => {
-  return new Promise((resolve) => {
-    if ((window as any).Razorpay) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
 
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
@@ -485,7 +474,11 @@ const OrderPage: React.FC = () => {
           {loading ? (
             <MenuSkeleton />
           ) : error && !menuItems.length ? (
-            <div className="error-message">{error}</div>
+            <GlobalErrorState 
+              title="Failed to load menu items" 
+              description={error} 
+              onRetry={() => window.location.reload()} 
+            />
           ) : (
             <div className="menu-display" style={{ scrollBehavior: 'smooth' }}>
               {categoriesList

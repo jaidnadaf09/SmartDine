@@ -22,9 +22,20 @@ import reviewRoutes from "./routes/reviewRoutes";
 import restaurantRoutes from "./routes/restaurantRoutes";
 import suggestionRoutes from "./routes/suggestionRoutes";
 import { initScheduler } from "./utils/scheduler";
+import http from "http";
+import { initSocket } from "./socket/socketServer";
 
 // Load environment variables
 dotenv.config();
+
+// Global Error Handlers to prevent silent crashes
+process.on("unhandledRejection", (err) => {
+    console.error("UNHANDLED PROMISE REJECTION:", err);
+});
+
+process.on("uncaughtException", (err) => {
+    console.error("UNCAUGHT EXCEPTION:", err);
+});
 
 const app = express();
 
@@ -125,7 +136,10 @@ const startServer = async () => {
         await sequelize.sync({ alter: true });
         console.log("Database tables synchronized");
 
-        app.listen(PORT, () => {
+        const server = http.createServer(app);
+        initSocket(server);
+
+        server.listen(PORT, () => {
             console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
             // Initialize automated tasks
             initScheduler();
@@ -137,3 +151,5 @@ const startServer = async () => {
 };
 
 startServer();
+
+

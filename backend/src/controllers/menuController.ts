@@ -22,7 +22,8 @@ export const getMenuItems = async (req: Request, res: Response) => {
         
         res.json(menuItems);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Error fetching menu items:", error);
+        return res.status(500).json({ message: 'Failed to fetch menu items' });
     }
 };
 
@@ -34,7 +35,8 @@ export const createMenuItem = async (req: Request, res: Response) => {
         const menuItem = await MenuItem.create(req.body);
         res.status(201).json(menuItem);
     } catch (error) {
-        res.status(400).json({ message: 'Invalid data' });
+        console.error("Error creating menu item:", error);
+        return res.status(400).json({ message: 'Invalid data' });
     }
 };
 
@@ -58,7 +60,8 @@ export const updateMenuItem = async (req: Request, res: Response) => {
             res.status(404).json({ message: 'Item not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Error updating menu item:", error);
+        return res.status(500).json({ message: 'Server Error' });
     }
 };
 
@@ -76,6 +79,7 @@ export const deleteMenuItem = async (req: Request, res: Response) => {
             res.status(404).json({ message: 'Item not found' });
         }
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
+        console.error("Error deleting menu item:", error);
+        return res.status(500).json({ message: 'Server Error' });
     }
 };

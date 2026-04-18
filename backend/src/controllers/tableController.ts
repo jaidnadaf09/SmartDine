@@ -19,6 +19,13 @@ export const getTables = async (req: Request, res: Response) => {
 // @access  Private/Admin
 export const createTable = async (req: Request, res: Response) => {
     try {
+        const seatingCapacity = req.body.capacity || req.body.seatingCapacity;
+        if (seatingCapacity > 10) {
+            return res.status(400).json({
+                message: "Seating capacity cannot exceed 10"
+            });
+        }
+
         const table = await Table.create(req.body);
         res.status(201).json(table);
     } catch (error) {

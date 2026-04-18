@@ -4,41 +4,78 @@ import { Icons } from '../icons/IconSystem';
 import { formatTime } from '@utils/dateFormatter';
 import { createPortal } from 'react-dom';
 import { playNotificationSound } from '@utils/notificationSound';
+import api from '@utils/api';
+import socket from '@socket/socketClient';
 import '../../App.css';
 
 const NotificationPanel: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
+  const seenNotificationIds = useRef<Set<number>>(new Set());
+  const isInitialFetch = useRef(true);
 
   const fetchNotifications = useCallback(async () => {
-    if (!isAuthenticated || !user?.token) return;
+    if (!isAuthenticated) return;
+    if (document.hidden) return; // skip polling when tab is hidden
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/notifications`, {
-        headers: { 'Authorization': `Bearer ${user.token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(prev => {
-          if (data.length > prev.length) {
-            playNotificationSound();
-          }
-          return data;
-        });
+      const res = await api.get('/notifications');
+      const newNotifications: any[] = res.data;
+      const incomingIds = newNotifications.map((n: any) => n.id);
+
+      if (!isInitialFetch.current) {
+        const hasRealNewNotification = incomingIds.some(
+          (id) => !seenNotificationIds.current.has(id)
+        );
+        if (hasRealNewNotification) {
+          playNotificationSound();
+        }
       }
+
+      // Accumulate all seen IDs so future polls compare against full history
+      incomingIds.forEach((id) => seenNotificationIds.current.add(id));
+
+      setNotifications(newNotifications);
+      isInitialFetch.current = false;
     } catch (err) {
       console.error('Error fetching notifications:', err);
     }
-  }, [isAuthenticated, user?.token]);
+  }, [isAuthenticated]);
+
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 5000);
-    return () => clearInterval(interval);
+    if (intervalRef.current) return; // prevent stacking
+    intervalRef.current = setInterval(fetchNotifications, 15000);
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [fetchNotifications]);
+
+  // Real-time: listen for push notifications via WebSocket
+  useEffect(() => {
+    const handleNewNotification = (notification: any) => {
+      setNotifications(prev => {
+        // Deduplicate — don't add if already present
+        if (prev.some(n => n.id === notification.id)) return prev;
+        seenNotificationIds.current.add(notification.id);
+        playNotificationSound();
+        return [notification, ...prev];
+      });
+    };
+
+    socket.on('notification:new', handleNewNotification);
+    return () => {
+      socket.off('notification:new', handleNewNotification);
+    };
+  }, []);
 
   const updatePosition = useCallback(() => {
     if (triggerRef.current) {
@@ -81,34 +118,18 @@ const NotificationPanel: React.FC = () => {
 
   const markAsRead = async (id: number) => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${user?.token}` }
-      });
-      if (res.ok) {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-      }
+      await api.put(`/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     } catch (err) {
       console.error('Error marking as read:', err);
     }
   };
 
   const clearAllNotifications = async () => {
-    if (!isAuthenticated || !user?.token) return;
-    
-    // Optimistic UI update: Clear immediately
+    if (!isAuthenticated) return;
     setNotifications([]);
-    
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/notifications/clear`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${user.token}` }
-      });
-      if (!res.ok) {
-        console.error('Failed to clear notifications on server');
-        // Optionally re-fetch to restore state if failed
-        fetchNotifications();
-      }
+      await api.delete('/notifications/clear');
     } catch (err) {
       console.error('Error clearing notifications:', err);
       fetchNotifications();
@@ -117,20 +138,10 @@ const NotificationPanel: React.FC = () => {
 
   const deleteNotification = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
-    if (!isAuthenticated || !user?.token) return;
-
-    // Optimistic UI update: Remove from list immediately
+    if (!isAuthenticated) return;
     setNotifications(prev => prev.filter(n => n.id !== id));
-
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/notifications/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${user.token}` }
-      });
-      if (!res.ok) {
-        console.error('Failed to delete notification on server');
-        fetchNotifications();
-      }
+      await api.delete(`/notifications/${id}`);
     } catch (err) {
       console.error('Error deleting notification:', err);
       fetchNotifications();

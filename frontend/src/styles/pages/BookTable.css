@@ -1100,7 +1100,10 @@ body[data-theme="dark"] .bt-chip.selected {
 }
 
 /* ── Panel Trigger Button (View Availability) ── */
+.view-availability-btn,
+.view-availability,
 .panel-trigger {
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1108,21 +1111,30 @@ body[data-theme="dark"] .bt-chip.selected {
   margin-top: 12px;
   margin-bottom: 14px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 0 14px;
   border-radius: 14px;
-  background: rgba(245, 239, 231, 0.7);
-  border: 1px dashed rgba(202, 164, 107, 0.45);
-  color: #7a5c34;
-  font-size: 14px;
+  background: var(--bt-card-inner);
+  border: 1px solid var(--bt-border-soft);
+  color: var(--bt-text-main);
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
 }
 
+.view-availability-btn:hover,
+.view-availability:hover,
 .panel-trigger:hover {
-  background: rgba(245, 239, 231, 0.95);
-  border: 1px dashed rgba(202, 164, 107, 0.7);
+  border-color: var(--bt-gold-main);
+  box-shadow: var(--bt-hover-glow);
   transform: translateY(-1px);
+}
+
+.view-availability-btn:active,
+.view-availability:active,
+.panel-trigger:active {
+  transform: scale(0.99);
 }
 
 .panel-trigger svg {

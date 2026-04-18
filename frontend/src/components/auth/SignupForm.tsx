@@ -138,8 +138,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
       <h2 className="auth-modal-title">Create Account</h2>
 
       <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="name">Full Name</label>
+        <div className="form-group input-group">
           <input
             className="form-input"
             type="text"
@@ -147,14 +146,14 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="Your Name"
+            placeholder=" "
             required
             autoFocus
           />
+          <label htmlFor="name">Full Name</label>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="email">Email Address</label>
+        <div className="form-group input-group">
           <input
             className="form-input"
             type="email"
@@ -162,13 +161,13 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="you@example.com"
+            placeholder=" "
             required
           />
+          <label htmlFor="email">Email Address</label>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="phone">Phone Number</label>
+        <div className="form-group input-group">
           <input
             className="form-input"
             type="tel"
@@ -176,14 +175,14 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="10-digit number"
+            placeholder=" "
             maxLength={10}
             required
           />
+          <label htmlFor="phone">Phone Number</label>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
+        <div className="form-group input-group">
           <div className="input-wrapper">
             <input
               className="form-input"
@@ -192,9 +191,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="At least 6 characters"
+              placeholder=" "
               required
             />
+            <label htmlFor="password">Password</label>
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -224,8 +224,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
           )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
+        <div className="form-group input-group">
           <div className="input-wrapper">
             <input
               className="form-input"
@@ -234,9 +233,10 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess, onSwitchToLogin, isM
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              placeholder="Confirm your password"
+              placeholder=" "
               required
             />
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}

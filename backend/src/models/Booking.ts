@@ -11,7 +11,7 @@ export interface BookingAttributes {
     guests: number;
     tableNumber?: number;
     tableId?: number | null;
-    status: 'pending' | 'confirmed' | 'checked_in' | 'cancelled' | 'completed';
+    status: 'pending' | 'confirmed' | 'checked_in' | 'cancelled' | 'completed' | 'no_show';
     specialRequests?: string;
     occasion?: string;
     preference?: string;
@@ -34,7 +34,7 @@ export class Booking extends Model<BookingAttributes> implements BookingAttribut
     public guests!: number;
     public tableNumber!: number;
     public tableId!: number | null;
-    public status!: 'pending' | 'confirmed' | 'checked_in' | 'cancelled' | 'completed';
+    public status!: 'pending' | 'confirmed' | 'checked_in' | 'cancelled' | 'completed' | 'no_show';
     public specialRequests!: string;
     public occasion!: string;
     public preference!: string;
@@ -92,7 +92,7 @@ Booking.init(
             }
         },
         status: {
-            type: DataTypes.ENUM('pending', 'confirmed', 'checked_in', 'cancelled', 'completed'),
+            type: DataTypes.ENUM('pending', 'confirmed', 'checked_in', 'cancelled', 'completed', 'no_show'),
             defaultValue: 'pending',
         },
         specialRequests: {

@@ -225,24 +225,74 @@ body[data-theme="light"] .auth-card h1 {
 }
 
 .form-group label {
-  color: rgba(255, 255, 255, 0.85);
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.65);
   font-weight: 600;
-  font-size: 0.9rem;
+  pointer-events: none;
+  transition: all 0.16s ease;
+  background: transparent;
+  padding: 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+.form-input:focus + label,
+.form-input:not(:placeholder-shown) + label {
+  top: 0px;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: rgba(212, 178, 132, 0.95);
+  background: transparent;
+}
+
+.input-group {
+  position: relative;
+  /* To ensure z-index context works correctly for absolute label */
 }
 
 .form-input {
   width: 100%;
-  padding: 14px 16px;
+  padding: 16px 16px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   color: white;
   font-size: 15px;
   outline: none;
-  transition: all 0.25s ease;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
   font-family: inherit;
+  position: relative;
+  z-index: 1;
+}
+
+/* Chrome Autofill Fix — preserves glass UI */
+.form-input:-webkit-autofill,
+.form-input:-webkit-autofill:hover,
+.form-input:-webkit-autofill:focus,
+.form-input:-webkit-autofill:active {
+  -webkit-text-fill-color: white !important;
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.08) inset !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Dark theme */
+body[data-theme="dark"] .form-input:-webkit-autofill {
+  -webkit-text-fill-color: white !important;
+  box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.06) inset !important;
+}
+
+/* Light theme */
+body[data-theme="light"] .form-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--text-primary) !important;
+  box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.35) inset !important;
+  border: 1px solid rgba(0, 0, 0, 0.18) !important;
 }
 
 .form-input:hover {
@@ -250,13 +300,17 @@ body[data-theme="light"] .auth-card h1 {
 }
 
 .form-input:focus {
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 12px rgba(111, 97, 52, 0.35);
+  border-color: rgba(196, 145, 93, 0.55);
+  box-shadow: 0 0 0 1px rgba(196, 145, 93, 0.45), 0 6px 18px rgba(196, 145, 93, 0.18);
   transform: translateY(-1px);
 }
 
+.form-input:not(:placeholder-shown) {
+  background: rgba(255, 255, 255, 0.10);
+}
+
 .form-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: transparent;
 }
 
 /* ── Light Mode Overrides ── */
@@ -288,18 +342,30 @@ body[data-theme="light"] .form-group label {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.55);
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 5;
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .password-toggle:hover {
-  color: white;
-  transform: translateY(-50%) scale(1.1);
+  color: rgba(212, 178, 132, 0.95);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.password-toggle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.password-toggle svg {
+  transition: transform 0.2s ease;
+}
+
+.password-toggle.active svg {
+  transform: rotate(12deg);
 }
 
 body[data-theme="light"] .password-toggle {
@@ -307,7 +373,7 @@ body[data-theme="light"] .password-toggle {
 }
 
 body[data-theme="light"] .password-toggle:hover {
-  color: #000;
+  color: var(--text-primary);
 }
 
 /* ── Form Actions ── */
@@ -385,7 +451,7 @@ body[data-theme="light"] .auth-back-btn {
 }
 
 body[data-theme="light"] .auth-link {
-  color: #444;
+  color: var(--text-secondary);
 }
 
 .auth-link a {
@@ -400,7 +466,18 @@ body[data-theme="light"] .auth-link {
   text-decoration: underline;
 }
 
-/* Unified under global variables */
+/* ── Error Feedback ── */
+.input-error {
+  animation: shake 0.28s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  border-color: #ff4d4d !important;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
 
 /* ── Password Feedback ── */
 .password-feedback {

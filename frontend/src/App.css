@@ -995,7 +995,7 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 }
 
 .notification-header {
-  padding: 15px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border-color);
   background: var(--card-bg-alt);
   display: flex;
@@ -1011,19 +1011,21 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
 }
 
 .clear-all-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
   background: transparent;
-  border: none;
-  color: var(--brand-primary);
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .clear-all-btn:hover {
   background: var(--brand-primary-light);
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
 }
 
 .notification-list {

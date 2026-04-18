@@ -29,6 +29,7 @@ interface DataTableProps<T> {
     onRowClick?: (item: T) => void;
     onClearAll?: () => void;
     itemsPerPage?: number;
+    headerActions?: React.ReactNode;
 }
 
 const DataTable = <T extends { id: string | number }>({ 
@@ -42,7 +43,8 @@ const DataTable = <T extends { id: string | number }>({
     onFilterChange,
     onRowClick,
     onClearAll,
-    itemsPerPage = 10
+    itemsPerPage = 10,
+    headerActions
 }: DataTableProps<T>) => {
     const [currentPage, setCurrentPage] = useState(1);
     
@@ -55,16 +57,12 @@ const DataTable = <T extends { id: string | number }>({
 
     return (
         <div className="admin-table-container">
-            <div className="admin-table-header" style={{ 
+            <div className="admin-table-header menu-controls-row" style={{ 
                 padding: '1.25rem 1.5rem', 
                 borderBottom: '1px solid var(--border-color)',
-                display: 'flex',
-                gap: '16px',
-                flexWrap: 'wrap',
-                alignItems: 'center',
                 background: 'var(--bg-card)'
             }}>
-                <div style={{ flex: '1', minWidth: '250px' }}>
+                <div className="menu-controls-left">
                     <SearchInput
                         placeholder={searchPlaceholder}
                         value={searchValue}
@@ -74,9 +72,7 @@ const DataTable = <T extends { id: string | number }>({
                         }}
                         onClear={() => onSearchChange('')}
                     />
-                </div>
-                
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    
                     {filters.map((filter) => (
                         <div key={filter.key} style={{ minWidth: '150px' }}>
                             <Select
@@ -102,7 +98,6 @@ const DataTable = <T extends { id: string | number }>({
                                 if (onClearAll) {
                                     onClearAll();
                                 } else {
-                                    // Fallback for pages not yet updated
                                     onSearchChange('');
                                     if (onFilterChange) {
                                         filters.forEach(f => onFilterChange(f.key, ''));
@@ -116,6 +111,12 @@ const DataTable = <T extends { id: string | number }>({
                         </Button>
                     )}
                 </div>
+
+                {headerActions && (
+                    <div className="menu-controls-right">
+                        {headerActions}
+                    </div>
+                )}
             </div>
 
             <div style={{ overflow: 'visible' }}>

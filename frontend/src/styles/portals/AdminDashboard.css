@@ -1,0 +1,160 @@
+/* =====================================================
+   AdminDashboard.css — Premium Statistics Layout
+   SmartDine Admin Portal — Layout Refinement (v4.0)
+   ===================================================== */
+
+/* Premium one-row stat layout */
+.sd-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr));
+    gap: 1.125rem; /* 18px */
+    margin-bottom: 2rem;
+}
+
+/* Ensure cards maintain consistent visual hierarchy */
+.sd-stats-grid > * {
+    min-height: 110px;
+}
+
+/* Premium polish for individual cards */
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.125rem 1.25rem; /* 18px 20px */
+    border-radius: 16px;
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.stat-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.stat-icon {
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.stat-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+}
+
+.stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.stat-trend {
+    font-size: 12px;
+    margin-top: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Responsive behaviour for different viewport tiers */
+@media (max-width: 1400px) {
+    .sd-stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .sd-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 520px) {
+    .sd-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dashboard Recent Activity Grid — Multi-card alignment */
+.dashboard-recent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem; /* 24px */
+    align-items: stretch;
+}
+
+/* Dashboard Recent Activity Refinements */
+.dashboard-recent-card {
+    min-height: 280px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem; /* 20px compact */
+    border-radius: 16px;
+}
+
+.dashboard-recent-list {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.dashboard-recent-list > div {
+    padding: 12px 0;
+    transition: background 0.2s ease;
+}
+
+.dashboard-recent-list > div:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dashboard-recent-list > div:last-child {
+    border-bottom: none !important;
+}
+
+/* Micro-animations for Trend Arrows */
+.trend-icon {
+    display: inline-flex;
+    align-items: center;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+    margin-right: 2px;
+}
+
+/* Slide Up for Positive, Slide Down for Negative */
+.trend-positive .trend-icon {
+    animation: trendUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.trend-negative .trend-icon {
+    animation: trendDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes trendUp {
+    0% { transform: translateY(4px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes trendDown {
+    0% { transform: translateY(-4px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+}

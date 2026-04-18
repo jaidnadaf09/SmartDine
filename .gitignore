@@ -7,6 +7,24 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+debug.log
+error.log
+logs/
+
+# temporary debug files
+*.tmp
+*.temp
+*.cache
+temp/
+tmp/
+
+# vite debug outputs
+vite_err*
+ts_errors*
+build_output*
+out_utf8*
+vite-error.txt
+
 
 node_modules
 dist
@@ -19,6 +37,7 @@ build
 !.vscode/extensions.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj

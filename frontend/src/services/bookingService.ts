@@ -53,3 +53,9 @@ export const unassignTable = async (bookingId: number) => {
     const res = await api.patch(`/admin/bookings/${bookingId}/unassign-table`);
     return res.data;
 };
+
+// Mark a booking as no-show
+export const markBookingNoShow = async (bookingId: number) => {
+    const res = await api.patch(`/admin/bookings/${bookingId}/no-show`);
+    return res.data;
+};

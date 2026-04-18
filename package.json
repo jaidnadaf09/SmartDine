@@ -2,15 +2,17 @@
   "name": "smartdine-monorepo",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev": "concurrently -n FRONTEND,BACKEND -c blue,green \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "npm run dev --prefix frontend",
     "dev:backend": "npm run dev --prefix backend",
     "build:frontend": "npm run build --prefix frontend",
     "build:backend": "npm run build --prefix backend",
     "build": "npm run build:frontend && npm run build:backend",
-    "start": "npm run start --prefix backend"
+    "start": "npm run start --prefix backend",
+    "clean": "rimraf *.log **/*.log vite-error.txt temp tmp"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "rimraf": "^6.1.3"
   }
 }

@@ -8,6 +8,7 @@ import { isRestaurantOpen, isValidWorkingHour } from '../utils/workingHours';
 import { Notification, RestaurantSetting, Table } from '../models';
 import sequelize from '../config/db';
 import { findBestAvailableTable } from '../services/tableAssignmentService';
+import { emitNotification, emitBookingEvent } from '../socket/socketServer';
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
@@ -124,6 +125,19 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: dateTimeError });
         }
 
+        const existingBooking = await Booking.findOne({
+            where: {
+                userId: user.id,
+                date: req.body.date,
+                time: req.body.time,
+                status: ["pending", "confirmed"]
+            }
+        });
+
+        if (existingBooking) {
+            return res.status(200).json(existingBooking);
+        }
+
         // Use a transaction to prevent race conditions during table assignment
         const result = await sequelize.transaction(async (t) => {
             const bestTable = await findBestAvailableTable({
@@ -150,11 +164,16 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
             }, { transaction: t });
 
             // Create notification for new booking
-            await Notification.create({
+            const newNotification = await Notification.create({
                 userId: user.id,
                 message: `Your table booking request #${booking.id} has been received.`,
                 type: 'booking'
             }, { transaction: t });
+
+            // Push notification to user in real-time
+            emitNotification(user.id, newNotification.toJSON());
+            // Notify admin dashboard of the new booking
+            emitBookingEvent('booking:new', booking.toJSON());
 
             return booking;
         });
@@ -184,11 +203,13 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
 
             // Create notification for booking update
             if (booking.userId) {
-                await Notification.create({
+                const updateNotification = await Notification.create({
                     userId: booking.userId,
                     message: `Your booking #${booking.id} has been updated to: ${booking.status.toUpperCase()}`,
                     type: 'booking'
                 });
+                emitNotification(booking.userId, updateNotification.toJSON());
+                emitBookingEvent('booking:updated', updatedBooking.toJSON());
             }
 
             res.json(updatedBooking);
@@ -238,6 +259,17 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
 
         booking.status = 'cancelled';
         await booking.save();
+
+        // Push real-time notification to user and update admin portal
+        if (booking.userId) {
+            const cancelNotif = await Notification.create({
+                userId: booking.userId,
+                message: "Your booking has been cancelled successfully.",
+                type: 'booking'
+            });
+            emitNotification(booking.userId, cancelNotif.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
 
         let updatedBalance = undefined;
 

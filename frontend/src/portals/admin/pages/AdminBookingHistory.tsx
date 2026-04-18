@@ -4,6 +4,7 @@ import api, { safeFetch } from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const AdminBookingHistory: React.FC = () => {
     const [bookings, setBookings] = useState<any[]>([]);
@@ -179,10 +180,11 @@ const AdminBookingHistory: React.FC = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Retrieving archived bookings...</p>
                 </div>
             ) : error ? (
-                <div className="error-state">
-                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
-                    <Button variant="primary" onClick={fetchBookingHistory}>Retry</Button>
-                </div>
+                <GlobalErrorState 
+                    title="Failed to load booking history" 
+                    description={error} 
+                    onRetry={fetchBookingHistory} 
+                />
             ) : (
                 <DataTable 
                     columns={columns} 

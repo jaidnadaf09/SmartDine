@@ -8,6 +8,7 @@ import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
 import Modal from '@ui/Modal';
 import Select from '@ui/Select';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 interface BookingsProps {
     hideHeader?: boolean;
@@ -358,10 +359,11 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
                     <p style={{ color: 'var(--text-muted)' }}>Loading bookings...</p>
                 </div>
             ) : error ? (
-                <div className="error-state">
-                    <p><Icons.alertCircle size={16} className="inline-icon" /> {error}</p>
-                    <Button variant="primary" onClick={fetchData}>Retry</Button>
-                </div>
+                <GlobalErrorState 
+                    title="Failed to load bookings" 
+                    description={error} 
+                    onRetry={fetchData} 
+                />
             ) : (
                 <DataTable 
                     columns={columns} 

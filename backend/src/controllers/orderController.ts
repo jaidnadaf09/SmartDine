@@ -3,6 +3,7 @@ import { Order, User, Table, Booking, WalletTransaction, sequelize, Notification
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Op } from 'sequelize';
 import { isRestaurantOpen } from '../utils/workingHours';
+import { emitNotification, emitOrderStatusUpdate, emitNewOrder, getIO } from '../socket/socketServer';
 
 // @desc    Get all orders
 // @route   GET /api/orders
@@ -76,6 +77,16 @@ export const createOrder = async (req: Request, res: Response) => {
         let assignedTableNumber = null;
         let activeBookingId = null;
 
+        if (paymentId) {
+            const existingOrder = await Order.findOne({
+                where: { paymentId }
+            });
+
+            if (existingOrder) {
+                return res.status(200).json(existingOrder);
+            }
+        }
+
         if (userId) {
             const activeBooking = await Booking.findOne({
                 where: {
@@ -105,6 +116,21 @@ export const createOrder = async (req: Request, res: Response) => {
             orderType: orderType
         });
 
+        const orderData = newOrder.toJSON();
+        
+        // Notify chef room immediately
+        emitNewOrder(orderData);
+
+        // Create notification for customer
+        if (userId) {
+            const placementNotif = await Notification.create({
+                userId,
+                message: "Your order has been placed successfully!",
+                type: 'order'
+            });
+            emitNotification(userId, placementNotif.toJSON());
+        }
+
         res.status(201).json(newOrder);
     } catch (error) {
         console.error("Error creating order:", error);
@@ -129,11 +155,20 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
         // Create notification for customer
         if (order.userId) {
-            await Notification.create({
+            const statusNotification = await Notification.create({
                 userId: order.userId,
                 message: `Your order #${order.id} status is now: ${status.toUpperCase()}`,
                 type: 'order'
             });
+            emitNotification(order.userId, statusNotification.toJSON());
+        }
+        // Push order update to stakeholders
+        emitOrderStatusUpdate(order.userId ?? null, updatedOrder.toJSON());
+
+        // Specific event for completion
+        if (status === 'completed' && order.userId) {
+            const io = getIO();
+            io.to(`user:${order.userId}`).emit('order:completed', updatedOrder.toJSON());
         }
 
         // Table Management: When order is completed or cancelled, release table and booking
@@ -249,11 +284,12 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
         await order.save();
 
         // Create notification for cancellation
-        await Notification.create({
+        const cancelNotification = await Notification.create({
             userId,
             message: `Order #${order.id} has been cancelled and refunded to your wallet.`,
             type: 'order'
         });
+        emitNotification(userId as number, cancelNotification.toJSON());
 
         const refundAmount = Number(order.totalAmount || 0);
         let currentBalance = 0;

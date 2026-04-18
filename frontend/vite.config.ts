@@ -17,9 +17,15 @@ export default defineConfig({
       '@portals': path.resolve(__dirname, './src/portals'),
       '@services': path.resolve(__dirname, './src/services'),
       '@shared': path.resolve(__dirname, './src/components/shared'),
+      '@socket': path.resolve(__dirname, './src/socket'),
       '@styles': path.resolve(__dirname, './src/styles'),
       '@ui': path.resolve(__dirname, './src/components/ui'),
       '@utils': path.resolve(__dirname, './src/utils'),
     },
   },
+  server: {
+    hmr: {
+      overlay: true
+    }
+  }
 })

@@ -4,6 +4,7 @@ import api, { safeFetch } from '@utils/api';
 import { formatDate } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const Payments: React.FC = () => {
     const [payments, setPayments] = useState<any[]>([]);
@@ -152,10 +153,11 @@ const Payments: React.FC = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Loading payments...</p>
                 </div>
             ) : error ? (
-                <div className="error-state">
-                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
-                    <Button variant="primary" onClick={fetchPayments}>Retry</Button>
-                </div>
+                <GlobalErrorState 
+                    title="Failed to load payments" 
+                    description={error} 
+                    onRetry={fetchPayments} 
+                />
             ) : (
                 <DataTable 
                     columns={columns} 

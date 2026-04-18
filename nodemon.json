@@ -1,0 +1,6 @@
+{
+  "watch": ["backend/src"],
+  "ext": "ts,json",
+  "ignore": ["node_modules"],
+  "exec": "npm run dev:backend"
+}

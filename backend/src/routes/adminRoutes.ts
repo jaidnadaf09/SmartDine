@@ -23,7 +23,8 @@ import {
     getOrdersHistory,
     updateOrderStatus,
     getPayments,
-    getAllReviews
+    getAllReviews,
+    markNoShow
 } from '../controllers/adminController';
 import { updateRestaurantStatus } from '../controllers/restaurantController';
 import { protect, adminOnly } from '../middleware/authMiddleware';
@@ -54,6 +55,7 @@ router.route('/bookings/:id/unassign-table').patch(unassignTable);
 router.route('/bookings/:id/table').put(updateBookingTable);
 router.route('/bookings/:id/assign-table').patch(assignTable);
 router.route('/bookings/:id/check-in').patch(checkInBooking);
+router.route('/bookings/:id/no-show').patch(markNoShow);
 
 router.route('/tables').get(getTables).post(addTable);
 router.route('/tables/available').get(getAvailableTables);

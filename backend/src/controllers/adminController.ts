@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { User, Order, Table, Booking } from '../models';
+import { User, Order, Table, Booking, Notification } from '../models';
 import { getAllReviews } from './reviewController';
+import { emitNotification, emitBookingEvent } from '../socket/socketServer';
 
 export { getAllReviews };
 
@@ -131,6 +132,16 @@ export const assignTable = async (req: Request, res: Response) => {
         booking.status = 'confirmed';
         await booking.save();
 
+        if (booking.userId) {
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message: `Table ${table.tableNumber} has been assigned to your booking #${booking.id} for ${new Date(booking.date).toLocaleDateString()} at ${booking.time}`,
+                type: 'booking'
+            });
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
+
         res.json({ message: 'Table assigned successfully', booking });
     } catch (error) {
         console.error('Error assigning table:', error);
@@ -156,6 +167,16 @@ export const checkInBooking = async (req: Request, res: Response) => {
         booking.status = 'checked_in';
         await booking.save();
 
+        if (booking.userId) {
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message: `You have been checked in at Table ${booking.tableNumber}`,
+                type: 'booking'
+            });
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
+
         res.json({ message: 'Customer checked in successfully', booking });
     } catch (error) {
         console.error('Error checking in booking:', error);
@@ -176,7 +197,7 @@ export const getBookingsHistory = async (req: Request, res: Response) => {
         if (status) {
             whereClause.status = status;
         } else {
-            whereClause.status = { [Op.in]: ['completed', 'cancelled'] };
+            whereClause.status = { [Op.in]: ['completed', 'cancelled', 'no_show'] };
         }
 
         if (search && typeof search === 'string') {
@@ -235,6 +256,17 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
         }
         booking.status = status;
         await booking.save();
+
+        if (booking.userId) {
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message: `Your booking #${booking.id} status is now: ${status.toUpperCase()}`,
+                type: 'booking'
+            });
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
+
         res.json(booking);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
@@ -270,6 +302,16 @@ export const cancelBooking = async (req: Request, res: Response) => {
 
         await booking.save();
 
+        if (booking.userId) {
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message: `Your booking #${booking.id} has been cancelled. Reason: ${booking.cancelReason}`,
+                type: 'booking'
+            });
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
+
         res.json({ message: "Booking cancelled successfully", booking });
     } catch (error) {
         console.error("Error cancelling booking:", error);
@@ -304,9 +346,62 @@ export const completeBooking = async (req: Request, res: Response) => {
 
         await booking.save();
 
+        if (booking.userId) {
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message: `Your booking #${booking.id} is complete. We hope you had a great meal!`,
+                type: 'booking'
+            });
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
+
         res.json({ message: "Booking completed and table released successfully", booking });
     } catch (error) {
         console.error("Error completing booking:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Mark a booking as no-show and release table
+// @route   PATCH /api/admin/bookings/:id/no-show
+// @access  Private/Admin
+export const markNoShow = async (req: Request, res: Response) => {
+    console.log(`Admin: Marking booking ${req.params.id} as no-show`);
+    try {
+        const booking = await Booking.findByPk(req.params.id);
+
+        if (!booking) {
+            return res.status(404).json({ message: "Booking not found" });
+        }
+
+        // Release table if assigned
+        if (booking.tableId) {
+            const table = await Table.findByPk(booking.tableId);
+            if (table) {
+                table.status = "available";
+                await table.save();
+            }
+        }
+
+        booking.status = "no_show";
+        booking.tableId = null;
+
+        await booking.save();
+
+        if (booking.userId) {
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message: `Your booking #${booking.id} was marked as a no-show.`,
+                type: 'booking'
+            });
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
+
+        res.json({ message: "Booking marked as no-show and table released", booking });
+    } catch (error) {
+        console.error("Error marking no-show:", error);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -327,6 +422,16 @@ export const unassignTable = async (req: Request, res: Response) => {
         booking.tableNumber = null as any;
 
         await booking.save();
+
+        if (booking.userId) {
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message: `Table has been unassigned from your booking #${booking.id}`,
+                type: 'booking'
+            });
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
 
         res.json({ message: "Table unassigned successfully", booking });
     } catch (error) {
@@ -364,6 +469,24 @@ export const updateBookingTable = async (req: Request, res: Response) => {
         }
 
         await booking.save();
+
+        if (booking.userId) {
+            let message = '';
+            if (booking.tableNumber) {
+                message = `Table ${booking.tableNumber} assigned for ${new Date(booking.date).toLocaleDateString()} at ${booking.time}`;
+            } else {
+                message = `Table unassigned for your booking #${booking.id}`;
+            }
+
+            const notification = await Notification.create({
+                userId: booking.userId,
+                message,
+                type: 'booking'
+            });
+
+            emitNotification(booking.userId, notification.toJSON());
+            emitBookingEvent('booking:updated', booking.toJSON());
+        }
 
         res.json({ message: 'Table updated successfully', booking });
     } catch (error) {
@@ -441,6 +564,13 @@ export const getAvailableTables = async (req: Request, res: Response) => {
 export const addTable = async (req: Request, res: Response) => {
     try {
         const { tableNumber, capacity, status } = req.body;
+        
+        if (capacity > 10) {
+            return res.status(400).json({
+                message: "Seating capacity cannot exceed 10"
+            });
+        }
+
         const table = await Table.create({ tableNumber, capacity, status, orders: 0 });
         res.status(201).json(table);
     } catch (error) {
@@ -454,6 +584,13 @@ export const addTable = async (req: Request, res: Response) => {
 export const updateTable = async (req: Request, res: Response) => {
     try {
         const { tableNumber, capacity, status } = req.body;
+        
+        if (capacity > 10) {
+            return res.status(400).json({
+                message: "Seating capacity cannot exceed 10"
+            });
+        }
+
         const table = await Table.findByPk(req.params.id);
         if (!table) {
             return res.status(404).json({ message: 'Table not found' });
@@ -676,6 +813,9 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
         const totalUsers = await User.count();
         const totalBookings = await Booking.count();
+        const noShowBookings = await Booking.count({
+            where: { status: 'no_show' }
+        });
 
         // Fetch Recent History
         const recentBookings = await Booking.findAll({
@@ -709,6 +849,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             totalBookings,
             totalOrders,
             totalRevenue,
+            noShowBookings,
             recentBookings,
             recentOrders,
             recentPayments

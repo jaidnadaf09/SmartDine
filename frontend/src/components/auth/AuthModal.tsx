@@ -50,14 +50,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose })
   }, [isOpen, onClose]);
 
   const { user } = useAuth();
-
-  // Safety auto-close if login succeeds behind modal's back
-  useEffect(() => {
-    if (user && isOpen) {
-      onClose();
-    }
-  }, [user, isOpen, onClose]);
-
   // Prevent background scroll
   useEffect(() => {
     if (isOpen) {

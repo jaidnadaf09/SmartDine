@@ -4,6 +4,7 @@ import api, { safeFetch } from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable from '../components/DataTable';
 import Button from '@ui/Button';
+import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
@@ -115,10 +116,11 @@ const OrderHistory: React.FC = () => {
                     <p style={{ color: 'var(--text-muted)' }}>Retrieving order history...</p>
                 </div>
             ) : error ? (
-                <div className="error-state">
-                    <p><Icons.error size={16} className="inline-icon" /> {error}</p>
-                    <Button variant="primary" onClick={fetchOrderHistory}>Retry</Button>
-                </div>
+                <GlobalErrorState 
+                    title="Failed to load order history" 
+                    description={error} 
+                    onRetry={fetchOrderHistory} 
+                />
             ) : (
                 <DataTable 
                     columns={columns} 

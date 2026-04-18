@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '../icons/IconSystem';
 import toast from 'react-hot-toast';
@@ -21,6 +21,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, isMo
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [inputError, setInputError] = useState(false);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -32,6 +34,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, isMo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
 
     if (!formData.email || !formData.password) {
@@ -72,12 +75,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, isMo
           navigate('/');
         }
       }
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        toast.error(err.message || 'Invalid email or password');
-      } else {
-        toast.error('Invalid email or password');
-      }
+    } catch (err: any) {
+      toast.error('Invalid email or password');
+      
+      // Improve UX: Clear only the password field so user can instantly retry
+      setFormData(prev => ({ ...prev, password: '' }));
+
+      // Trigger shake animation
+      setInputError(true);
+      setTimeout(() => setInputError(false), 300);
+
+      // Auto-focus password field
+      setTimeout(() => {
+        passwordRef.current?.focus();
+      }, 50);
     } finally {
       setLoading(false);
     }
@@ -92,8 +103,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, isMo
       <h2 className="auth-modal-title">Welcome Back</h2>
 
       <form onSubmit={handleSubmit} className="auth-form">
-        <div className="form-group">
-          <label htmlFor="email">Email Address</label>
+        <div className="form-group input-group">
           <input
             className="form-input"
             type="email"
@@ -101,25 +111,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToSignup, isMo
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="you@example.com"
+            placeholder=" "
             required
             autoFocus
           />
+          <label htmlFor="email">Email Address</label>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
+        <div className="form-group input-group">
           <div className="input-wrapper">
             <input
-              className="form-input"
+              ref={passwordRef}
+              className={`form-input ${inputError ? "input-error" : ""}`}
               type={showPassword ? "text" : "password"}
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Your secret password"
+              placeholder=" "
               required
             />
+            <label htmlFor="password">Password</label>
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}

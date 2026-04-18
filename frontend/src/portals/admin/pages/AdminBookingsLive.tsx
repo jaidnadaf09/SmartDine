@@ -14,10 +14,12 @@ import {
     rejectBooking,
     completeBooking,
     unassignTable as unassignTableApi,
+    markBookingNoShow,
 } from '../../../services/bookingService';
 import '@styles/portals/AdminBookingsLive.css';
+import socket from '@socket/socketClient';
 
-const POLL_INTERVAL = 10_000; // 10 seconds
+const POLL_INTERVAL = 20_000; // 20 seconds
 
 const REJECT_REASONS = ['Customer cancelled', 'No show', 'Restaurant issue', 'Full capacity'];
 
@@ -54,6 +56,7 @@ const AdminBookingsLive: React.FC = () => {
 
     // ── Core data fetch ──────────────────────────────────
     const loadData = useCallback(async (isInitial = false) => {
+        if (!isInitial && document.hidden) return; // skip background polls
         if (isInitial) setLoading(true);
         try {
             const [active, history, tables] = await Promise.all([
@@ -65,10 +68,10 @@ const AdminBookingsLive: React.FC = () => {
             const pending = active.filter((b: any) => b.status === 'pending');
             const confirmed = active.filter((b: any) => ['confirmed', 'checked_in'].includes(b.status));
 
-            // Today's completed bookings
+            // Today's completed/no-show bookings
             const today = new Date().toDateString();
             const todayCompleted = history.filter(
-                (b: any) => b.status === 'completed' && new Date(b.updatedAt).toDateString() === today
+                (b: any) => ['completed', 'no_show'].includes(b.status) && new Date(b.updatedAt).toDateString() === today
             );
 
             // Improvement #3: auto-scroll when new pending arrives
@@ -106,11 +109,80 @@ const AdminBookingsLive: React.FC = () => {
         loadData(true);
     }, [loadData]);
 
-    // Polling every 10 seconds
+    // Polling every 20 seconds with stacking protection
+    const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     useEffect(() => {
-        const intervalId = setInterval(() => loadData(false), POLL_INTERVAL);
-        return () => clearInterval(intervalId);
+        if (pollIntervalRef.current) return;
+        pollIntervalRef.current = setInterval(() => loadData(false), POLL_INTERVAL);
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+                pollIntervalRef.current = null;
+            }
+        };
     }, [loadData]);
+
+    // Real-time: receive instant booking updates via WebSocket
+    useEffect(() => {
+        const handleBookingNew = (booking: any) => {
+            // 1. Alert logic
+            toast('🔔 New booking received!', {
+                duration: 4000,
+                style: {
+                    background: 'var(--bg-card)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid rgba(245,158,11,0.3)',
+                },
+            });
+
+            // 2. Direct State Update
+            if (booking.status === 'pending') {
+                setPendingBookings(prev => {
+                    if (prev.some(b => b.id === booking.id)) return prev;
+                    return [booking, ...prev];
+                });
+                // Auto-scroll to top for new requests
+                newRequestsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (['confirmed', 'checked_in'].includes(booking.status)) {
+                setConfirmedBookings(prev => {
+                    if (prev.some(b => b.id === booking.id)) return prev;
+                    return [booking, ...prev];
+                });
+            }
+            
+            // Still refresh available tables in background
+            fetchAvailableTables().then(tables => setAvailableTables(tables)).catch(() => {});
+        };
+
+        const handleBookingUpdated = (updatedBooking: any) => {
+            // Remove from all potential lists first to handle status transitions
+            setPendingBookings(prev => prev.filter(b => b.id !== updatedBooking.id));
+            setConfirmedBookings(prev => prev.filter(b => b.id !== updatedBooking.id));
+            setCompletedToday(prev => prev.filter(b => b.id !== updatedBooking.id));
+
+            // Place in the correct list based on new status
+            if (updatedBooking.status === 'pending') {
+                setPendingBookings(prev => [updatedBooking, ...prev]);
+            } else if (['confirmed', 'checked_in'].includes(updatedBooking.status)) {
+                setConfirmedBookings(prev => [updatedBooking, ...prev]);
+            } else if (updatedBooking.status === 'completed') {
+                const today = new Date().toDateString();
+                if (new Date(updatedBooking.updatedAt).toDateString() === today) {
+                    setCompletedToday(prev => [updatedBooking, ...prev]);
+                }
+            }
+
+            // Sync tables
+            fetchAvailableTables().then(tables => setAvailableTables(tables)).catch(() => {});
+        };
+
+        socket.on('booking:new', handleBookingNew);
+        socket.on('booking:updated', handleBookingUpdated);
+        return () => {
+            socket.off('booking:new', handleBookingNew);
+            socket.off('booking:updated', handleBookingUpdated);
+        };
+    }, [fetchAvailableTables]);
 
     // ── Assign Table ─────────────────────────────────────
     const handleOpenAssign = (bookingId: number) => {
@@ -174,6 +246,16 @@ const AdminBookingsLive: React.FC = () => {
             await loadData(false);
         } catch (err: any) {
             toast.error(err.response?.data?.message || 'Failed to check in');
+        }
+    };
+
+    const handleNoShow = async (bookingId: number) => {
+        try {
+            await markBookingNoShow(bookingId);
+            toast.success('Marked as No-show');
+            await loadData(false);
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || 'Failed to mark no-show');
         }
     };
 
@@ -278,6 +360,7 @@ const AdminBookingsLive: React.FC = () => {
                                         onComplete={handleComplete}
                                         onCheckIn={handleCheckIn}
                                         onUnassign={handleUnassign}
+                                        onNoShow={handleNoShow}
                                         onChangeTable={handleChangeTable}
                                     />
                                 ))}
@@ -316,6 +399,7 @@ const AdminBookingsLive: React.FC = () => {
                                         onComplete={handleComplete}
                                         onCheckIn={handleCheckIn}
                                         onUnassign={handleUnassign}
+                                        onNoShow={handleNoShow}
                                         onChangeTable={handleChangeTable}
                                     />
                                 ))}
@@ -343,6 +427,7 @@ const AdminBookingsLive: React.FC = () => {
                                     onComplete={handleComplete}
                                     onCheckIn={handleCheckIn}
                                     onUnassign={handleUnassign}
+                                    onNoShow={handleNoShow}
                                     onChangeTable={handleChangeTable}
                                 />
                             ))}
