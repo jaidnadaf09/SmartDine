@@ -14,11 +14,6 @@ const ProfilePage: React.FC = () => {
 
     return (
         <div className="management-page">
-            <div className="page-header">
-                <h1>Personal Profile</h1>
-                <p>Manage your account details and wallet settings.</p>
-            </div>
-
             <div className="profile-grid">
                 {/* ── Left Card: Account Information ── */}
                 <motion.div
@@ -91,7 +86,6 @@ const ProfilePage: React.FC = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 }}
                     className="premium-card"
-                    style={{ display: 'flex', flexDirection: 'column' }}
                 >
                     <div className="wallet-header">
                         <div className="wallet-icon-box">

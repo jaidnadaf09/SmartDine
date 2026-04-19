@@ -82,6 +82,8 @@ const BookingCard: React.FC<BookingCardProps> = ({
         try { await onNoShow(booking.id); } finally { setMarkingNoShow(false); }
     };
 
+    const isActive = status === 'pending' || status === 'confirmed' || status === 'checked_in';
+
     return (
         <motion.div
             layout
@@ -89,118 +91,122 @@ const BookingCard: React.FC<BookingCardProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className={`booking-card status-${status} ${isNew ? 'is-new' : ''}`}
+            className={`booking-card status-${status} ${isActive ? 'booking-card--active' : ''} ${isNew ? 'is-new' : ''}`}
         >
-            {isNew && <span className="booking-new-badge">NEW</span>}
+            <div className="booking-card-top-line"></div>
+            
+            <div className="booking-card-content">
+                {isNew && <span className="booking-new-badge">NEW</span>}
 
-            {/* ── Premium Header ── */}
-            <div className="booking-header">
-                <div>
-                    <h3 className="customer-name">{booking.customerName}</h3>
-                    <div className="customer-phone">
-                        <Icons.phone size={12} strokeWidth={1.5} />
-                        {booking.phone || booking.email || '—'}
-                    </div>
-                </div>
-
-                <div className="status-group">
-                    {booking.table && (
-                        <div className="badge badge-table">
-                            Table No - {booking.table.tableNumber}
+                {/* ── Premium Header ── */}
+                <div className="booking-header">
+                    <div>
+                        <h3 className="customer-name">{booking.customerName}</h3>
+                        <div className="customer-phone">
+                            <Icons.phone size={12} strokeWidth={1.5} />
+                            {booking.phone || booking.email || '—'}
                         </div>
-                    )}
-                    <div className={`badge ${badge.className}`} title={badge.tooltip}>
-                        {badge.label}
+                    </div>
+
+                    <div className="status-group">
+                        {booking.table && (
+                            <div className="badge badge-table">
+                                Table No - {booking.table.tableNumber}
+                            </div>
+                        )}
+                        <div className={`badge ${badge.className}`} title={badge.tooltip}>
+                            {badge.label}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* ── Premium Info Row (Dashed T-Border) ── */}
-            <div className="booking-info">
-                <div className="booking-info-item">
-                    <span>👥 Guests</span>
-                    <strong>{booking.guests} {Number(booking.guests) === 1 ? 'Guest' : 'Guests'}</strong>
+                {/* ── Premium Info Row (Dashed T-Border) ── */}
+                <div className="booking-info">
+                    <div className="booking-info-item">
+                        <span>👥 Guests</span>
+                        <strong>{booking.guests} {Number(booking.guests) === 1 ? 'Guest' : 'Guests'}</strong>
+                    </div>
+                    <div className="booking-info-item">
+                        <span>📅 Date</span>
+                        <strong>{formatDate(booking.date)}</strong>
+                    </div>
+                    <div className="booking-info-item">
+                        <span>🕒 Time</span>
+                        <strong>{formatTime(booking.time)}</strong>
+                    </div>
                 </div>
-                <div className="booking-info-item">
-                    <span>📅 Date</span>
-                    <strong>{formatDate(booking.date)}</strong>
-                </div>
-                <div className="booking-info-item">
-                    <span>🕒 Time</span>
-                    <strong>{formatTime(booking.time)}</strong>
-                </div>
-            </div>
 
-            {/* ── Modern Tag Row ── */}
-            {(booking.occasion || booking.preference) && (
-                <div className="booking-tags">
-                    {booking.occasion && (
-                        <div className="tag-chip">✨ {booking.occasion}</div>
+                {/* ── Modern Tag Row ── */}
+                {(booking.occasion || booking.preference) && (
+                    <div className="booking-tags">
+                        {booking.occasion && (
+                            <div className="tag-chip">✨ {booking.occasion}</div>
+                        )}
+                        {booking.preference && (
+                            <div className="tag-chip">🌿 {booking.preference}</div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Premium Glass Actions ── */}
+                {/* Premium Glass Actions */}
+                <div className="booking-actions">
+                    {/* 1. SEED STATE: Pending */}
+                    {status === 'pending' && (
+                        <>
+                            <button 
+                                className="primary-btn" 
+                                onClick={handleAssign}
+                                disabled={assigning}
+                            >
+                                {assigning ? 'Opening...' : (booking.tableId ? 'Confirm' : 'Assign Table')}
+                            </button>
+                            <button 
+                                className="danger-text-btn" 
+                                onClick={() => onReject(booking)}
+                            >
+                                Reject
+                            </button>
+                        </>
                     )}
-                    {booking.preference && (
-                        <div className="tag-chip">🌿 {booking.preference}</div>
+
+                    {/* 2. ENGAGED STATE: Confirmed */}
+                    {status === 'confirmed' && (
+                        <>
+                            <button 
+                                className="primary-btn" 
+                                onClick={handleCheckIn}
+                                disabled={checkingIn}
+                            >
+                                {checkingIn ? '...' : 'Check-in'}
+                            </button>
+                            <button 
+                                className="no-show-btn" 
+                                onClick={handleNoShow}
+                                disabled={markingNoShow}
+                            >
+                                {markingNoShow ? '...' : 'No-show'}
+                            </button>
+                        </>
+                    )}
+
+                    {/* 3. ACTIVE STATE: Checked-in */}
+                    {status === 'checked_in' && (
+                        <button 
+                            className="secondary-btn" 
+                            onClick={handleComplete}
+                            disabled={completing}
+                            style={{ width: '100%' }}
+                        >
+                            {completing ? 'Completing...' : 'Complete Visit'}
+                        </button>
                     )}
                 </div>
-            )}
 
-            {/* ── Premium Glass Actions ── */}
-            {/* Premium Glass Actions */}
-            <div className="booking-actions">
-                {/* 1. SEED STATE: Pending */}
-                {status === 'pending' && (
-                    <>
-                        <button 
-                            className="primary-btn" 
-                            onClick={handleAssign}
-                            disabled={assigning}
-                        >
-                            {assigning ? 'Opening...' : (booking.tableId ? 'Confirm' : 'Assign Table')}
-                        </button>
-                        <button 
-                            className="danger-text-btn" 
-                            onClick={() => onReject(booking)}
-                        >
-                            Reject
-                        </button>
-                    </>
-                )}
-
-                {/* 2. ENGAGED STATE: Confirmed */}
-                {status === 'confirmed' && (
-                    <>
-                        <button 
-                            className="primary-btn" 
-                            onClick={handleCheckIn}
-                            disabled={checkingIn}
-                        >
-                            {checkingIn ? '...' : 'Check-in'}
-                        </button>
-                        <button 
-                            className="no-show-btn" 
-                            onClick={handleNoShow}
-                            disabled={markingNoShow}
-                        >
-                            {markingNoShow ? '...' : 'No-show'}
-                        </button>
-                    </>
-                )}
-
-                {/* 3. ACTIVE STATE: Checked-in */}
-                {status === 'checked_in' && (
-                    <button 
-                        className="secondary-btn" 
-                        onClick={handleComplete}
-                        disabled={completing}
-                        style={{ width: '100%' }}
-                    >
-                        {completing ? 'Completing...' : 'Complete Visit'}
-                    </button>
-                )}
-            </div>
-
-            <div className="footer-text">
-                <Icons.clock size={11} strokeWidth={1.5} />
-                Received {getTimeAgo(booking.createdAt)}
+                <div className="footer-text">
+                    <Icons.clock size={11} strokeWidth={1.5} />
+                    Received {getTimeAgo(booking.createdAt)}
+                </div>
             </div>
         </motion.div>
     );

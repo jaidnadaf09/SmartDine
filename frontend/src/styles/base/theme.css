@@ -4,25 +4,35 @@
    ═══════════════════════════════════════════ */
 
 :root {
+    /* SmartDine Warm Theme Overrides (Customer Portal Parity) */
+    --sd-bg-primary: #f7f3ee;
+    --sd-bg-secondary: #f1ebe5;
+    --sd-card-bg: rgba(255, 255, 255, 0.8);
+    --sd-card-solid: #fffaf6;
+    --sd-border-soft: #eadfd6;
+    --sd-text-primary: #3b2a1a;
+    --sd-text-secondary: #6b4c2f;
+    --sd-text-muted: #9c7a5a;
+
     /* Base surfaces */
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
-    --bg-tertiary: #f1f5f9;
+    --bg-primary: var(--sd-bg-primary);
+    --bg-secondary: var(--sd-bg-secondary);
+    --bg-tertiary: #f8f4ef;
 
     /* Card surfaces */
-    --card-bg: #ffffff;
-    --card-muted: #f8fafc;
+    --card-bg: var(--sd-card-bg);
+    --card-muted: var(--sd-card-solid);
 
     /* Borders */
-    --border-subtle: rgba(0, 0, 0, 0.08);
-    --border-strong: rgba(0, 0, 0, 0.18);
-    --border-default: #cbd5e1;
+    --border-subtle: var(--sd-border-soft);
+    --border-strong: rgba(60, 30, 10, 0.08);
+    --border-default: #dccdbd;
     --border: var(--border-subtle);
 
     /* Text hierarchy */
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    --text-primary: var(--sd-text-primary);
+    --text-secondary: var(--sd-text-secondary);
+    --text-muted: var(--sd-text-muted);
 
     /* Brand/Accent */
     --accent: #2563eb;

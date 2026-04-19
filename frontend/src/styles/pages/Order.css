@@ -382,7 +382,6 @@ body[data-theme="dark"] .menu-search input.search-input-field:focus {
 /* ── Premium Food Card ── */
 .compact-menu-card {
   background: rgba(255, 255, 255, 0.55);
-  /* Removed backdrop-filter to prevent text blurring on some browsers */
   border-radius: 16px;
   border: 1px solid rgba(196, 145, 93, 0.12);
   padding: 14px;
@@ -405,6 +404,30 @@ body[data-theme="dark"] .menu-search input.search-input-field:focus {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+}
+
+/* mobile tap feedback */
+.compact-menu-card:active {
+  transform: scale(0.985);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.compact-menu-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 0, 0, 0.05),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.compact-menu-card:active::after {
+  opacity: 1;
 }
 
 
@@ -521,6 +544,10 @@ body:not([data-theme="dark"]) .expand-btn:hover {
   background: rgba(198, 167, 105, 0.08);
 }
 
+.expand-btn svg {
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .rotate {
   transform: rotate(180deg);
 }
@@ -528,7 +555,6 @@ body:not([data-theme="dark"]) .expand-btn:hover {
 .dish-desc {
   color: var(--text-muted);
   font-size: 13px;
-  /* Refined size */
   margin: 0 0 6px;
   line-height: 1.4;
   overflow: hidden;
@@ -536,7 +562,10 @@ body:not([data-theme="dark"]) .expand-btn:hover {
   -webkit-line-clamp: 1;
   line-clamp: 1;
   -webkit-box-orient: vertical;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: 
+    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.22s ease,
+    margin-bottom 0.3s ease;
   max-height: 1.4em;
   opacity: 0.75;
 }
@@ -544,7 +573,7 @@ body:not([data-theme="dark"]) .expand-btn:hover {
 .dish-desc.expanded {
   -webkit-line-clamp: unset;
   line-clamp: unset;
-  max-height: 200px;
+  max-height: 150px;
   opacity: 1;
   margin-bottom: 12px;
 }

@@ -25,6 +25,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isGuest: boolean;
   loading: boolean;
+  reconnecting: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,12 +35,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reconnecting, setReconnecting] = useState(false);
 
   // Connect socket and authenticate with the stored JWT
   const connectSocket = (token: string) => {
+    socket.auth = { token };
     if (!socket.connected) {
       socket.connect();
     }
+    // Still emit authenticate event to support standard implementations via our custom socket logic
     socket.emit('authenticate', token);
   };
 
@@ -67,12 +71,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         setUser(fetchedUser);
         connectSocket(token); // re-authenticate socket on page refresh
-      } catch (e) {
-        console.error('Auth Hydration failed');
-        localStorage.removeItem('token');
-        setUser(null);
-      } finally {
         setLoading(false);
+      } catch (e) {
+        console.warn('Auth Hydration failed, retrying once to handle backend restarts...');
+        setReconnecting(true);
+        setTimeout(async () => {
+          try {
+            const retryRes = await api.get('/auth/me');
+            const retryData = retryRes.data;
+            const fetchedUser: User = {
+              id: retryData.id,
+              name: retryData.name,
+              email: retryData.email,
+              phone: retryData.phone || undefined,
+              profileImage: retryData.profileImage || null,
+              role: (retryData.role as string).toLowerCase() as UserRole,
+              token: token,
+              walletBalance: retryData.walletBalance || 0,
+            };
+            setUser(fetchedUser);
+            connectSocket(token);
+          } catch (retryErr) {
+            console.error('Auth Hydration retry failed');
+            localStorage.removeItem('token');
+            setUser(null);
+            socket.disconnect();
+          } finally {
+            setReconnecting(false);
+            setLoading(false);
+          }
+        }, 800);
       }
     };
     
@@ -196,8 +224,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, changePassword, isAuthenticated: !!user, isGuest: !user, loading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, changePassword, isAuthenticated: !!user, isGuest: !user, loading, reconnecting }}>
       {children}
+      {reconnecting && (
+        <div style={{ position: 'fixed', bottom: 10, left: 10, padding: '4px 8px', background: 'var(--brand-primary)', color: 'white', fontSize: 12, borderRadius: 4, zIndex: 9999 }}>
+          Reconnecting...
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };

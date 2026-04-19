@@ -30,11 +30,11 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
             next();
         } catch (error: any) {
             console.error("Auth error:", error.message);
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            return res.status(401).json({ message: 'Session expired' });
         }
     } else {
         console.warn("No Authorization header found or doesn't start with Bearer");
-        res.status(401).json({ message: 'Not authorized, no token' });
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
 };
 

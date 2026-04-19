@@ -29,20 +29,25 @@ const MenuCard: React.FC<MenuCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [qtyAnimation, setQtyAnimation] = useState<string | null>(null);
 
-  const toggleExpand = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const toggleExpand = () => {
     setIsExpanded(prev => !prev);
   };
 
   return (
-    <div className={`compact-menu-card ${quantityInCart > 0 ? 'in-cart-glow' : ''} ${isExpanded ? 'expanded' : ''}`}>
+    <div 
+      className={`compact-menu-card ${quantityInCart > 0 ? 'in-cart-glow' : ''} ${isExpanded ? 'expanded' : ''}`}
+      onClick={toggleExpand}
+    >
       
       {/* Header: Name + Expand Arrow */}
       <div className="menu-card-header">
         <h4 className="dish-name">{item.name}</h4>
         <button 
           className="expand-btn" 
-          onClick={toggleExpand}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExpand();
+          }}
           type="button"
           aria-label={isExpanded ? "Collapse" : "Expand"}
         >

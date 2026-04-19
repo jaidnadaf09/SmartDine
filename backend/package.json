@@ -15,7 +15,9 @@
         ],
         "ext": "ts,json",
         "ignore": [
-            "dist"
+            "node_modules",
+            "dist",
+            ".git"
         ],
         "exec": "ts-node src/index.ts"
     },

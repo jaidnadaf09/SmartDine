@@ -80,8 +80,7 @@
 /* ── Premium Booking Card ───────────────────────────── */
 .booking-card {
     position: relative;
-    padding: 20px;
-    border-radius: var(--radius-card, 18px);
+    border-radius: var(--radius-card, 14px);
     background: var(--card-bg);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -90,7 +89,63 @@
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    overflow: visible; /* Prevent dropdown clipping */
+    overflow: hidden; /* Fuses the top line with rounded corners */
+}
+
+/* Internal content wrapper (restores layout after overflow: hidden) */
+.booking-card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Premium Shimmer Effect (Active Cards Only) ── */
+.booking-card--active {
+    position: relative;
+    overflow: hidden;
+}
+
+.booking-card--active::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 120%;
+    height: 100%;
+    background: linear-gradient(
+        110deg,
+        transparent 35%,
+        rgba(255, 255, 255, 0.06) 45%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.06) 55%,
+        transparent 65%
+    );
+    pointer-events: none;
+    z-index: 2;
+    animation: bookingShimmer 5s ease-in-out infinite;
+    will-change: transform;
+}
+
+/* Reduced brightness for dark theme */
+body[data-theme="dark"] .booking-card--active::after {
+    background: linear-gradient(
+        110deg,
+        transparent 35%,
+        rgba(255, 255, 255, 0.04) 45%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.04) 55%,
+        transparent 65%
+    );
+}
+
+@keyframes bookingShimmer {
+    0% { transform: translateX(0); opacity: 0; }
+    15% { opacity: 1; }
+    60% { transform: translateX(140%); opacity: 0; }
+    100% { transform: translateX(140%); opacity: 0; }
 }
 
 .booking-card:hover {
@@ -98,47 +153,35 @@
     box-shadow: var(--shadow-lg);
 }
 
-/* Subtle glass glow for premium feel */
-.booking-card::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background: linear-gradient(
-        120deg,
-        rgba(255, 255, 255, 0.05),
-        rgba(255, 255, 255, 0.02)
-    );
-    z-index: 0;
-}
-
-/* Ensure content stays above the glow layer */
-.booking-card > * {
-    position: relative;
-    z-index: 1;
-}
-
-/* Soft Gradient Top Stripe (preserved) */
-.booking-card::before {
-    content: "";
+/* Fixed Status Line — Fused at top: 0 */
+.booking-card-top-line {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    height: 4px;
-    border-radius: var(--radius-card, 18px) var(--radius-card, 18px) 0 0;
-    background: transparent;
-    transition: opacity 0.3s ease;
-    z-index: 2;
+    width: 100%;
+    height: 3px;
+    margin: 0;
+    padding: 0;
+    z-index: 5;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
 }
 
-.booking-card.status-pending::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.booking-card.status-confirmed::before { background: linear-gradient(90deg, #10b981, #34d399); }
-.booking-card.status-checked_in::before { background: linear-gradient(90deg, #10b981, #3b82f6); }
-.booking-card.status-completed::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-.booking-card.status-cancelled::before { background: linear-gradient(90deg, #ef4444, #f87171); }
-.booking-card.status-no_show::before { background: linear-gradient(90deg, #94a3b8, #64748b); }
+/* Status-specific gradients (Fused with card) */
+.status-pending .booking-card-top-line { 
+    background: linear-gradient(90deg, #f59e0b, #fbbf24); 
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+}
+.status-confirmed .booking-card-top-line,
+.status-checked_in .booking-card-top-line,
+.status-completed .booking-card-top-line { 
+    background: linear-gradient(90deg, #3b82f6, #60a5fa); 
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.35);
+}
+.status-cancelled .booking-card-top-line,
+.status-no_show .booking-card-top-line { 
+    background: linear-gradient(90deg, #ef4444, #f87171); 
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+}
 
 /* Improvement: New booking pulse */
 .booking-card.is-new {
@@ -289,7 +332,7 @@
     border-radius: 12px;
     font-weight: 700;
     font-size: 14px;
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    background: linear-gradient(135deg, #c89b6d, #a97a50);
     color: white;
     border: none;
     cursor: pointer;
@@ -298,12 +341,12 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 12px rgba(160, 110, 60, 0.25);
 }
 
 .primary-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 6px 18px rgba(160, 110, 60, 0.35);
     filter: brightness(1.05);
 }
 
