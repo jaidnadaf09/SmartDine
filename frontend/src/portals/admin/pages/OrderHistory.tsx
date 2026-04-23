@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Icons } from '@components/icons/IconSystem';
 import api, { safeFetch } from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable from '../components/DataTable';
-import Button from '@ui/Button';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const OrderHistory: React.FC = () => {
@@ -11,13 +9,17 @@ const OrderHistory: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const mountedRef = useRef(true);
 
     const fetchOrderHistory = async () => {
+        setLoading(true);
         try {
-            const res = await safeFetch(() => api.get('/admin/orders/history'));
+            const res = await safeFetch(() => api.get(`/admin/orders/history?page=${currentPage}&limit=10&search=${searchTerm}`));
             if (mountedRef.current) {
-                setOrders(Array.isArray(res.data) ? res.data : []);
+                setOrders(res.data.orders || []);
+                setTotalItems(res.data.total || 0);
                 setError(null);
             }
         } catch (err: any) {
@@ -34,7 +36,7 @@ const OrderHistory: React.FC = () => {
         mountedRef.current = true;
         fetchOrderHistory();
         return () => { mountedRef.current = false; };
-    }, []);
+    }, [currentPage, searchTerm]);
 
     const columns = [
         { 
@@ -100,16 +102,8 @@ const OrderHistory: React.FC = () => {
         }
     ];
 
-    const filteredOrders = orders.filter(order => {
-        return (
-            order.id.toString().includes(searchTerm) || 
-            (order.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    });
-
     return (
         <div className="management-page">
-
             {loading ? (
                 <div style={{ padding: '3rem', textAlign: 'center' }}>
                     <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
@@ -124,10 +118,17 @@ const OrderHistory: React.FC = () => {
             ) : (
                 <DataTable 
                     columns={columns} 
-                    data={filteredOrders} 
+                    data={orders} 
                     searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
+                    onSearchChange={(val) => {
+                        setSearchTerm(val);
+                        setCurrentPage(1);
+                    }}
                     searchPlaceholder="Search order ID or customer..."
+                    isServerSide={true}
+                    totalCount={totalItems}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
                 />
             )}
         </div>

@@ -106,25 +106,21 @@ const EditProfilePage: React.FC = () => {
     };
 
     return (
-        <div className="management-page">
-            <div className="page-header">
-                <h1>Edit Account</h1>
-                <p>Keep your information up to date.</p>
-            </div>
-
+        <div className="profile-center-layout">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="premium-card premium-card-centered"
+                className="profile-card"
             >
                 <form onSubmit={handleSubmit}>
                     {/* ── Avatar Edit Section ── */}
                     <div className="edit-avatar-container">
-                        <div
-                            className="edit-avatar-ring"
-                            onClick={() => document.getElementById('imageUpload')?.click()}
-                        >
-                            <div className="edit-avatar-inner">
+                        <div className="profile-avatar-block">
+                            <div
+                                className="profile-avatar-wrapper"
+                                onClick={() => document.getElementById('imageUpload')?.click()}
+                                style={{ cursor: 'pointer' }}
+                            >
                                 <AnimatePresence mode="wait">
                                     {!isRemovingPhoto ? (
                                         <motion.div
@@ -138,7 +134,6 @@ const EditProfilePage: React.FC = () => {
                                                 <img
                                                     src={formData.profileImage}
                                                     alt="Preview"
-                                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 />
                                             ) : (
                                                 <div className="profile-avatar-icon">
@@ -159,27 +154,18 @@ const EditProfilePage: React.FC = () => {
                                     )}
                                 </AnimatePresence>
                             </div>
+
+                            <button
+                                type="button"
+                                className="photo-btn"
+                                onClick={formData.profileImage ? () => setIsConfirmOpen(true) : () => document.getElementById('imageUpload')?.click()}
+                                disabled={loading}
+                            >
+                                {formData.profileImage ? 'Remove Photo' : 'Add Photo'}
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => document.getElementById('imageUpload')?.click()}
-                            className="upload-icon"
-                        >
-                            <Icons.camera size={14} />
-                        </button>
                         <input id="imageUpload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
                     </div>
-
-                    {formData.profileImage && (
-                        <button
-                            type="button"
-                            className="remove-photo-btn"
-                            onClick={() => setIsConfirmOpen(true)}
-                            disabled={loading}
-                        >
-                            Remove Photo
-                        </button>
-                    )}
 
                     <div className="pf-form-fields">
                         <FormField

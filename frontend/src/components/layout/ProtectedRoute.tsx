@@ -1,7 +1,6 @@
 import React, { type ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@context/AuthContext';
-import { useAuthModal } from '@context/AuthModalContext';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -9,8 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { isAuthenticated, user, loading } = useAuth();
-  const { openAuthModal } = useAuthModal();
+  const { isAuthenticated, user, loading, openAuthModal } = useAuth();
   const location = useLocation();
 
   const publicRoutes = ["/", "/order", "/book-table"];

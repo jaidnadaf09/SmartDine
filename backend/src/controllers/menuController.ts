@@ -32,6 +32,13 @@ export const getMenuItems = async (req: Request, res: Response) => {
 // @access  Private/Admin
 export const createMenuItem = async (req: Request, res: Response) => {
     try {
+        const { price } = req.body;
+
+        // Price Validation
+        if (typeof price !== 'number' || !Number.isFinite(price) || price <= 0) {
+            return res.status(400).json({ message: 'Invalid price value. Price must be greater than 0.' });
+        }
+
         const menuItem = await MenuItem.create(req.body);
         res.status(201).json(menuItem);
     } catch (error) {
@@ -48,11 +55,24 @@ export const updateMenuItem = async (req: Request, res: Response) => {
         const item = await MenuItem.findByPk(req.params.id);
 
         if (item) {
-            item.name = req.body.name || item.name;
-            item.category = req.body.category || item.category;
-            item.price = req.body.price || item.price;
-            item.status = req.body.status || item.status;
-            item.description = req.body.description || item.description;
+            const userRole = (req as any).user?.role;
+
+            // Only update restricted fields if the user is an admin
+            if (userRole === 'admin') {
+                if (req.body.price !== undefined) {
+                    const priceValue = req.body.price;
+                    if (typeof priceValue !== 'number' || !Number.isFinite(priceValue) || priceValue <= 0) {
+                        return res.status(400).json({ message: 'Invalid price value. Price must be greater than 0.' });
+                    }
+                    item.price = priceValue;
+                }
+                item.name = req.body.name || item.name;
+                item.category = req.body.category || item.category;
+            }
+
+            // Both Chef and Admin can update status and description
+            if (req.body.status !== undefined) item.status = req.body.status;
+            if (req.body.description !== undefined) item.description = req.body.description;
 
             const updatedItem = await item.save();
             res.json(updatedItem);

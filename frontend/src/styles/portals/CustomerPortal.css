@@ -482,7 +482,7 @@
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
+  padding: 16px 18px; /* Compact padding */
   box-shadow: var(--card-shadow);
   transition: all 0.25s ease;
   animation: fadeUpIn 0.3s ease-out;
@@ -538,7 +538,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 8px; /* Compact spacing */
 }
 
 .booking-info-grid {
@@ -601,9 +601,23 @@
 /* Items list */
 .cp-items-list {
   background: var(--card-bg-alt);
-  border-radius: 10px;
-  padding: 10px 14px;
+  border-radius: 8px;
+  padding: 8px 10px;
   border: 1px solid var(--card-border);
+  max-height: 72px; /* Fixed height for consistency */
+  overflow: hidden;
+  position: relative;
+}
+
+.cp-items-list::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  background: linear-gradient(to bottom, transparent, var(--card-bg-alt));
+  pointer-events: none;
 }
 
 .cp-items-label {
@@ -622,9 +636,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 5px 0;
+  padding: 3px 0; /* Compact padding */
   border-bottom: 1px solid var(--card-border);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
 }
 
 .cp-item-row:last-child {
@@ -640,11 +654,11 @@
 .cp-item-qty {
   color: var(--text-muted);
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 4px;
-  padding: 1px 6px;
+  padding: 1px 5px;
 }
 
 .cp-item-price {
@@ -1000,44 +1014,70 @@
 }
 
 /* Search Box */
+/* Container */
 .cp-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  height: 42px;
+  border-radius: 14px;
   position: relative;
   flex: 1;
   min-width: 220px;
+
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+
+  backdrop-filter: blur(10px);
+  transition: all 0.25s ease;
 }
 
-.cp-search-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.cp-search-input {
-  width: 100%;
-  padding: 10px 38px 10px 40px;
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
+.cp-search-box:hover {
+  border-color: var(--brand-primary);
   background: var(--card-bg);
-  color: var(--text-primary);
-  font-size: 0.88rem;
-  font-family: 'Inter', sans-serif;
-  font-weight: 500;
-  outline: none;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
 }
 
-.cp-search-input::placeholder {
-  color: var(--text-muted);
-  font-weight: 400;
+.cp-search-box:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 1px rgba(198, 167, 105, 0.25);
+}
+
+/* Input (Fully Flattened) */
+.cp-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+
+  width: 100%;
+  height: 100%;
+
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  padding: 0;
+
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 0;
 }
 
 .cp-search-input:focus {
-  border-color: var(--brand-primary);
-  box-shadow: 0 0 0 3px rgba(111, 78, 55, 0.1);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Placeholder */
+.cp-search-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Icon (Adjusted for new box structure) */
+.cp-search-icon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+  pointer-events: none;
 }
 
 .cp-search-clear {
@@ -1141,3 +1181,240 @@
     min-width: 260px;
   }
 }
+
+/* ── View More Button ── */
+.view-more-btn {
+  width: 100%;
+  margin: 16px 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--brand-primary);
+  color: white;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  letter-spacing: 0.05em;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+}
+
+.view-more-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  opacity: 0.95;
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+}
+
+.view-more-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cp-spin {
+  animation: cp-spin 1s linear infinite;
+}
+
+@keyframes cp-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Dark Mode Glass Enhancement for Search */
+[data-theme="dark"] .cp-search-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .cp-search-input {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+/* Fix Autofill background in dark mode */
+[data-theme="dark"] .cp-search-input:-webkit-autofill,
+[data-theme="dark"] .cp-search-input:-webkit-autofill:hover,
+[data-theme="dark"] .cp-search-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Hard override nested inputs in search box for dark mode */
+[data-theme="dark"] .cp-search-box input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.cp-item-instruction {
+  padding: 4px 8px !important;
+  font-size: 0.75rem !important;
+}
+
+.cp-more-items {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ── Change Password UI (Premium Upgrade) ── */
+.cp-password-center {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.cp-password-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 28px;
+  border-radius: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.15),
+    0 0 0 1px rgba(255,255,255,0.02) inset;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease;
+  margin: 0 auto;
+}
+
+.pw-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.pw-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.submit-btn {
+  background: var(--brand-primary);
+  color: white;
+  border: none;
+  height: 44px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(111, 78, 55, 0.25);
+  flex: 2;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: var(--brand-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  height: 44px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: var(--card-bg-alt);
+  border-color: var(--text-dim);
+  color: var(--text-primary);
+}
+
+.pw-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 38px; /* Aligned with FormField input area */
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.pw-toggle-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Password Strength (Premium Upgrade) */
+.password-strength {
+  height: 6px;
+  border-radius: 6px;
+  margin-top: 8px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+
+.strength-bar {
+  height: 100%;
+  transition: all 0.35s ease;
+}
+
+.strength-weak {
+  width: 30%;
+  background: #ef4444;
+}
+
+.strength-medium {
+  width: 60%;
+  background: #f59e0b;
+}
+
+.strength-strong {
+  width: 100%;
+  background: #10b981;
+}
+
+.strength-label {
+  font-size: 0.75rem;
+  margin-top: 4px;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.strength-label.weak { color: #ef4444; }
+.strength-label.medium { color: #f59e0b; }
+.strength-label.strong { color: #10b981; }
+

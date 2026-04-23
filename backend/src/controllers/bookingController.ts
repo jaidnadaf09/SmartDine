@@ -8,7 +8,7 @@ import { isRestaurantOpen, isValidWorkingHour } from '../utils/workingHours';
 import { Notification, RestaurantSetting, Table } from '../models';
 import sequelize from '../config/db';
 import { findBestAvailableTable } from '../services/tableAssignmentService';
-import { emitNotification, emitBookingEvent } from '../socket/socketServer';
+import { emitNotification, emitBookingUpdate } from '../socket/socketServer';
 
 // Helper: validate booking date is within today → today+30 days
 // AND booking date+time is not in the past
@@ -170,10 +170,10 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
                 type: 'booking'
             }, { transaction: t });
 
-            // Push notification to user in real-time
-            emitNotification(user.id, newNotification.toJSON());
-            // Notify admin dashboard of the new booking
-            emitBookingEvent('booking:new', booking.toJSON());
+            // Silent UI refresh for admin + user
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(user.id, { type: 'created' });
 
             return booking;
         });
@@ -208,8 +208,10 @@ export const updateBooking = async (req: AuthRequest, res: Response) => {
                     message: `Your booking #${booking.id} has been updated to: ${booking.status.toUpperCase()}`,
                     type: 'booking'
                 });
-                emitNotification(booking.userId, updateNotification.toJSON());
-                emitBookingEvent('booking:updated', updatedBooking.toJSON());
+                // Silent UI refresh for admin + user
+                emitBookingUpdate(booking);
+                // Audible notification for customer
+                emitNotification(booking.userId, { type: 'confirmed' });
             }
 
             res.json(updatedBooking);
@@ -267,8 +269,10 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
                 message: "Your booking has been cancelled successfully.",
                 type: 'booking'
             });
-            emitNotification(booking.userId, cancelNotif.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh for admin + user
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'cancelled' });
         }
 
         let updatedBalance = undefined;
@@ -361,8 +365,12 @@ export const getUpcomingBooking = async (req: AuthRequest, res: Response) => {
 // @access  Public
 export const getUserBookings = async (req: AuthRequest, res: Response) => {
     try {
-        const bookings = await Booking.findAll({
-            where: { userId: req.params.userId },
+        const userId = req.params.userId;
+        const limit = parseInt(req.query.limit as string) || 5;
+        const offset = parseInt(req.query.offset as string) || 0;
+
+        const { rows, count } = await Booking.findAndCountAll({
+            where: { userId },
             include: [
                 {
                     model: Table,
@@ -370,9 +378,15 @@ export const getUserBookings = async (req: AuthRequest, res: Response) => {
                     attributes: ['id', 'tableNumber', 'capacity'],
                 }
             ],
-            order: [['id', 'DESC']]
+            order: [['createdAt', 'DESC']], // Using createdAt for stable descending order
+            limit,
+            offset
         });
-        res.json(bookings);
+
+        res.json({
+            bookings: rows,
+            total: count
+        });
     } catch (error: any) {
         console.error('Error fetching user bookings:', error);
         res.status(500).json({ message: error.message || 'Server Error' });

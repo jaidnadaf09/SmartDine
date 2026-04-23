@@ -6,6 +6,7 @@ import KitchenOrders from './KitchenOrders';
 
 import ChefFeedback from './ChefFeedback';
 import OrderHistory from './OrderHistory';
+import ChefMenu from './ChefMenu';
 
 const ChefPortal: React.FC = () => {
   return (
@@ -16,6 +17,7 @@ const ChefPortal: React.FC = () => {
         <Route path="/orders" element={<KitchenOrders />} />
         <Route path="/order-history" element={<OrderHistory />} />
         <Route path="/feedback" element={<ChefFeedback />} />
+        <Route path="/menu" element={<ChefMenu />} />
       </Routes>
     </ChefLayout>
   );

@@ -27,6 +27,14 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Force layout recalculation after mount to prevent first-render positioning glitch
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 60);
+    return () => clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -48,12 +56,11 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
   };
 
   return (
-    <div className="custom-time-dropdown-container" ref={containerRef} style={{ position: 'relative', width: '100%', zIndex: isOpen ? 100 : 'auto' }}>
+    <div className="custom-time-dropdown-container" ref={containerRef} style={{ position: 'relative', width: '100%', zIndex: isOpen ? 9999 : 'auto' }}>
       <div
         className="selector-box"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="icon-box"><Icons.clock size={18} className="lucide" color="var(--bt-icon-color)" /></span>
         <span style={{ flex: 1, fontWeight: 600, fontSize: '15px' }}>{formatTo12Hr(value)}</span>
         <Icons.chevronDown size={16} color="var(--bt-icon-color)" />
       </div>

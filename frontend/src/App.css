@@ -502,23 +502,105 @@ body[data-theme='dark'] .header {
   gap: 15px;
 }
 
-.header-actions {
-  display: flex !important;
+.sd-header-right {
+  display: flex;
   align-items: center;
-  gap: 12px;
-  order: 2; /* Ensure it stays right of nav buttons */
-}
-
-.welcome-text {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  gap: 14px;
+  position: relative;
 }
 
 @media (max-width: 768px) {
-  .welcome-text {
+  .welcome-text, .sd-welcome-text {
     display: none; /* Hide name on mobile to save space */
   }
+}
+
+/* ── Mute Toggle Floating Card ── */
+.sd-notification-floating-card {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  width: 240px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: dropdownFade 0.2s ease-out;
+}
+
+.sd-floating-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.8;
+  margin-bottom: 2px;
+}
+
+.sd-setting-description {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.sd-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  width: fit-content;
+}
+
+.sd-toggle input {
+  display: none;
+}
+
+.sd-toggle-slider {
+  width: 40px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+body[data-theme="dark"] .sd-toggle-slider {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sd-toggle-slider::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sd-toggle input:checked + .sd-toggle-slider {
+  background: var(--brand-primary);
+}
+
+.sd-toggle input:checked + .sd-toggle-slider::after {
+  left: 23px;
+}
+
+.sd-toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  opacity: 0.75;
 }
 
 .nav-buttons {

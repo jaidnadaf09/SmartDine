@@ -1,6 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import api from '@utils/api';
-import socket from '@socket/socketClient';
+import { getSocket } from '@socket/socketClient';
+
+export type AuthType = 'login' | 'signup' | null;
+
+export interface AuthModalOptions {
+  redirectTo?: string;
+}
 
 export type UserRole = 'customer' | 'waiter' | 'chef' | 'admin' | null;
 
@@ -25,7 +31,15 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isGuest: boolean;
   loading: boolean;
+  isAuthReady: boolean;
   reconnecting: boolean;
+  // Modal state (merged from AuthModalContext)
+  authType: AuthType;
+  authOptions?: AuthModalOptions;
+  isOpen: boolean;
+  openAuthModal: (type: 'login' | 'signup', options?: AuthModalOptions) => void;
+  closeAuthModal: () => void;
+  setAuthType: (type: AuthType) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,16 +50,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [reconnecting, setReconnecting] = useState(false);
+  const hasHydrated = useRef(false);
 
-  // Connect socket and authenticate with the stored JWT
-  const connectSocket = (token: string) => {
-    socket.auth = { token };
-    if (!socket.connected) {
-      socket.connect();
+  // Modal state (merged from AuthModalContext)
+  const [authType, setAuthType] = useState<AuthType>(null);
+  const [authOptions, setAuthOptions] = useState<AuthModalOptions | undefined>();
+
+  const openAuthModal = useCallback((type: 'login' | 'signup', options?: AuthModalOptions) => {
+    setAuthType(type);
+    if (options) {
+      setAuthOptions(options);
+      if (options.redirectTo) {
+        sessionStorage.setItem('redirectScroll', window.scrollY.toString());
+      }
     }
-    // Still emit authenticate event to support standard implementations via our custom socket logic
-    socket.emit('authenticate', token);
-  };
+  }, []);
+
+  const closeAuthModal = useCallback(() => {
+    setAuthType(null);
+    setTimeout(() => setAuthOptions(undefined), 300);
+  }, []);
+
+  const isOpen = !!authType;
+
+
+
+  const connectSocket = useCallback(() => {
+    getSocket();
+  }, []);
+
+  useEffect(() => {
+    if (user?.token) {
+      connectSocket();
+    }
+  }, [user?.token, connectSocket]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -54,6 +92,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
       return;
     }
+
+    if (hasHydrated.current) return;
+    hasHydrated.current = true;
 
     const hydrateAuth = async () => {
       try {
@@ -70,7 +111,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           walletBalance: data.walletBalance || 0,
         };
         setUser(fetchedUser);
-        connectSocket(token); // re-authenticate socket on page refresh
+        connectSocket(); // re-authenticate socket on page refresh
+        closeAuthModal(); // ensure modal is closed if user is already authenticated
         setLoading(false);
       } catch (e) {
         console.warn('Auth Hydration failed, retrying once to handle backend restarts...');
@@ -90,12 +132,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               walletBalance: retryData.walletBalance || 0,
             };
             setUser(fetchedUser);
-            connectSocket(token);
+            connectSocket();
+            closeAuthModal(); // close modal on successful retry hydration
           } catch (retryErr) {
             console.error('Auth Hydration retry failed');
             localStorage.removeItem('token');
             setUser(null);
-            socket.disconnect();
+            getSocket().disconnect();
           } finally {
             setReconnecting(false);
             setLoading(false);
@@ -141,7 +184,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('smartdine_user', JSON.stringify(loggedInUser));
       localStorage.setItem('token', data.token);
       setUser(loggedInUser);
-      connectSocket(data.token); // connect socket after successful login
+      connectSocket(); // connect socket after successful login
+      closeAuthModal(); // IMPORTANT: close modal BEFORE caller can navigate
 
       return loggedInUser;
     } catch (error: any) {
@@ -187,9 +231,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('smartdine_user', JSON.stringify(newUser));
       if (data.token) {
         localStorage.setItem('token', data.token);
-        connectSocket(data.token); // connect socket after signup
+        connectSocket(); // connect socket after signup
       }
       setUser(newUser);
+      closeAuthModal(); // IMPORTANT: close modal BEFORE caller can navigate
 
       return newUser;
     } catch (error: any) {
@@ -202,7 +247,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     localStorage.removeItem('smartdine_user');
     localStorage.removeItem('token');
-    socket.disconnect(); // clean up socket on logout
+    getSocket().disconnect(); // clean up socket on logout
   };
 
   const updateUser = (newData: Partial<User>) => {
@@ -224,7 +269,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, updateUser, changePassword, isAuthenticated: !!user, isGuest: !user, loading, reconnecting }}>
+    <AuthContext.Provider value={{
+      user, login, signup, logout, updateUser, changePassword,
+      isAuthenticated: !!user, isGuest: !user, loading, isAuthReady: !loading, reconnecting,
+      authType, authOptions, isOpen, openAuthModal, closeAuthModal, setAuthType
+    }}>
       {children}
       {reconnecting && (
         <div style={{ position: 'fixed', bottom: 10, left: 10, padding: '4px 8px', background: 'var(--brand-primary)', color: 'white', fontSize: 12, borderRadius: 4, zIndex: 9999 }}>

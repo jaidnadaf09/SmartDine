@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '@components/icons/IconSystem';
-import api, { safeFetch } from '@utils/api';
+import api from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
-import StatsCard from '../components/StatsCard';
+import KpiCard from '../../../components/ui/KpiCard';
 import Button from '@ui/Button';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
+import { getSocket } from '@socket/socketClient';
 import '@styles/portals/ChefPortal.css';
 import '@styles/portals/AdminDashboard.css';
 
@@ -15,39 +16,69 @@ const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const mountedRef = useRef(true);
+    const isFetchingRef = useRef(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const hasFetchedStatsRef = useRef(false);
 
     const fetchStats = useCallback(async () => {
+        if (isFetchingRef.current) return;
+        
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+
+        isFetchingRef.current = true;
         try {
-            const res = await safeFetch(() => api.get('/admin/stats'));
+            const res = await api.get('/admin/stats', {
+                signal: abortControllerRef.current.signal
+            });
             if (mountedRef.current) {
                 setStats(res.data);
-                setError(null); // Clear any previous error on success
+                setError(null);
             }
         } catch (err: any) {
-            // Only show error if we have no data at all (first load failure)
-            if (mountedRef.current && !stats) {
-                setError(err.response?.data?.message || err.message || 'Failed to load stats.');
+            if (err.name === 'CanceledError' || err.name === 'AbortError') return;
+            if (mountedRef.current) {
+                setStats((prev: any) => {
+                    if (!prev) setError(err.response?.data?.message || err.message || 'Failed to load stats.');
+                    return prev;
+                });
             }
         } finally {
-            if (mountedRef.current) setLoading(false);
+            if (mountedRef.current) {
+                isFetchingRef.current = false;
+                setLoading(false);
+            }
         }
     }, []);
 
     useEffect(() => {
         mountedRef.current = true;
-        fetchStats();
+        if (!hasFetchedStatsRef.current) {
+            hasFetchedStatsRef.current = true;
+            fetchStats();
+        }
         return () => { mountedRef.current = false; };
     }, [fetchStats]);
 
-    const statCards = [
-        { label: 'Total Users',    value: stats?.totalUsers    || 0,  icon: <Icons.user size={24} />, accent: '#f59e0b', trend: { value: 12, isUp: true } },
-        { label: 'Total Bookings', value: stats?.totalBookings || 0,  icon: <Icons.calendar size={24} />, accent: '#3b82f6', trend: { value: 8, isUp: true } },
-        { label: 'Total Orders',   value: stats?.totalOrders   || 0,  icon: <Icons.clipboard size={24} />, accent: '#10b981', trend: { value: 5, isUp: false } },
-        { label: 'No-shows',       value: stats?.noShowBookings || 0, icon: <Icons.user size={24} />, accent: '#ef4444', trend: { value: 8, isUp: false }, isInverse: true },
-        { label: 'Total Revenue',  value: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(stats?.totalRevenue || 0), icon: <Icons.payment size={24} />, accent: '#6366f1', trend: { value: 15, isUp: true } },
-    ];
+    useEffect(() => {
+        const socket = getSocket();
+        
+        const handleSignal = () => {
+            fetchStats();
+        };
 
+        socket.on('notification:new', handleSignal);
+        socket.on('booking:new', handleSignal);
+        socket.on('order:new', handleSignal);
 
+        return () => {
+            socket.off('notification:new', handleSignal);
+            socket.off('booking:new', handleSignal);
+            socket.off('order:new', handleSignal);
+        };
+    }, [fetchStats]);
 
     if (loading) return (
         <div style={{ padding: '2rem', textAlign: 'center' }}>
@@ -58,7 +89,6 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="management-page">
-
             {error ? (
                 <GlobalErrorState 
                     title="Failed to load dashboard metrics" 
@@ -68,15 +98,46 @@ const Dashboard: React.FC = () => {
             ) : (
                 <>
                     {/* Stats Grid */}
-                    <div className="sd-stats-grid">
-                        {statCards.map((card, i) => (
-                            <StatsCard key={i} {...card} accentColor={card.accent} />
-                        ))}
+                    <div className="chef-stats-grid">
+                        <KpiCard
+                            title="TOTAL USERS"
+                            value={stats?.totalUsers || 0}
+                            icon={<Icons.user size={18} />}
+                            color="orange"
+                            trendLabel="registered users"
+                        />
+                        <KpiCard
+                            title="TOTAL BOOKINGS"
+                            value={stats?.totalBookings || 0}
+                            icon={<Icons.calendar size={18} />}
+                            color="blue"
+                            trendLabel="all-time reservations"
+                        />
+                        <KpiCard
+                            title="TOTAL ORDERS"
+                            value={stats?.totalOrders || 0}
+                            icon={<Icons.clipboard size={18} />}
+                            color="green"
+                            trendLabel="placed orders"
+                        />
+                        <KpiCard
+                            title="NO-SHOWS"
+                            value={stats?.noShowBookings || 0}
+                            icon={<Icons.user size={18} />}
+                            color="red"
+                            trendLabel="missed bookings"
+                        />
+                        <KpiCard
+                            title="TOTAL REVENUE"
+                            value={new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(stats?.totalRevenue || 0)}
+                            icon={<Icons.payment size={18} />}
+                            color="indigo"
+                            trendLabel="gross income"
+                        />
                     </div>
 
                     {/* Activity Grid */}
                     <div className="dashboard-recent-grid">
-                        {/* Recent Bookings */}
                         <div className="admin-card dashboard-recent-card">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                 <h3 style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -100,7 +161,6 @@ const Dashboard: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Recent Orders */}
                         <div className="admin-card dashboard-recent-card">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                                 <h3 style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>

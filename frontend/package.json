@@ -10,12 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/react-date-range": "^1.4.10",
     "browser-image-compression": "^2.0.2",
     "crypto": "^1.0.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0",
     "razorpay": "^2.9.6",
     "react": "^19.2.0",
+    "react-date-range": "^2.0.1",
     "react-dom": "^19.2.0",
     "react-easy-crop": "^5.5.7",
     "react-hot-toast": "^2.6.0",

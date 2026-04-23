@@ -1,0 +1,42 @@
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.admin-toolbar-left {
+  flex: 1;
+  max-width: 520px;
+}
+
+.admin-toolbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-toolbar-left {
+    max-width: 100%;
+  }
+
+  .admin-toolbar-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .admin-toolbar-right > * {
+    flex: 1;
+    min-width: 140px;
+  }
+}
+
+

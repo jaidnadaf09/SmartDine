@@ -23,6 +23,7 @@ const AvailabilitySidePanel: React.FC<AvailabilitySidePanelProps> = ({ isOpen, o
   const [tables, setTables] = useState<DailyTableAvailabilityData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [expandedTableId, setExpandedTableId] = useState<number | null>(null);
 
   const displayDate = date ? new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '';
 
@@ -44,6 +45,11 @@ const AvailabilitySidePanel: React.FC<AvailabilitySidePanelProps> = ({ isOpen, o
     };
 
     fetchDailyAvailability();
+  }, [date, isOpen]);
+
+  // Reset expansion when date or openness changes
+  useEffect(() => {
+    setExpandedTableId(null);
   }, [date, isOpen]);
 
   const isToday = (dateStr: string) => {
@@ -90,58 +96,76 @@ const AvailabilitySidePanel: React.FC<AvailabilitySidePanelProps> = ({ isOpen, o
               Showing full schedule for <strong>{displayDate}</strong>
             </div>
             
-            {tables.map(table => (
-              <div key={table.tableId} className="availability-table-card">
-                <div className="availability-table-header">
-                  <strong className="availability-table-title">Table {table.tableNumber}</strong>
-                  <span className="availability-seat-badge">{table.capacity} seats</span>
+            {tables.map(table => {
+              const isExpanded = expandedTableId === table.tableId;
+
+              return (
+                <div 
+                  key={table.tableId} 
+                  className={`availability-table-card ${isExpanded ? 'expanded' : ''}`}
+                  onClick={() => setExpandedTableId(isExpanded ? null : table.tableId)}
+                >
+                  <div className="availability-table-header">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div className="table-icon-wrapper">
+                            <Icons.armchair size={16} className="table-card-icon" />
+                        </div>
+                        <strong className="availability-table-title">Table {table.tableNumber}</strong>
+                    </div>
+                    <span className="availability-seat-badge">
+                        <Icons.users size={12} style={{ marginRight: '6px', opacity: 0.8 }} />
+                        {table.capacity} seats
+                    </span>
+                  </div>
+                  
+                  {isExpanded && (
+                    <div className="availability-slots" onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const currentTime = getCurrentTime24();
+                        const visibleSlots = isToday(date)
+                          ? table.availableSlots.filter(slot => {
+                              // convert "1:00 PM" → "13:00"
+                              const [time, period] = slot.split(' ');
+                              let [h, m] = time.split(':').map(Number);
+
+                              if (period === 'PM' && h !== 12) h += 12;
+                              if (period === 'AM' && h === 12) h = 0;
+
+                              const slot24 =
+                                h.toString().padStart(2, '0') +
+                                ':' +
+                                m.toString().padStart(2, '0');
+
+                              return slot24 >= currentTime;
+                            })
+                          : table.availableSlots;
+
+                        if (visibleSlots.length === 0) {
+                          return <div style={{ fontSize: '13px', opacity: 0.5, gridColumn: 'span 3', textAlign: 'center', padding: '10px' }}>No upcoming slots today</div>;
+                        }
+
+                        return visibleSlots.map(slot => (
+                          <span
+                            key={slot}
+                            className={`slot-chip ${
+                              selectedTableId === table.tableId && parse24To12(selectedTime || '') === slot
+                                ? 'active'
+                                : ''
+                            }`}
+                            onClick={() => {
+                              onSelectTime(slot, table.tableId);
+                              onClose();
+                            }}
+                          >
+                            {slot}
+                          </span>
+                        ));
+                      })()}
+                    </div>
+                  )}
                 </div>
-                
-                <div className="availability-slots">
-                  {(() => {
-                    const currentTime = getCurrentTime24();
-                    const visibleSlots = isToday(date)
-                      ? table.availableSlots.filter(slot => {
-                          // convert "1:00 PM" → "13:00"
-                          const [time, period] = slot.split(' ');
-                          let [h, m] = time.split(':').map(Number);
-
-                          if (period === 'PM' && h !== 12) h += 12;
-                          if (period === 'AM' && h === 12) h = 0;
-
-                          const slot24 =
-                            h.toString().padStart(2, '0') +
-                            ':' +
-                            m.toString().padStart(2, '0');
-
-                          return slot24 >= currentTime;
-                        })
-                      : table.availableSlots;
-
-                    if (visibleSlots.length === 0) {
-                      return <div style={{ fontSize: '13px', opacity: 0.5 }}>No upcoming slots</div>;
-                    }
-
-                    return visibleSlots.map(slot => (
-                      <span
-                        key={slot}
-                        className={`slot-chip ${
-                          selectedTableId === table.tableId && parse24To12(selectedTime || '') === slot
-                            ? 'active'
-                            : ''
-                        }`}
-                        onClick={() => {
-                          onSelectTime(slot, table.tableId);
-                          onClose();
-                        }}
-                      >
-                        {slot}
-                      </span>
-                    ));
-                  })()}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

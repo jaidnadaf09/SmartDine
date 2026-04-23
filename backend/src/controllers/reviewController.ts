@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Review, Order, User } from '../models';
+import { emitNotification } from '../socket/socketServer';
 
 // @desc    Create a review
 // @route   POST /api/reviews
@@ -34,6 +35,9 @@ export const createReview = async (req: AuthRequest, res: Response) => {
             rating,
             comment
         });
+
+        // Notify Admin of new review
+        emitNotification(review.userId!, { type: 'created' });
 
         res.status(201).json(review);
     } catch (error: any) {

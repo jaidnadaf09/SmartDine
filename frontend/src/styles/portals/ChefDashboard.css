@@ -1,0 +1,17 @@
+/* =====================================================
+   ChefDashboard.css — Porter-specific Layout Spacing
+   ===================================================== */
+
+/* 
+   NOTE: Admin-style stat cards are inherited from StatsCard.tsx 
+   and AdminDashboard.css to maintain 1:1 visual parity. 
+*/
+
+.chef-page {
+    /* Portal-specific layout spacing if needed */
+}
+
+/* Ensure consistent spacing below the stats grid in the chef portal */
+.chef-page .sd-stats-grid {
+    margin-bottom: 32px;
+}

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '@components/icons/IconSystem';
 import api from '@utils/api';
 import toast from 'react-hot-toast';
 import { formatDate } from '@utils/dateFormatter';
+import RatingDisplay from '@ui/RatingDisplay';
 
 interface Review {
     id: number;
@@ -19,8 +20,11 @@ interface Review {
 const ChefFeedback: React.FC = () => {
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
+    const hasFetchedRef = useRef(false);
 
     useEffect(() => {
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
         fetchFeedback();
     }, []);
 
@@ -33,21 +37,6 @@ const ChefFeedback: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const renderStars = (rating: number) => {
-        return (
-            <div className="star-rating">
-                {[...Array(5)].map((_, i) => (
-                    <Icons.star
-                        key={i}
-                        size={16}
-                        fill={i < rating ? "var(--brand-primary)" : "none"}
-                        color={i < rating ? "var(--brand-primary)" : "var(--text-dim)"}
-                    />
-                ))}
-            </div>
-        );
     };
 
     if (loading) return <div className="loading-container">Loading feedback...</div>;
@@ -68,7 +57,7 @@ const ChefFeedback: React.FC = () => {
                                     <span style={{ fontWeight: 700, color: 'var(--brand-primary)', fontSize: '0.9rem' }}>Order #{review.orderId}</span>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatDate(review.createdAt)}</div>
                                 </div>
-                                {renderStars(review.rating)}
+                                <RatingDisplay rating={review.rating} size={16} />
                             </div>
                             
                             <div className="review-body" style={{ marginBottom: '15px' }}>

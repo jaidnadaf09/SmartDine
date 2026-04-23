@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Order, Table, Booking, User, Review } from '../models';
+import { Order, Table, Booking, User, Review, MenuItem, Notification } from '../models';
+import { emitOrderUpdate, emitNotification } from '../socket/socketServer';
 
 
 // @desc    Get chef dashboard stats
@@ -12,20 +13,20 @@ export const getChefDashboardStats = async (req: Request, res: Response) => {
         today.setHours(0, 0, 0, 0);
 
         const pendingCount = await Order.count({ where: { status: 'pending' } });
-        const preparingCount = await Order.count({ where: { status: 'preparing' } });
-        const readyCount = await Order.count({ where: { status: 'ready' } });
         const completedTodayCount = await Order.count({
             where: {
                 status: 'completed',
                 updatedAt: { [Op.gte]: today }
             }
         });
+        const completedAllTimeCount = await Order.count({ where: { status: 'completed' } });
+        const availableDishesCount = await MenuItem.count({ where: { status: 'available' } });
 
         res.json({
             pendingOrders: pendingCount,
-            preparingOrders: preparingCount,
-            readyOrders: readyCount,
-            completedToday: completedTodayCount
+            completedToday: completedTodayCount,
+            completedAllTime: completedAllTimeCount,
+            availableDishesToday: availableDishesCount
         });
     } catch (error) {
         console.error("Error fetching chef stats:", error);
@@ -75,6 +76,32 @@ export const updateChefOrderStatus = async (req: Request, res: Response) => {
         order.status = status;
         await order.save();
         console.log("[ORDER COMPLETE]", order.id, "status:", order.status);
+
+        // Notify customer in real-time
+        const statusLabels: Record<string, string> = {
+            pending: 'received and pending',
+            preparing: 'now being prepared 🍳',
+            ready: 'ready for pickup/service! 🎉',
+            completed: 'completed. Enjoy your meal!',
+            cancelled: 'cancelled.',
+        };
+        const statusLabel = statusLabels[status] || status;
+
+        if (order.userId) {
+            const notification = await Notification.create({
+                userId: order.userId,
+                message: `Your order #${order.id} is ${statusLabel}`,
+                type: 'order',
+            });
+            // Map chef-set status to notification type for frontend sound routing
+            const notifType = status === 'cancelled' ? 'cancelled'
+                : status === 'completed' ? 'completed'
+                : 'confirmed';
+            emitNotification(order.userId, { type: notifType });
+        }
+
+        // Silent UI refresh for all stakeholders (Admin, Chef, Customer)
+        emitOrderUpdate(order.toJSON());
 
         // Table Management Logic: When order is completed
         if (status === 'completed') {

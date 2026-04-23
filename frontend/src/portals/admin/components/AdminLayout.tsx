@@ -5,7 +5,6 @@ import { useAuthModal } from '@context/AuthModalContext';
 import '@styles/portals/Portals.css';
 
 import AvatarDropdown from '@shared/AvatarDropdown';
-import NotificationPanel from '@feedback/NotificationPanel';
 import { Icons } from '@components/icons/IconSystem';
 import Button from '@ui/Button';
 
@@ -66,34 +65,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
     return (
         <div className={`admin-dashboard ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-            <aside className="admin-sidebar">
-                <div className="sidebar-header">
-                    <h2 style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <Icons.utensils size={28} /> 
-                        {sidebarOpen && <span style={{ transition: 'opacity 0.3s' }}>SmartDine</span>}
-                    </h2>
-                    <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="toggle-sidebar" 
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                        style={{ 
-                            background: 'var(--bg-secondary)', 
-                            color: 'var(--text-primary)',
-                            border: '1px solid var(--border-color)',
-                            cursor: 'pointer',
-                            padding: '4px',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '32px',
-                            height: '32px'
-                        }}
-                    >
-                        {sidebarOpen ? <Icons.left size={18} /> : <Icons.right size={18} />}
-                    </Button>
-                </div>
+            <aside className={`admin-sidebar ${!sidebarOpen ? 'collapsed' : ''}`}>
+            <div className="sidebar-header">
+                <h2 style={{ color: 'var(--brand-primary)', fontWeight: 800, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Icons.utensils size={28} /> 
+                    <span>SmartDine</span>
+                </h2>
+                <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="toggle-sidebar" 
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                >
+                    <Icons.menu size={22} />
+                </Button>
+            </div>
 
                 <nav className="sidebar-nav">
                     {navItems.map((item) => (
@@ -104,26 +90,27 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                             data-tooltip={item.tooltip}
                         >
                             <span className="nav-icon">{item.icon}</span>
-                            {sidebarOpen && <span className="nav-label">{item.label}</span>}
+                            <span className="nav-label">{item.label}</span>
                         </Link>
                     ))}
                 </nav>
 
                 <div className="sidebar-footer">
-                    <Button 
-                        variant="ghost"
-                        className="nav-link logout-link" 
+                    <div
+                        className="nav-link logout-link"
                         onClick={handleLogout}
                         data-tooltip="Logout"
-                        icon={<Icons.logout size={22} />}
-                        style={{ width: '100%', justifyContent: 'flex-start' }}
+                        style={{ cursor: 'pointer' }}
                     >
-                        {sidebarOpen && <span className="nav-label">Logout</span>}
-                    </Button>
+                        <span className="nav-icon">
+                            <Icons.logout size={22} />
+                        </span>
+                        <span className="nav-label">Logout</span>
+                    </div>
                 </div>
             </aside>
 
-            <main className="admin-main">
+            <main className="admin-main sd-main-content">
                 <header className="sd-header">
                     <div className="sd-header-left">
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -138,7 +125,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     
                     <div className="sd-header-right">
                         <span className="sd-welcome-text">Welcome, Administrator</span>
-                        <NotificationPanel />
                         <AvatarDropdown />
                     </div>
                 </header>

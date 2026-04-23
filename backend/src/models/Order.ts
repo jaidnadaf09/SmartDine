@@ -81,6 +81,11 @@ Order.init(
     {
         sequelize,
         tableName: 'orders',
+        indexes: [
+            { fields: ['userId'] },
+            { fields: ['status'] },
+            { fields: ['createdAt'] }
+        ]
     }
 );
 

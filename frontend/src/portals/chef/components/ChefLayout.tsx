@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '@context/AuthContext';
 import { Icons } from '@components/icons/IconSystem';
 import AvatarDropdown from '@shared/AvatarDropdown';
-import NotificationPanel from '@feedback/NotificationPanel';
 import '../../../App.css';
 import '@styles/portals/ChefPortal.css';
 
@@ -26,10 +25,11 @@ const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
     }, [location.pathname]);
 
     const navLinks = [
-        { path: '/chef/dashboard', label: 'Dashboard', icon: <Icons.dashboard size={20} /> },
-        { path: '/chef/orders', label: 'Kitchen Orders', icon: <Icons.chef size={20} /> },
-        { path: '/chef/order-history', label: 'Order History', icon: <Icons.historyIcon size={20} /> },
-        { path: '/chef/feedback', label: 'Customer Feedback', icon: <Icons.star size={20} /> },
+        { path: '/chef/dashboard', label: 'Dashboard', icon: <Icons.dashboard size={22} /> },
+        { path: '/chef/orders', label: 'Kitchen Orders', icon: <Icons.chef size={22} /> },
+        { path: '/chef/order-history', label: 'Order History', icon: <Icons.historyIcon size={22} /> },
+        { path: '/chef/menu', label: 'Menu', icon: <Icons.utensilsCrossed size={22} /> },
+        { path: '/chef/feedback', label: 'Customer Feedback', icon: <Icons.star size={22} /> },
     ];
 
     const pageMeta: Record<string, { title: string; subtitle: string; breadcrumb: string }> = {
@@ -68,11 +68,11 @@ const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
 
     return (
         <div className={`admin-dashboard ${!isSidebarOpen ? 'sidebar-closed' : ''}`}>
-            <aside className="admin-sidebar chef-sidebar">
+            <aside className={`admin-sidebar chef-sidebar ${!isSidebarOpen ? 'collapsed' : ''}`}>
                 <div className="sidebar-header">
-                    <h2><Icons.utensils size={24} /> SmartDine</h2>
+                    <h2><Icons.utensils size={24} /> <span>SmartDine</span></h2>
                     <button className="toggle-sidebar" onClick={() => setSidebarOpen(!isSidebarOpen)}>
-                        <Icons.menu size={20} />
+                        <Icons.menu size={22} />
                     </button>
                 </div>
                 <nav className="sidebar-nav">
@@ -89,34 +89,37 @@ const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
                     ))}
                 </nav>
                 <div className="sidebar-footer">
-                    <button onClick={logout} className="sidebar-logout">
-                        <Icons.logout size={18} />
+                    <div
+                        className="nav-link logout-link"
+                        onClick={logout}
+                        data-tooltip="Logout"
+                        style={{ cursor: 'pointer' }}
+                    >
+                        <span className="nav-icon">
+                            <Icons.logout size={22} />
+                        </span>
                         <span className="nav-label">Sign Out</span>
-                    </button>
+                    </div>
                 </div>
             </aside>
 
-            <main className="admin-main" style={{ flex: 1, height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <main className="admin-main sd-main-content">
                 <header className="sd-header">
-                  <div className="sd-header-left">
-                    <div className="header-text" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <div className="page-breadcrumb" style={{ fontSize: '0.7rem', opacity: 0.5, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '2px' }}>
-                        {meta.breadcrumb}
-                      </div>
-                      <h1 className="page-title" style={{ fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.02em', margin: 0, color: 'var(--text-primary)' }}>
-                        {meta.title}
-                      </h1>
+                    <div className="sd-header-left">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <h1 style={{ fontSize: '1.15rem', fontWeight: 600, letterSpacing: '-0.025em', color: '#ffffff', margin: 0 }}>
+                                {meta.title}
+                            </h1>
+                            <p style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.85)', margin: 0, maxWidth: '520px', lineHeight: 1.2 }}>
+                                {meta.breadcrumb}
+                            </p>
+                        </div>
                     </div>
-                  </div>
 
-                  <div className="sd-header-right">
-                    <div className="page-subtitle" style={{ fontSize: '0.85rem', opacity: 0.7, marginRight: '16px', display: 'none' /* hidden for space if needed, otherwise keep */ }}>
-                      {meta.subtitle}
+                    <div className="sd-header-right">
+                        <span className="sd-welcome-text">Chef Portal</span>
+                        <AvatarDropdown />
                     </div>
-                    <span className="sd-welcome-text">Chef Portal</span>
-                    <NotificationPanel />
-                    <AvatarDropdown />
-                  </div>
                 </header>
 
                 <div className="admin-content" style={{ padding: '24px 30px', flex: 1, overflowY: 'auto' }}>

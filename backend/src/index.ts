@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { sequelize } from "./models";
 import helmet from "helmet";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
 // @ts-ignore
 import xss from "xss-clean";
@@ -39,8 +40,9 @@ process.on("uncaughtException", (err) => {
 
 const app = express();
 
-// Security Middleware
+// Security & Performance Middleware
 app.use(helmet());
+app.use(compression());
 app.use(xss());
 
 const apiLimiter = rateLimit({

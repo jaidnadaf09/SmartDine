@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Icons } from '@components/icons/IconSystem';
 import api, { safeFetch } from '@utils/api';
 import { formatDate, formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '@ui/Button';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const AdminBookingHistory: React.FC = () => {
@@ -13,6 +11,8 @@ const AdminBookingHistory: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const mountedRef = useRef(true);
     const hasLoadedOnce = useRef(false);
 
@@ -25,6 +25,9 @@ const AdminBookingHistory: React.FC = () => {
         if (!hasLoadedOnce.current) setLoading(true);
         try {
             const params = new URLSearchParams();
+            params.append('page', currentPage.toString());
+            params.append('limit', '10');
+
             if (debouncedSearchTerm) params.append('search', debouncedSearchTerm);
             
             // Map payment filter to status if 'refunded'
@@ -35,12 +38,8 @@ const AdminBookingHistory: React.FC = () => {
             }
 
             // Guard for valid statuses to prevent backend enum crashes
-            // Backend supported statuses: completed, cancelled, pending, confirmed, checked_in
             const allowedStatuses = ['pending', 'confirmed', 'checked_in', 'cancelled', 'completed'];
             if (activeFilters.status && allowedStatuses.includes(activeFilters.status)) {
-                // If payment was refunded, we've already set status=cancelled. 
-                // Only override if the user manually selected a status that isn't 'all'.
-                // If they did both, status filter takes precedence or they combine depending on API.
                 params.set('status', activeFilters.status);
             }
 
@@ -50,8 +49,8 @@ const AdminBookingHistory: React.FC = () => {
 
             const res = await safeFetch(() => api.get(`/admin/bookings/history?${params.toString()}`));
             if (mountedRef.current) {
-                const data = res.data?.data || res.data;
-                setBookings(Array.isArray(data) ? data : []);
+                setBookings(res.data.bookings || []);
+                setTotalItems(res.data.total || 0);
                 setError(null);
                 hasLoadedOnce.current = true;
             }
@@ -69,7 +68,7 @@ const AdminBookingHistory: React.FC = () => {
         mountedRef.current = true;
         fetchBookingHistory();
         return () => { mountedRef.current = false; };
-    }, [debouncedSearchTerm, activeFilters]);
+    }, [debouncedSearchTerm, activeFilters, currentPage]);
 
     const columns = [
         { 
@@ -193,9 +192,16 @@ const AdminBookingHistory: React.FC = () => {
                     onSearchChange={setSearchTerm}
                     filters={filterConfig}
                     activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                    onFilterChange={(key, value) => {
+                        setActiveFilters(prev => ({ ...prev, [key]: value }));
+                        setCurrentPage(1);
+                    }}
                     onClearAll={clearAllFilters}
                     searchPlaceholder="Search customer..."
+                    isServerSide={true}
+                    totalCount={totalItems}
+                    currentPage={currentPage}
+                    onPageChange={setCurrentPage}
                 />
             )}
         </div>

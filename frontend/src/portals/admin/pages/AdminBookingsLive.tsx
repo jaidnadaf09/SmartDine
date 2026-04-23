@@ -17,9 +17,9 @@ import {
     markBookingNoShow,
 } from '../../../services/bookingService';
 import '@styles/portals/AdminBookingsLive.css';
-import socket from '@socket/socketClient';
+import { getSocket } from '@socket/socketClient';
 
-const POLL_INTERVAL = 20_000; // 20 seconds
+const POLL_INTERVAL = 60_000; // 60 seconds backup poll
 
 const REJECT_REASONS = ['Customer cancelled', 'No show', 'Restaurant issue', 'Full capacity'];
 
@@ -54,9 +54,14 @@ const AdminBookingsLive: React.FC = () => {
     const newRequestsRef = useRef<HTMLDivElement>(null);
     const prevPendingCount = useRef(0);
 
+    const isFetchingRef = useRef(false);
+    const hasFetchedRef = useRef(false);
+
     // ── Core data fetch ──────────────────────────────────
     const loadData = useCallback(async (isInitial = false) => {
         if (!isInitial && document.hidden) return; // skip background polls
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
         if (isInitial) setLoading(true);
         try {
             const [active, history, tables] = await Promise.all([
@@ -101,11 +106,14 @@ const AdminBookingsLive: React.FC = () => {
             }
         } finally {
             if (isInitial) setLoading(false);
+            isFetchingRef.current = false;
         }
     }, []);
 
     // Initial load
     useEffect(() => {
+        if (hasFetchedRef.current) return;
+        hasFetchedRef.current = true;
         loadData(true);
     }, [loadData]);
 
@@ -176,6 +184,7 @@ const AdminBookingsLive: React.FC = () => {
             fetchAvailableTables().then(tables => setAvailableTables(tables)).catch(() => {});
         };
 
+        const socket = getSocket();
         socket.on('booking:new', handleBookingNew);
         socket.on('booking:updated', handleBookingUpdated);
         return () => {

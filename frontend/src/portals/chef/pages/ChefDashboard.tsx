@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icons } from '@components/icons/IconSystem';
 import api from '@utils/api';
+import { getSocket } from '@socket/socketClient';
+import KpiCard from '../../../components/ui/KpiCard';
 import '@styles/portals/ChefPortal.css';
-
-
-// Using centralized api instance
+import '@styles/portals/ChefDashboard.css';
+import '@styles/portals/AdminDashboard.css';
 
 interface DashboardStats {
   pendingOrders: number;
-  preparingOrders: number;
-  readyOrders: number;
   completedToday: number;
+  completedAllTime: number;
+  availableDishesToday: number;
 }
 
 const ChefDashboard: React.FC = () => {
@@ -19,42 +20,98 @@ const ChefDashboard: React.FC = () => {
 
   const [stats, setStats] = useState<DashboardStats>({
     pendingOrders: 0,
-    preparingOrders: 0,
-    readyOrders: 0,
     completedToday: 0,
+    completedAllTime: 0,
+    availableDishesToday: 0,
   });
   const [loading, setLoading] = useState(true);
+  const isFetchingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
 
   const fetchStats = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) { setLoading(false); return; }
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
       const res = await api.get('/chef/stats');
       setStats(res.data);
-    } catch {
-      // Stats unavailable — keep zeros
+    } catch (err) {
+      console.error('Failed to fetch chef stats:', err);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 10000);
-    return () => clearInterval(interval);
+    let interval: any;
+
+    const startPolling = () => {
+      stopPolling(); // Safety clear
+      interval = setInterval(fetchStats, 60000); // 60s fallback refresh
+    };
+
+    const stopPolling = () => {
+      if (interval) clearInterval(interval);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        fetchStats();
+        startPolling();
+      }
+    };
+
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      fetchStats();
+    }
+    startPolling();
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [fetchStats]);
 
-  const statCards = [
-    { label: 'Pending', value: stats.pendingOrders, icon: <Icons.clock size={24} />, accent: '#f59e0b', bg: '#fef3c7' },
-    { label: 'Preparing', value: stats.preparingOrders, icon: <Icons.chef size={24} />, accent: '#3b82f6', bg: '#dbeafe' },
-    { label: 'Ready to Serve', value: stats.readyOrders, icon: <Icons.checkCircle size={24} />, accent: '#10b981', bg: '#d1fae5' },
-    { label: 'Completed Today', value: stats.completedToday, icon: <Icons.historyIcon size={24} />, accent: '#6366f1', bg: '#ede9fe' },
-  ];
+  // Real-time: Refresh stats on order events with optimistic updates
+  useEffect(() => {
+    const socket = getSocket();
+    
+    const handleNewOrder = () => {
+        setStats(prev => ({ ...prev, pendingOrders: prev.pendingOrders + 1 }));
+        // Also fetch to stay sync with backend logic (discounts, items etc)
+        fetchStats(); 
+    };
+
+    const handleOrderCompleted = () => {
+        setStats(prev => ({ 
+            ...prev, 
+            pendingOrders: Math.max(0, prev.pendingOrders - 1),
+            completedToday: prev.completedToday + 1,
+            completedAllTime: prev.completedAllTime + 1
+        }));
+        fetchStats();
+    };
+
+    socket.on('order:new', handleNewOrder);
+    socket.on('order:updated', fetchStats);
+    socket.on('order:completed', handleOrderCompleted);
+
+    return () => {
+      socket.off('order:new', handleNewOrder);
+      socket.off('order:updated', fetchStats);
+      socket.off('order:completed', handleOrderCompleted);
+    };
+  }, [fetchStats]);
 
   const quickLinks = [
     { label: 'View Kitchen Orders', path: '/chef/orders', icon: <Icons.chef size={20} /> },
     { label: 'Order History', path: '/chef/order-history', icon: <Icons.historyIcon size={20} /> },
-    { label: 'Inventory (Soon)', path: '#', icon: <Icons.package size={20} /> },
+    { label: 'Menu Management', path: '/chef/menu', icon: <Icons.list size={20} /> },
   ];
 
   if (loading) return (
@@ -65,38 +122,60 @@ const ChefDashboard: React.FC = () => {
   );
 
   return (
-    <div className="chef-page">
-      {/* Stat Cards */}
-      <div className="chef-stats-grid">
-        {statCards.map((card, i) => (
-          <div key={i} className="admin-card" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <div className="chef-stat-icon" style={{ background: card.bg, color: card.accent, padding: '15px', borderRadius: '12px' }}>
-              {card.icon}
-            </div>
-            <div>
-              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>{card.value}</div>
-              <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{card.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className="chef-dashboard-page">
+      <div className="chef-page">
+        {/* Stat Cards */}
+        <div className="chef-stats-grid">
+          <KpiCard
+            title="PENDING"
+            value={stats.pendingOrders}
+            icon={<Icons.clock size={18} />}
+            color="orange"
+            trendLabel="live queue"
+          />
 
-      {/* Quick Actions */}
-      <div className="chef-section">
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '20px', color: 'var(--text-primary)' }}>Quick Management</h2>
-        <div className="chef-quick-grid">
-          {quickLinks.map((ql) => (
-            <button key={ql.path} className="admin-card" style={{ border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 24px', cursor: 'pointer', textAlign: 'left', width: '100%' }} onClick={() => navigate(ql.path)}>
-              <span style={{ color: 'var(--brand-primary)' }}>{ql.icon}</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ql.label}</span>
-              <Icons.right size={16} style={{ marginLeft: 'auto', opacity: 0.5 }} />
-            </button>
-          ))}
+          <KpiCard
+            title="COMPLETED TODAY"
+            value={stats.completedToday}
+            icon={<Icons.checkCircle size={18} />}
+            color="blue"
+            trendLabel="since morning"
+          />
+
+          <KpiCard
+            title="COMPLETED ALL TIME"
+            value={stats.completedAllTime}
+            icon={<Icons.chart size={18} />}
+            color="green"
+            trendLabel="total performance"
+          />
+
+          <KpiCard
+            title="DISHES AVAILABLE"
+            value={stats.availableDishesToday}
+            icon={<Icons.utensilsCrossed size={18} />}
+            color="purple"
+            trendLabel="active menu"
+          />
         </div>
-      </div>
 
-      <div className="chef-info-strip">
-        <span><Icons.utensils size={14} className="inline-icon" /> SmartDine Kitchen System</span>
+        {/* Quick Actions */}
+        <div className="chef-section">
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '20px', color: 'var(--text-primary)' }}>Quick Management</h2>
+          <div className="chef-quick-grid">
+            {quickLinks.map((ql) => (
+              <button key={ql.path} className="admin-card" style={{ border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 24px', cursor: 'pointer', textAlign: 'left', width: '100%' }} onClick={() => navigate(ql.path)}>
+                <span style={{ color: 'var(--brand-primary)' }}>{ql.icon}</span>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ql.label}</span>
+                <Icons.right size={16} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="chef-info-strip">
+          <span><Icons.utensils size={14} className="inline-icon" /> SmartDine Kitchen System</span>
+        </div>
       </div>
     </div>
   );

@@ -89,37 +89,89 @@
   padding: 18px 16px;
   margin-bottom: 16px;
   border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
 .availability-table-card:hover {
   background: rgba(255, 255, 255, 0.9);
   transform: translateY(-2px);
-  border-color: rgba(186, 142, 87, 0.15);
+  border-color: rgba(186, 142, 87, 0.2);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.availability-table-card.expanded {
+  background: #ffffff;
+  border-color: rgba(186, 142, 87, 0.4);
+  box-shadow: 0 12px 32px rgba(186, 142, 87, 0.08);
+  transform: scale(1.01);
 }
 
 .availability-table-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+}
+
+.availability-table-card.expanded .availability-table-header {
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.05);
+}
+
+.table-icon-wrapper {
+  height: 36px;
+  width: 36px;
+  border-radius: 12px;
+  background: rgba(186, 142, 87, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b68d53;
+  transition: all 0.3s ease;
+}
+
+.availability-table-card:hover .table-icon-wrapper {
+  background: rgba(186, 142, 87, 0.15);
+}
+
+.availability-table-card.expanded .table-icon-wrapper {
+  background: #b68d53;
+  color: #ffffff;
+  transform: rotate(-5deg);
+  box-shadow: 0 4px 12px rgba(182, 141, 83, 0.2);
+}
+
+.table-card-icon {
+  transition: transform 0.3s ease;
 }
 
 .availability-table-title {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: #3e2c1c;
+  color: #2d241a;
+  letter-spacing: -0.01em;
 }
 
 .availability-seat-badge {
   font-size: 0.75rem;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
   background: #fdfaf5;
   color: #b68d53;
   border: 1px solid rgba(186, 142, 87, 0.1);
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+body.dark .availability-seat-badge {
+  background: rgba(215, 180, 122, 0.08);
+  color: #e8c98f;
+  border-color: rgba(215, 180, 122, 0.12);
 }
 
 /* Slots Grid */
@@ -128,6 +180,18 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   margin-top: 10px;
+  animation: slideDownFade 0.3s ease forwards;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .slot-chip {

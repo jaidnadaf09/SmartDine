@@ -161,6 +161,68 @@
   padding: 32px 24px 60px;
 }
 
+/* ================================
+   CHEF DASHBOARD – ISOLATED FIX
+   ================================ */
+
+.chef-dashboard-page .chef-page {
+  max-width: none !important;   /* remove width restriction ONLY here */
+  width: 100%;
+  margin: 0;
+  padding: 32px 32px 60px;
+}
+
+.chef-dashboard-page .chef-main {
+  width: 100%;
+}
+
+.chef-dashboard-page .chef-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* always 4 equal cards */
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.chef-dashboard-page .chef-stat-card {
+  width: 100%;
+  min-width: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(12px);
+}
+
+.chef-dashboard-page .stat-label {
+  color: var(--text-muted);
+}
+
+.chef-dashboard-page .stat-value {
+  color: var(--text-primary);
+}
+
+.chef-dashboard-page .stat-icon {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Dark mode specific refinement for Chef Dashboard */
+body[data-theme="dark"] .chef-dashboard-page .chef-stat-card {
+  background: rgba(30, 30, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 1200px) {
+  .chef-dashboard-page .chef-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .chef-dashboard-page .chef-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .chef-welcome-banner {
   display: flex;
   align-items: center;
@@ -211,7 +273,7 @@
   margin-bottom: 32px;
 }
 
-.chef-stat-card {
+:not(.chef-dashboard-page) .chef-stat-card {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.65), rgba(255, 255, 255, 0.45));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -224,7 +286,7 @@
   transition: 0.25s ease;
 }
 
-.chef-stat-card:hover {
+:not(.chef-dashboard-page) .chef-stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
@@ -1634,4 +1696,75 @@ body.dark .new-order-glow {
   .order-info-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Pagination ── */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  border-radius: 12px;
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--brand-primary);
+  color: white;
+  border-color: var(--brand-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 90, 43, 0.2);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--bg-tertiary);
+}
+
+.pagination-page-indicator {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 100px;
+  text-align: center;
+}
+
+/* ── Order History Refinements ── */
+.history-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.history-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12) !important;
 }

@@ -13,6 +13,7 @@ interface SelectProps {
     className?: string;
     placeholder?: string;
     style?: React.CSSProperties;
+    disabled?: boolean;
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -21,6 +22,7 @@ const Select: React.FC<SelectProps> = ({
     options,
     className = '',
     placeholder = 'Select an option',
+    disabled = false
 }) => {
     return (
         <ModernSelect
@@ -29,6 +31,7 @@ const Select: React.FC<SelectProps> = ({
             onChange={onChange}
             placeholder={placeholder}
             className={className}
+            disabled={disabled}
         />
     );
 };

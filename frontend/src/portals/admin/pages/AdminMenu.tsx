@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { smartToast } from '@utils/toastConfig';
 import api from '@utils/api';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
@@ -8,6 +8,7 @@ import GlobalErrorState from '@components/ui/GlobalErrorState';
 import FormField from '../components/FormField';
 import Modal from '@ui/Modal';
 import Select from '@ui/Select';
+import '@styles/portals/AdminMenu.css';
 
 interface MenuItem {
     id: number;
@@ -29,6 +30,18 @@ const AdminMenu: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<MenuItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const mountedRef = useRef(true);
+    const isFetchingRef = useRef(false);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => { mountedRef.current = false; };
+    }, []);
+
     const [newItem, setNewItem] = useState<{
         name: string;
         category: string;
@@ -43,17 +56,40 @@ const AdminMenu: React.FC = () => {
         status: 'available'
     });
 
+    // Auto-resize description textarea (after state initialization)
+    useEffect(() => {
+        if (isModalOpen && descriptionRef.current) {
+            const textarea = descriptionRef.current;
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        }
+    }, [isModalOpen, newItem.description]);
+
     const fetchMenu = async () => {
+        if (isFetchingRef.current) return;
+        
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        abortControllerRef.current = new AbortController();
+
         setLoading(true);
+        isFetchingRef.current = true;
         try {
-            const res = await api.get('/menu');
-            setMenuItems(res.data);
-            setError(null);
+            const res = await api.get('/menu', { signal: abortControllerRef.current.signal });
+            if (mountedRef.current) {
+                setMenuItems(res.data);
+                setError(null);
+            }
         } catch (err: any) {
+            if (err.name === 'CanceledError' || err.name === 'AbortError') return;
             console.error('Failed to fetch menu:', err);
-            setError('Failed to load menu items.');
+            if (mountedRef.current) setError('Failed to load menu items.');
         } finally {
-            setLoading(false);
+            if (mountedRef.current) {
+                isFetchingRef.current = false;
+                setLoading(false);
+            }
         }
     };
 
@@ -75,9 +111,44 @@ const AdminMenu: React.FC = () => {
         }
     };
 
+    const openDeleteModal = (item: MenuItem) => {
+        setDeleteTarget(item);
+    };
+
+    const handleDeleteDish = async () => {
+        if (!deleteTarget) return;
+
+        setIsDeleting(true);
+        try {
+            await api.delete(`/menu/${deleteTarget.id}`);
+            
+            setMenuItems(prev => prev.filter(m => m.id !== deleteTarget.id));
+            smartToast.success('Dish deleted successfully');
+            setDeleteTarget(null);
+        } catch (err: any) {
+            console.error('Failed to delete dish:', err);
+            smartToast.error('Failed to delete dish');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     const handleSaveDish = async () => {
         if (!newItem.name || !newItem.category || !newItem.price) {
             smartToast.error('Please fill in all required fields');
+            return;
+        }
+
+        const priceValue = Number(newItem.price);
+
+        /* STRICT VALIDATION */
+        if (!Number.isFinite(priceValue) || priceValue <= 0) {
+            smartToast.error('Price must be greater than 0');
+            return;
+        }
+
+        if (priceValue > 10000) {
+            smartToast.error('Price exceeds allowed limit (Max: ₹10,000)');
             return;
         }
 
@@ -85,7 +156,7 @@ const AdminMenu: React.FC = () => {
         try {
             const payload = {
                 ...newItem,
-                price: parseFloat(newItem.price.toString())
+                price: priceValue
             };
 
             if (editingItem) {
@@ -99,6 +170,7 @@ const AdminMenu: React.FC = () => {
             }
             setIsModalOpen(false);
             resetForm();
+            fetchMenu();
         } catch (err: any) {
             console.error('Failed to save dish:', err);
             smartToast.error(err.response?.data?.message || 'Failed to save dish');
@@ -226,14 +298,27 @@ const AdminMenu: React.FC = () => {
             header: 'Actions',
             key: 'actions',
             render: (item: MenuItem) => (
-                <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    icon={<Icons.edit size={14} />}
-                    onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
-                >
-                    Edit
-                </Button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        icon={<Icons.edit size={14} />}
+                        onClick={(e) => { e.stopPropagation(); openEditModal(item); }}
+                    >
+                        Edit
+                    </Button>
+                    <Button 
+                        variant="danger" 
+                        size="sm" 
+                        icon={<Icons.trash size={14} />} 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteModal(item);
+                        }}
+                    >
+                        Delete
+                    </Button>
+                </div>
             )
         }
     ];
@@ -326,9 +411,9 @@ const AdminMenu: React.FC = () => {
                         onChange={(e: any) => setNewItem({ ...newItem, name: e.target.value })} 
                     />
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                        <div className="form-group">
-                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Category</label>
+                    <div className="sd-dish-row">
+                        <div className="sd-dish-form-group">
+                            <label className="sd-dish-label">Category</label>
                             <Select 
                                 value={newItem.category}
                                 onChange={(value: string) => setNewItem({ ...newItem, category: value })}
@@ -342,37 +427,45 @@ const AdminMenu: React.FC = () => {
                                 placeholder="Select Category"
                             />
                         </div>
-                        <FormField 
-                            label="Price (₹)" 
-                            type="number" 
-                            placeholder="0.00" 
-                            value={newItem.price} 
-                            onChange={(e: any) => setNewItem({ ...newItem, price: e.target.value })} 
-                        />
+                        <div className="sd-dish-form-group">
+                            <label className="sd-dish-label">Price (₹)</label>
+                            <FormField 
+                                label="" 
+                                type="number" 
+                                min="1"
+                                step="0.01"
+                                placeholder="0.00" 
+                                value={newItem.price} 
+                                onChange={(e: any) => {
+                                    const value = e.target.value;
+                                    /* allow only valid decimal pattern */
+                                    if (/^\d*\.?\d*$/.test(value)) {
+                                        setNewItem({ ...newItem, price: value });
+                                    }
+                                }} 
+                                style={{ marginBottom: 0 }}
+                            />
+                        </div>
                     </div>
 
-                    <div className="form-group">
-                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Description</label>
+                    <div className="sd-dish-form-group">
+                        <label className="sd-dish-label">Description</label>
                         <textarea 
+                            ref={descriptionRef}
+                            className="sd-dish-textarea"
                             value={newItem.description}
-                            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                            placeholder="Describe the dish flavors, ingredients..."
-                            style={{ 
-                                width: '100%', 
-                                padding: '14px', 
-                                borderRadius: '14px', 
-                                background: 'var(--bg-secondary)', 
-                                border: '1px solid var(--border-color)', 
-                                minHeight: '100px',
-                                resize: 'none',
-                                color: 'var(--text-primary)',
-                                fontSize: '0.95rem',
-                                outline: 'none'
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setNewItem(prev => ({ ...prev, description: value }));
+                                e.target.style.height = 'auto';
+                                e.target.style.height = `${e.target.scrollHeight}px`;
                             }}
+                            placeholder="Describe the dish flavors, ingredients..."
+                            rows={2}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
+                    <div className="sd-dish-visibility" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border-color)' }}>
                         <div>
                             <span style={{ fontWeight: 700, display: 'block', color: 'var(--text-primary)' }}>Visible to customers</span>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Dish will appear on current menu</span>
@@ -414,6 +507,34 @@ const AdminMenu: React.FC = () => {
                         style={{ padding: '12px 24px' }}
                     >
                         {editingItem ? 'Update Dish' : 'Add Dish'}
+                    </Button>
+                </div>
+            </Modal>
+
+            {/* ── Delete Confirmation Modal ─────────────────── */}
+            <Modal
+                isOpen={!!deleteTarget}
+                onClose={() => setDeleteTarget(null)}
+                title="Delete Dish"
+                size="sm"
+            >
+                <div style={{ marginBottom: '24px', lineHeight: '1.6', color: 'var(--text-primary)' }}>
+                    Are you sure you want to delete <strong>{deleteTarget?.name}</strong>?
+                    <br />
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                        This action cannot be undone and will remove it from the menu.
+                    </span>
+                </div>
+
+                <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
+                    <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+                    <Button 
+                        variant="danger" 
+                        onClick={handleDeleteDish}
+                        loading={isDeleting}
+                        style={{ padding: '10px 24px' }}
+                    >
+                        Delete Dish
                     </Button>
                 </div>
             </Modal>

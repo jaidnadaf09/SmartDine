@@ -19,6 +19,12 @@ const sequelize = new Sequelize(databaseUrl, {
             ? { require: true, rejectUnauthorized: false }
             : false,
     },
+    pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000
+    }
 });
 
 export const connectDB = async () => {

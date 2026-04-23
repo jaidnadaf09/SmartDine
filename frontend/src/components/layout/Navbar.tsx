@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@context/AuthContext';
-import { useAuthModal } from '@context/AuthModalContext';
 import AvatarDropdown from '@shared/AvatarDropdown';
 import NotificationPanel from '@feedback/NotificationPanel';
 import { Icons } from '../icons/IconSystem';
@@ -38,8 +37,7 @@ const iconMap: Record<string, React.ReactNode> = {
 const Navbar: React.FC<NavbarProps> = ({ customLinks, roleTag }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
-  const { openAuthModal } = useAuthModal();
+  const { isAuthenticated, user, openAuthModal } = useAuth();
 
   const isAdmin = user?.role?.toLowerCase() === 'admin';
   const isChef  = user?.role?.toLowerCase() === 'chef';

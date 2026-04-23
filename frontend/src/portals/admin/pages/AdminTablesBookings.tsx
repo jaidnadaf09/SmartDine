@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import api, { safeFetch } from '@utils/api';
@@ -30,6 +30,7 @@ const AdminTablesBookings: React.FC = () => {
     const [editingTable, setEditingTable] = useState<any>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [newTable, setNewTable] = useState({ tableNumber: '', capacity: 2, status: 'available' });
+    const hasFetchedTablesRef = useRef(false);
 
     const fetchTables = useCallback(async () => {
         try {
@@ -45,7 +46,10 @@ const AdminTablesBookings: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        fetchTables();
+        if (!hasFetchedTablesRef.current) {
+            hasFetchedTablesRef.current = true;
+            fetchTables();
+        }
     }, [fetchTables]);
 
     const handleSaveTable = async () => {
@@ -241,8 +245,8 @@ const AdminTablesBookings: React.FC = () => {
                     />
 
                     {editingTable && (
-                        <div className="form-group">
-                            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                        <div className="sd-table-form-group">
+                            <label className="sd-table-label">
                                 Table Status
                             </label>
                             <Select

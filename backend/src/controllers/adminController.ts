@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { Op } from 'sequelize';
 import { User, Order, Table, Booking, Notification } from '../models';
 import { getAllReviews } from './reviewController';
-import { emitNotification, emitBookingEvent } from '../socket/socketServer';
+import { emitNotification, emitBookingUpdate, emitOrderUpdate } from '../socket/socketServer';
 
 export { getAllReviews };
 
@@ -138,8 +138,10 @@ export const assignTable = async (req: Request, res: Response) => {
                 message: `Table ${table.tableNumber} has been assigned to your booking #${booking.id} for ${new Date(booking.date).toLocaleDateString()} at ${booking.time}`,
                 type: 'booking'
             });
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'confirmed' });
         }
 
         res.json({ message: 'Table assigned successfully', booking });
@@ -173,8 +175,10 @@ export const checkInBooking = async (req: Request, res: Response) => {
                 message: `You have been checked in at Table ${booking.tableNumber}`,
                 type: 'booking'
             });
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'confirmed' });
         }
 
         res.json({ message: 'Customer checked in successfully', booking });
@@ -226,7 +230,11 @@ export const getBookingsHistory = async (req: Request, res: Response) => {
             }
         }
 
-        const bookings = await Booking.findAll({
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await Booking.findAndCountAll({
             where: whereClause,
             include: [
                 {
@@ -235,9 +243,16 @@ export const getBookingsHistory = async (req: Request, res: Response) => {
                     attributes: ['id', 'tableNumber', 'capacity']
                 }
             ],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
-        res.json(bookings);
+        res.json({
+            bookings: rows,
+            total: count,
+            page,
+            totalPages: Math.ceil(count / limit)
+        });
     } catch (error) {
         console.error("Error fetching booking history:", error);
         res.status(500).json({ message: 'Server Error' });
@@ -263,8 +278,14 @@ export const updateBookingStatus = async (req: Request, res: Response) => {
                 message: `Your booking #${booking.id} status is now: ${status.toUpperCase()}`,
                 type: 'booking'
             });
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Map status to sound type: cancelled statuses play error sound
+            const notifType = (status === 'cancelled' || status === 'no_show') ? 'cancelled'
+                : status === 'completed' ? 'completed'
+                : 'confirmed';
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: notifType });
         }
 
         res.json(booking);
@@ -308,8 +329,10 @@ export const cancelBooking = async (req: Request, res: Response) => {
                 message: `Your booking #${booking.id} has been cancelled. Reason: ${booking.cancelReason}`,
                 type: 'booking'
             });
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'cancelled' });
         }
 
         res.json({ message: "Booking cancelled successfully", booking });
@@ -352,8 +375,10 @@ export const completeBooking = async (req: Request, res: Response) => {
                 message: `Your booking #${booking.id} is complete. We hope you had a great meal!`,
                 type: 'booking'
             });
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'completed' });
         }
 
         res.json({ message: "Booking completed and table released successfully", booking });
@@ -395,8 +420,10 @@ export const markNoShow = async (req: Request, res: Response) => {
                 message: `Your booking #${booking.id} was marked as a no-show.`,
                 type: 'booking'
             });
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'no_show' });
         }
 
         res.json({ message: "Booking marked as no-show and table released", booking });
@@ -429,8 +456,10 @@ export const unassignTable = async (req: Request, res: Response) => {
                 message: `Table has been unassigned from your booking #${booking.id}`,
                 type: 'booking'
             });
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'confirmed' });
         }
 
         res.json({ message: "Table unassigned successfully", booking });
@@ -484,8 +513,10 @@ export const updateBookingTable = async (req: Request, res: Response) => {
                 type: 'booking'
             });
 
-            emitNotification(booking.userId, notification.toJSON());
-            emitBookingEvent('booking:updated', booking.toJSON());
+            // Silent UI refresh
+            emitBookingUpdate(booking);
+            // Audible notification for customer
+            emitNotification(booking.userId, { type: 'confirmed' });
         }
 
         res.json({ message: 'Table updated successfully', booking });
@@ -647,18 +678,40 @@ export const getOrders = async (req: Request, res: Response) => {
 export const getOrdersHistory = async (req: Request, res: Response) => {
     console.log("Admin: Fetching order history");
     try {
-        const orders = await Order.findAll({
-            where: {
-                status: { [Op.in]: ['completed', 'cancelled'] }
-            },
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search as string;
+
+        const whereClause: any = {
+            status: { [Op.in]: ['completed', 'cancelled'] }
+        };
+
+        if (search) {
+            whereClause[Op.or] = [
+                { id: { [Op.like]: `%${search}%` } },
+                { '$customer.name$': { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows } = await Order.findAndCountAll({
+            where: whereClause,
             include: [{
                 model: User,
                 as: 'customer',
                 attributes: ['name', 'email']
             }],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+            subQuery: false
         });
-        res.json(orders);
+        res.json({
+            orders: rows,
+            total: count,
+            page,
+            totalPages: Math.ceil(count / limit)
+        });
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }
@@ -715,7 +768,8 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
             }
         }
 
-        res.json(order);
+        // Silent UI refresh for all stakeholders
+        emitOrderUpdate(order.toJSON());
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }

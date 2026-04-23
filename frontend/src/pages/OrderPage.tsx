@@ -69,6 +69,14 @@ const OrderPage: React.FC = () => {
   const [cartBump, setCartBump] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const prevCartLength = useRef(0);
+  const mountedRef = useRef(true);
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -110,14 +118,29 @@ const OrderPage: React.FC = () => {
 
   useEffect(() => {
     const fetchMenuItems = async () => {
+      if (isFetchingRef.current) return;
+      
+      if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+
+      isFetchingRef.current = true;
       try {
-        const response = await api.get('/menu');
-        setMenuItems(response.data);
+        const response = await api.get('/menu', { signal: abortControllerRef.current.signal });
+        if (mountedRef.current) {
+          setMenuItems(response.data);
+          setError(null);
+        }
       } catch (err: any) {
+        if (err.name === 'CanceledError' || err.name === 'AbortError') return;
         console.error('Error fetching menu:', err);
-        setError('Failed to load menu. Please try again later.');
+        if (mountedRef.current) setError('Failed to load menu. Please try again later.');
       } finally {
-        setLoading(false);
+        if (mountedRef.current) {
+          isFetchingRef.current = false;
+          setLoading(false);
+        }
       }
     };
 
@@ -127,7 +150,7 @@ const OrderPage: React.FC = () => {
           const res = await api.get(`/bookings/user/${user.id}`);
           const bookings = res.data;
           const active = bookings.find((b: any) => b.status === 'confirmed' && b.tableNumber);
-          if (active) {
+          if (mountedRef.current && active) {
             setAssignedTable(active.tableNumber);
           }
         } catch (err) {
@@ -138,7 +161,7 @@ const OrderPage: React.FC = () => {
 
     fetchMenuItems();
     fetchUserBooking();
-  }, [user]);
+  }, [user, isGuest]);
 
   const triggerCartPulse = useCallback(() => {
     setCartPulse(false);

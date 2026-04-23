@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Icons } from '@components/icons/IconSystem';
 import { AlertTriangle } from 'lucide-react';
@@ -16,6 +16,7 @@ const Users: React.FC = () => {
     const [userToDelete, setUserToDelete] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+    const hasFetchedUsersRef = useRef(false);
     const currentUser = JSON.parse(localStorage.getItem('smartdine_user') || '{}');
 
     const fetchUsers = async () => {
@@ -33,7 +34,10 @@ const Users: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchUsers();
+        if (!hasFetchedUsersRef.current) {
+            hasFetchedUsersRef.current = true;
+            fetchUsers();
+        }
     }, []);
 
     const deleteUser = (userId: number) => {

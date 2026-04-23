@@ -3,7 +3,7 @@ import { Order, User, Table, Booking, WalletTransaction, sequelize, Notification
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Op } from 'sequelize';
 import { isRestaurantOpen } from '../utils/workingHours';
-import { emitNotification, emitOrderStatusUpdate, emitNewOrder, getIO } from '../socket/socketServer';
+import { emitNotification, emitOrderUpdate, getIO } from '../socket/socketServer';
 
 // @desc    Get all orders
 // @route   GET /api/orders
@@ -12,37 +12,69 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
     try {
         const includeAll = req.query.includeAll === 'true';
         const includeHistory = req.query.includeHistory === 'true';
-        let whereClause = {};
+        const page = parseInt(req.query.page as string) || 1;
+        const limit = parseInt(req.query.limit as string) || 6;
+        const offset = (page - 1) * limit;
+        const search = req.query.search as string;
+        const status = req.query.status as string;
+        const dateRange = req.query.dateRange as string;
+
+        let whereClause: any = {};
 
         if (includeAll) {
-            // Return all orders (no filter)
             whereClause = {};
         } else if (includeHistory) {
-            // Return only historical orders (Chef History)
-            whereClause = {
-                status: {
-                    [Op.in]: ['completed', 'cancelled']
-                }
-            };
+            whereClause.status = { [Op.in]: ['completed', 'cancelled'] };
         } else {
-            // Return only active orders (Default/Chef Kitchen)
-            whereClause = {
-                status: {
-                    [Op.notIn]: ['completed', 'cancelled']
-                }
-            };
+            whereClause.status = { [Op.notIn]: ['completed', 'cancelled'] };
         }
 
-        const orders = await Order.findAll({
+        // Apply Status Filter
+        if (status && status !== 'all') {
+            whereClause.status = status;
+        }
+
+        // Apply Search
+        if (search) {
+            whereClause[Op.or] = [
+                { id: { [Op.like]: `%${search}%` } },
+                { '$customer.name$': { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        // Apply Date Filtering
+        if (dateRange && dateRange !== 'all') {
+            const now = new Date();
+            let startDate = new Date();
+            if (dateRange === 'today') {
+                startDate.setHours(0, 0, 0, 0);
+            } else if (dateRange === 'week') {
+                startDate.setDate(now.getDate() - 7);
+            } else if (dateRange === 'month') {
+                startDate.setMonth(now.getMonth() - 1);
+            }
+            whereClause.createdAt = { [Op.gte]: startDate };
+        }
+
+        const { count, rows } = await Order.findAndCountAll({
             where: whereClause,
             include: [{
                 model: User,
                 as: 'customer',
                 attributes: ['id', 'name']
             }],
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset,
+            subQuery: false // Important for limit/offset with includes
         });
-        res.json(orders);
+
+        res.json({
+            orders: rows,
+            total: count,
+            page,
+            totalPages: Math.ceil(count / limit)
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server Error' });
@@ -118,17 +150,17 @@ export const createOrder = async (req: Request, res: Response) => {
 
         const orderData = newOrder.toJSON();
         
-        // Notify chef room immediately
-        emitNewOrder(orderData);
+        // Silent UI refresh for admin + chef + customer
+        emitOrderUpdate(newOrder.toJSON());
 
-        // Create notification for customer
-        if (userId) {
-            const placementNotif = await Notification.create({
-                userId,
+        // Audible notification for customer
+        if (newOrder.userId) {
+            await Notification.create({
+                userId: newOrder.userId,
                 message: "Your order has been placed successfully!",
                 type: 'order'
             });
-            emitNotification(userId, placementNotif.toJSON());
+            emitNotification(newOrder.userId, { type: 'created' });
         }
 
         res.status(201).json(newOrder);
@@ -155,15 +187,30 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
         // Create notification for customer
         if (order.userId) {
-            const statusNotification = await Notification.create({
+            await Notification.create({
                 userId: order.userId,
                 message: `Your order #${order.id} status is now: ${status.toUpperCase()}`,
                 type: 'order'
             });
-            emitNotification(order.userId, statusNotification.toJSON());
+            // Map order status to notification type for sound selection
+            const typeMap: any = {
+                pending: "created",
+                confirmed: "confirmed",
+                preparing: "confirmed",
+                ready: "confirmed",
+                completed: "completed",
+                cancelled: "cancelled",
+                rejected: "cancelled"
+            };
+
+            // Audible notification for customer
+            emitNotification(order.userId, { 
+                type: typeMap[status] || "confirmed" 
+            });
         }
-        // Push order update to stakeholders
-        emitOrderStatusUpdate(order.userId ?? null, updatedOrder.toJSON());
+
+        // Silent UI refresh for all stakeholders
+        emitOrderUpdate(updatedOrder.toJSON());
 
         // Specific event for completion
         if (status === 'completed' && order.userId) {
@@ -239,22 +286,26 @@ export const getUserOrders = async (req: Request, res: Response) => {
 // @access  Private
 export const getMyOrders = async (req: AuthRequest, res: Response) => {
     try {
-        if (!req.user || !req.user.id) {
+        if (!req.user?.id) {
             console.warn("getMyOrders: No req.user or ID found in request");
             return res.status(401).json({ message: 'Not authorized' });
         }
-        
-        console.log(`Fetching orders for user ID: ${req.user.id} (${typeof req.user.id})`);
-        
-        const userId = typeof req.user.id === 'string' ? parseInt(req.user.id) : req.user.id;
-        
-        const orders = await Order.findAll({
-            where: { userId },
-            order: [['createdAt', 'DESC']]
+
+        const limit = parseInt(req.query.limit as string) || 5;
+        const offset = parseInt(req.query.offset as string) || 0;
+
+        const { rows, count } = await Order.findAndCountAll({
+            where: { userId: req.user.id },
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
-        
-        console.log(`Found ${orders.length} orders for user ${req.user.id}`);
-        res.json(orders);
+
+        res.json({
+            orders: rows,
+            total: count
+        });
+
     } catch (error: any) {
         console.error('Error fetching my orders:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
@@ -284,12 +335,17 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
         await order.save();
 
         // Create notification for cancellation
-        const cancelNotification = await Notification.create({
+        await Notification.create({
             userId,
             message: `Order #${order.id} has been cancelled and refunded to your wallet.`,
             type: 'order'
         });
-        emitNotification(userId as number, cancelNotification.toJSON());
+        
+        // Silent UI refresh first
+        emitOrderUpdate(order.toJSON());
+        
+        // Audible notification for customer
+        emitNotification(userId as number, { type: 'cancelled' });
 
         const refundAmount = Number(order.totalAmount || 0);
         let currentBalance = 0;

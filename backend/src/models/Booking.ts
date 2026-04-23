@@ -131,6 +131,11 @@ Booking.init(
     {
         sequelize,
         tableName: 'bookings',
+        indexes: [
+            { fields: ['userId'] },
+            { fields: ['status'] },
+            { fields: ['date'] }
+        ]
     }
 );
 

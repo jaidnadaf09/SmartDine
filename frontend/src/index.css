@@ -34,7 +34,7 @@
   /* Standardized Layering */
   --z-dropdown: 9999;
   --z-modal: 10000;
-  --z-toast: 11000;
+  --z-toast: 999999;
   
   /* Border Radius */
   --radius-sm: 8px;
@@ -129,7 +129,7 @@ body {
 
 /* Global Toast Layering */
 .react-hot-toast {
-  z-index: 9999 !important;
+  z-index: 999999 !important;
 }
 
 /* Premium Dropdown UI — Improved Spacing & Positioning */
@@ -320,7 +320,7 @@ body {
    Update: Header Layout & Spacing Standardization 
    ---------------------------------------------------- */
 .sd-header {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -1,45 +1,46 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icons } from '@components/icons/IconSystem';
-import api from '@utils/api';
 import '@styles/pages/OrderSuccess.css';
 
 interface OrderSuccessState {
-  orderId?: number;
+  order?: any;
+  // Legacy support for manual fields if needed, but 'order' is primary
   items?: { itemName: string; quantity: number }[];
   totalAmount?: number;
   paymentMethod?: string;
   paymentId?: string;
+  orderId?: number;
 }
 
 const OrderSuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as OrderSuccessState | null;
+  const order = state?.order;
 
-  const [order, setOrder] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-
+  // Rule 3: Required fallback protection
+  // If user refreshes or accesses page directly, state is lost.
+  // Redirect to order history to avoid showing empty UI.
   useEffect(() => {
-    if (state?.orderId) {
-      setLoading(true);
-      api.get(`/orders/${state.orderId}`)
-        .then(res => setOrder(res.data))
-        .catch(() => setOrder(null))
-        .finally(() => setLoading(false));
+    if (!order && !state?.orderId) {
+      navigate('/customer/myorders', { replace: true });
     }
-  }, [state?.orderId]);
+  }, [order, state, navigate]);
 
+  if (!order && !state?.orderId) return null;
+
+  // Extract data with fallbacks
   const items = order?.items || state?.items || [];
   const totalAmount = order?.totalAmount ?? state?.totalAmount ?? 0;
   const paymentId = order?.paymentId || state?.paymentId;
   const orderId = order?.id || state?.orderId;
-  const paymentMethod = state?.paymentMethod || 'online';
+  const paymentMethod = order?.paymentMethod || state?.paymentMethod || 'online';
 
   const estimatedMinutes = 20 + (items.length > 3 ? 10 : 0);
 
   return (
-    <div className="os-container">
+    <div className="os-container portal-content">
       {/* Confetti-like gradient top bar */}
       <div className="os-top-accent" />
 
@@ -69,17 +70,13 @@ const OrderSuccessPage: React.FC = () => {
             {orderId && <span className="os-order-id">#{orderId}</span>}
           </div>
 
-          {loading ? (
-            <div className="os-skeleton-list">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="skeleton os-skeleton-row" />
-              ))}
-            </div>
-          ) : items.length > 0 ? (
+          {items.length > 0 ? (
             <div className="os-items-list">
               {items.map((item: any, i: number) => (
                 <div key={i} className="os-item-row">
-                  <span className="os-item-name">{item.itemName || item.name}</span>
+                  <span className="os-item-name">
+                    {item.itemName || item.name || item.dishName}
+                  </span>
                   <span className="os-item-qty">× {item.quantity}</span>
                 </div>
               ))}
@@ -100,7 +97,7 @@ const OrderSuccessPage: React.FC = () => {
             </div>
             <div className="os-detail-item">
               <span className="os-detail-label">Payment</span>
-              <span className="os-detail-value">
+              <span className="os-detail-value os-payment-tag">
                 {paymentMethod === 'wallet' ? '🏦 Wallet' : '💳 Online'}
               </span>
             </div>
@@ -146,3 +143,4 @@ const OrderSuccessPage: React.FC = () => {
 };
 
 export default OrderSuccessPage;
+

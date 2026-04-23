@@ -1,81 +1,70 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@context/AuthContext';
 import { Icons } from '../icons/IconSystem';
 import { formatTime } from '@utils/dateFormatter';
 import { createPortal } from 'react-dom';
-import { playNotificationSound } from '@utils/notificationSound';
 import api from '@utils/api';
-import socket from '@socket/socketClient';
 import '../../App.css';
 
 const NotificationPanel: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, right: 0 });
-  const seenNotificationIds = useRef<Set<number>>(new Set());
-  const isInitialFetch = useRef(true);
-
-  const fetchNotifications = useCallback(async () => {
-    if (!isAuthenticated) return;
-    if (document.hidden) return; // skip polling when tab is hidden
-    try {
-      const res = await api.get('/notifications');
-      const newNotifications: any[] = res.data;
-      const incomingIds = newNotifications.map((n: any) => n.id);
-
-      if (!isInitialFetch.current) {
-        const hasRealNewNotification = incomingIds.some(
-          (id) => !seenNotificationIds.current.has(id)
-        );
-        if (hasRealNewNotification) {
-          playNotificationSound();
-        }
-      }
-
-      // Accumulate all seen IDs so future polls compare against full history
-      incomingIds.forEach((id) => seenNotificationIds.current.add(id));
-
-      setNotifications(newNotifications);
-      isInitialFetch.current = false;
-    } catch (err) {
-      console.error('Error fetching notifications:', err);
-    }
-  }, [isAuthenticated]);
-
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    fetchNotifications();
-    if (intervalRef.current) return; // prevent stacking
-    intervalRef.current = setInterval(fetchNotifications, 15000);
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [fetchNotifications]);
-
-  // Real-time: listen for push notifications via WebSocket
-  useEffect(() => {
-    const handleNewNotification = (notification: any) => {
-      setNotifications(prev => {
-        // Deduplicate — don't add if already present
-        if (prev.some(n => n.id === notification.id)) return prev;
-        seenNotificationIds.current.add(notification.id);
-        playNotificationSound();
-        return [notification, ...prev];
-      });
-    };
-
-    socket.on('notification:new', handleNewNotification);
-    return () => {
-      socket.off('notification:new', handleNewNotification);
-    };
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
   }, []);
+
+  // Part 2D: Fetch notifications
+  const fetchNotifications = useCallback(async () => {
+    try {
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+      abortControllerRef.current = new AbortController();
+
+      const res = await api.get('/notifications', { 
+        signal: abortControllerRef.current.signal 
+      });
+      
+      if (mountedRef.current) {
+        setNotifications(res.data);
+      }
+    } catch (err: any) {
+      if (err.name === 'CanceledError' || err.name === 'AbortError') return;
+      console.error('Fetch error:', err);
+    }
+  }, []);
+
+  // Part 2G: Initial load
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'customer') {
+      fetchNotifications();
+    }
+  }, [isAuthenticated, user?.role, fetchNotifications]);
+
+  // Part 2F: Polling fallback (60s) - Silent only
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'customer') return;
+    const interval = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user?.role, fetchNotifications]);
+
+  // Part 2E: UI Sync Listener (Listening for CustomerLayout's signals)
+  useEffect(() => {
+    const handleSync = (event: any) => {
+      console.log("[UI Sync] Registered Layout Signal:", event.detail);
+      // Trigger data refresh to update the bell dot/list
+      fetchNotifications();
+    };
+
+    window.addEventListener('smartdine:notification', handleSync);
+    return () => window.removeEventListener('smartdine:notification', handleSync);
+  }, [fetchNotifications]);
 
   const updatePosition = useCallback(() => {
     if (triggerRef.current) {

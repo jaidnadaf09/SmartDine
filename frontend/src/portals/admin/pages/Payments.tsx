@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Icons } from '@components/icons/IconSystem';
 import api, { safeFetch } from '@utils/api';
 import { formatDate } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '@ui/Button';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
 
 const Payments: React.FC = () => {
@@ -13,6 +11,7 @@ const Payments: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
     const mountedRef = useRef(true);
+    const hasFetchedPaymentsRef = useRef(false);
 
     const fetchPayments = async () => {
         try {
@@ -33,7 +32,10 @@ const Payments: React.FC = () => {
 
     useEffect(() => {
         mountedRef.current = true;
-        fetchPayments();
+        if (!hasFetchedPaymentsRef.current) {
+            hasFetchedPaymentsRef.current = true;
+            fetchPayments();
+        }
         return () => { mountedRef.current = false; };
     }, []);
 

@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Button from '@ui/Button';
 import Select from '@ui/Select';
 import SearchInput from '@ui/SearchInput';
+import useDebounce from '../../../hooks/useDebounce';
 
 interface Column<T> {
     header: string;
@@ -30,6 +31,11 @@ interface DataTableProps<T> {
     onClearAll?: () => void;
     itemsPerPage?: number;
     headerActions?: React.ReactNode;
+    // Server-side pagination props
+    isServerSide?: boolean;
+    totalCount?: number;
+    currentPage?: number;
+    onPageChange?: (page: number) => void;
 }
 
 const DataTable = <T extends { id: string | number }>({ 
@@ -44,16 +50,51 @@ const DataTable = <T extends { id: string | number }>({
     onRowClick,
     onClearAll,
     itemsPerPage = 10,
-    headerActions
+    headerActions,
+    isServerSide = false,
+    totalCount = 0,
+    currentPage: parentPage,
+    onPageChange
 }: DataTableProps<T>) => {
-    const [currentPage, setCurrentPage] = useState(1);
+    const [localPage, setLocalPage] = useState(1);
+    const currentPage = isServerSide ? (parentPage || 1) : localPage;
     
+    // Manage local input state for instant UI reaction
+    const [displayValue, setDisplayValue] = useState(searchValue);
+    const debouncedSearchValue = useDebounce(displayValue, 300);
+
+    // Sync local state if parent prop changes (e.g., Search cleared)
+    React.useEffect(() => {
+        setDisplayValue(searchValue);
+    }, [searchValue]);
+
+    // Update parent only when debounced value changes
+    React.useEffect(() => {
+        if (debouncedSearchValue !== searchValue) {
+            onSearchChange(debouncedSearchValue);
+            if (isServerSide) {
+                onPageChange?.(1);
+            } else {
+                setLocalPage(1);
+            }
+        }
+    }, [debouncedSearchValue, onSearchChange, searchValue, isServerSide, onPageChange]);
+
     // Check if any filters are active (including search)
     const hasActiveFilters = searchValue || Object.values(activeFilters).some(v => v !== '');
 
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const effectiveTotalCount = isServerSide ? totalCount : data.length;
+    const totalPages = Math.ceil(effectiveTotalCount / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedData = data.slice(startIndex, startIndex + itemsPerPage);
+    const paginatedData = isServerSide ? data : data.slice(startIndex, startIndex + itemsPerPage);
+
+    const handlePageChange = (newPage: number) => {
+        if (isServerSide) {
+            onPageChange?.(newPage);
+        } else {
+            setLocalPage(newPage);
+        }
+    };
 
     return (
         <div className="admin-table-container">
@@ -65,12 +106,12 @@ const DataTable = <T extends { id: string | number }>({
                 <div className="menu-controls-left">
                     <SearchInput
                         placeholder={searchPlaceholder}
-                        value={searchValue}
-                        onChange={(e) => {
-                            onSearchChange(e.target.value);
-                            setCurrentPage(1);
+                        value={displayValue}
+                        onChange={(e) => setDisplayValue(e.target.value)}
+                        onClear={() => {
+                            setDisplayValue('');
+                            onSearchChange('');
                         }}
-                        onClear={() => onSearchChange('')}
                     />
                     
                     {filters.map((filter) => (
@@ -79,7 +120,7 @@ const DataTable = <T extends { id: string | number }>({
                                 value={activeFilters[filter.key] || ''}
                                 onChange={(value: string) => {
                                     onFilterChange?.(filter.key, value);
-                                    setCurrentPage(1);
+                                    handlePageChange(1);
                                 }}
                                 options={[
                                     { label: filter.label, value: '' },
@@ -103,7 +144,7 @@ const DataTable = <T extends { id: string | number }>({
                                         filters.forEach(f => onFilterChange(f.key, ''));
                                     }
                                 }
-                                setCurrentPage(1);
+                                handlePageChange(1);
                             }}
                             style={{ color: '#ef4444' }}
                         >
@@ -163,20 +204,20 @@ const DataTable = <T extends { id: string | number }>({
                     background: 'var(--bg-card)'
                 }}>
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, data.length)} of {data.length} entries
+                        Showing {startIndex + 1} to {Math.min(startIndex + paginatedData.length, effectiveTotalCount)} of {effectiveTotalCount} entries
                     </span>
                     <div style={{ display: 'flex', gap: '8px' }}>
                         <Button 
                             variant="secondary"
                             size="sm"
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            onClick={() => handlePageChange(currentPage - 1)}
                             disabled={currentPage === 1}
                             icon={<ChevronLeft size={18} />}
                         />
                         <Button 
                             variant="secondary"
                             size="sm"
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            onClick={() => handlePageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
                             icon={<ChevronRight size={18} />}
                         />

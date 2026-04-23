@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Icons } from '@components/icons/IconSystem';
 import api from '@utils/api';
 import toast from 'react-hot-toast';
@@ -8,6 +8,8 @@ import Button from '@ui/Button';
 import Select from '@ui/Select';
 import Card from '@ui/Card';
 import SearchInput from '@ui/SearchInput';
+import RatingDisplay from '@ui/RatingDisplay';
+import useDebounce from '../../../hooks/useDebounce';
 
 interface Review {
     id: number;
@@ -29,13 +31,17 @@ const AdminReviews: React.FC = () => {
     const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({
-        rating: '',
         date: ''
     });
+    const hasFetchedReviewsRef = useRef(false);
 
     useEffect(() => {
-        fetchReviews();
+        if (!hasFetchedReviewsRef.current) {
+            hasFetchedReviewsRef.current = true;
+            fetchReviews();
+        }
     }, []);
 
     const fetchReviews = async () => {
@@ -58,9 +64,9 @@ const AdminReviews: React.FC = () => {
 
     const filteredReviews = reviews?.filter(review => {
         const matchesSearch = 
-            review.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            review.comment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            review.orderId?.toString().includes(searchTerm);
+            review.user?.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            review.comment?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+            review.orderId?.toString().includes(debouncedSearchTerm);
         
         const matchesRating = !activeFilters.rating || review.rating === parseInt(activeFilters.rating);
         
@@ -71,21 +77,6 @@ const AdminReviews: React.FC = () => {
         }
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-
-    const renderStars = (rating: number) => {
-        return (
-            <div style={{ display: 'flex', gap: '4px' }}>
-                {[...Array(5)].map((_, i) => (
-                    <Icons.star
-                        key={i}
-                        size={16}
-                        fill={i < rating ? "var(--brand-primary)" : "none"}
-                        color={i < rating ? "var(--brand-primary)" : "var(--text-muted)"}
-                    />
-                ))}
-            </div>
-        );
-    };
 
     if (loading) {
         return (
@@ -214,7 +205,7 @@ const AdminReviews: React.FC = () => {
                                     </span>
                                     <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{review.user?.name}</h4>
                                 </div>
-                                {renderStars(review.rating)}
+                                <RatingDisplay rating={review.rating} size={16} />
                             </div>
                             
                             <div className="review-comment" style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', minHeight: '80px', position: 'relative' }}>

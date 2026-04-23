@@ -1,6 +1,6 @@
 import express from 'express';
 import { getMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from '../controllers/menuController';
-import { protect, adminOnly } from '../middleware/authMiddleware';
+import { protect, adminOnly, chefOnly } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.route('/')
     .post(protect, adminOnly, createMenuItem);
 
 router.route('/:id')
-    .put(protect, adminOnly, updateMenuItem)
+    .put(protect, chefOnly, updateMenuItem)
     .delete(protect, adminOnly, deleteMenuItem);
 
 export default router;

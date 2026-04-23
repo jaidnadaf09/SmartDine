@@ -2,6 +2,56 @@
    PREMIUM DESIGN SYSTEM
 ═══════════════════════════════════════════ */
 
+.portal-layout {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  background: var(--bg-secondary);
+}
+
+
+/* ── Star Rating Design System ── */
+.cp-star-rating, .sd-star-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-star-rating {
+  justify-content: center;
+  gap: 12px;
+  margin: 24px 0;
+}
+
+.cp-star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.cp-star-btn:hover {
+  transform: scale(1.15);
+}
+
+.rating-star {
+  color: transparent; /* No fill by default */
+  stroke: #c9b8a6; /* Soft visible border for unselected */
+  stroke-width: 1.5;
+  transition: all 0.2s ease;
+}
+
+.rating-star.filled {
+  color: var(--brand-primary); /* Fill when active */
+  stroke: var(--brand-primary);
+  filter: drop-shadow(0 0 4px rgba(111, 78, 55, 0.2));
+}
+
+
 /* Dashboard Cards */
 .admin-card {
   background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,250,245,0.9));
@@ -376,11 +426,9 @@ textarea:focus {
   --danger-border: rgba(248, 113, 113, 0.4);
 }
 
-/* Chef Sidebar Alignment Override */
+/* Chef Sidebar Alignment Override — Sync with Admin */
 .chef-sidebar {
-  padding-top: 20px;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding: 0;
   position: relative;
   z-index: var(--z-header, 100);
 }
@@ -437,39 +485,29 @@ textarea:focus {
   margin-top: auto;
 }
 
-.sidebar-logout {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
-  background: var(--card-bg);
-  color: var(--danger-text);
-  font-weight: 500;
-  transition: all 0.2s ease;
-  cursor: pointer;
+.logout-link {
+  color: var(--danger-text) !important;
+  margin-top: auto;
 }
 
-.sidebar-logout svg {
-  flex-shrink: 0;
-  color: var(--danger-text);
+.logout-link .nav-icon {
+  color: var(--danger-text) !important;
 }
 
-.sidebar-logout:hover {
-  background: var(--danger-bg-soft);
+.logout-link:hover {
+  background: var(--danger-bg-soft) !important;
   border-color: var(--danger-border);
 }
 
-.sidebar-closed .sidebar-footer {
-  padding: 14px 8px;
+.sidebar-closed .logout-link,
+.collapsed .logout-link {
+  justify-content: center !important;
+  padding: 10px 0 !important;
 }
 
-.sidebar-closed .sidebar-logout {
-  justify-content: center;
-  padding: 10px;
+.sidebar-closed .sidebar-footer,
+.collapsed .sidebar-footer {
+  padding: 14px 8px;
 }
 .profile-card {
   background: var(--card-bg);
@@ -714,7 +752,7 @@ textarea:focus {
   top: 0;
   background: var(--card-bg);
   color: var(--text-primary);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
@@ -724,52 +762,229 @@ textarea:focus {
   overflow-x: hidden;
 }
 
-.sidebar-closed .admin-sidebar {
-  width: 80px;
+/* ── Portal Shell Refinements ── */
+.sd-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  transition: background-color 0.3s ease;
+  overflow-x: hidden;
 }
 
+/* Sidebar Alignment Fix (72px Standard) */
 .sidebar-header {
-  padding: 2rem 1.5rem;
+  height: 72px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--card-border);
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-card);
 }
 
-.sidebar-header h2 {
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin: 0;
-  color: var(--brand-primary);
-  white-space: nowrap;
-  /* fixed scroll */
+
+
+.sd-main-content {
+  flex: 1;
+  min-width: 0; /* CRITICAL for Flex child overflow */
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ── PREMIUM KPI CARDS (Cross-Portal System) ── */
+.sd-kpi-card {
+  position: relative;
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.sd-kpi-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(var(--brand-rgb, 198, 146, 91), 0.2);
+}
+
+.sd-kpi-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
-.sidebar-closed .sidebar-header h2 {
-  opacity: 0;
-  width: 0;
-}
-
-.toggle-sidebar {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
+.sd-kpi-icon {
+  height: 42px;
+  width: 42px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
 }
 
-.toggle-sidebar:hover {
-  background: var(--brand-primary-light);
+.sd-kpi-title {
+  font-size: 0.75rem;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sd-kpi-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  margin: 10px 0;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.sd-kpi-trend {
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sd-kpi-trend .trend-label {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.sd-kpi-trend .trend-arrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* KPI Color Variations (Admin Parity) */
+.sd-kpi-orange { border-left: 4px solid #f59e0b; }
+.sd-kpi-orange .sd-kpi-icon { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+.sd-kpi-orange:hover .sd-kpi-icon { background: #f59e0b; color: #fff; }
+
+.sd-kpi-blue { border-left: 4px solid #3b82f6; }
+.sd-kpi-blue .sd-kpi-icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.sd-kpi-blue:hover .sd-kpi-icon { background: #3b82f6; color: #fff; }
+
+.sd-kpi-green { border-left: 4px solid #10b981; }
+.sd-kpi-green .sd-kpi-icon { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.sd-kpi-green:hover .sd-kpi-icon { background: #10b981; color: #fff; }
+
+.sd-kpi-purple { border-left: 4px solid #a855f7; }
+.sd-kpi-purple .sd-kpi-icon { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+.sd-kpi-purple:hover .sd-kpi-icon { background: #a855f7; color: #fff; }
+
+.sd-kpi-red { border-left: 4px solid #ef4444; }
+.sd-kpi-red .sd-kpi-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.sd-kpi-red:hover .sd-kpi-icon { background: #ef4444; color: #fff; }
+
+.sd-kpi-indigo { border-left: 4px solid #6366f1; }
+.sd-kpi-indigo .sd-kpi-icon { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+.sd-kpi-indigo:hover .sd-kpi-icon { background: #6366f1; color: #fff; }
+
+.trend-up { color: #10b981; }
+.trend-down { color: #ef4444; }
+
+.sd-kpi-sparkline {
+  margin-top: 12px;
+  height: 32px;
+  opacity: 0.6;
+  color: inherit;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
+  transition: opacity 0.3s ease;
+}
+
+.sd-kpi-card:hover .sd-kpi-sparkline {
+  opacity: 1;
+}
+
+.sd-kpi-sparkline svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.admin-sidebar.collapsed {
+  width: 72px;
+}
+
+.sidebar-closed .admin-sidebar {
+  width: 72px;
+}
+
+.sidebar-header {
+  height: 72px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-header h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  height: 100%;
   color: var(--brand-primary);
+  white-space: nowrap;
+  /* fixed scroll */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s ease;
+}
+
+.collapsed .sidebar-header h2,
+.sidebar-closed .sidebar-header h2 {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.collapsed .sidebar-header,
+.sidebar-closed .sidebar-header {
+  height: 72px;
+  padding: 0;
+  justify-content: center;
+}
+
+.toggle-sidebar {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: var(--text-secondary);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.collapsed .toggle-sidebar,
+.sidebar-closed .toggle-sidebar {
+  margin: 0 auto;
+}
+
+.toggle-sidebar:hover {
+  background: rgba(180, 140, 80, 0.1) !important;
+  color: var(--brand-primary);
+}
+
+.dark .toggle-sidebar:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
 }
 
 .sidebar-nav {
@@ -792,11 +1007,22 @@ textarea:focus {
   border-radius: 12px;
   padding: 10px 14px;
   color: var(--text-secondary);
+  font-weight: 600;
   text-decoration: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  overflow: hidden;
   gap: 14px;
   position: relative;
   margin: 4px 12px;
+}
+
+.collapsed .nav-label,
+.sidebar-closed .nav-label {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  margin-left: 0;
 }
 
 .nav-link:hover {
@@ -889,10 +1115,15 @@ textarea:focus {
 }
 
 /* Admin Main Area */
-.admin-main {
+.admin-main,
+.chef-main,
+.customer-main,
+.sd-main-content {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  width: 100%;
   min-height: 100vh;
   /* fixed scroll */
 }

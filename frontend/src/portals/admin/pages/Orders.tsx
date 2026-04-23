@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Icons } from '@components/icons/IconSystem';
 import api, { safeFetch } from '@utils/api';
+import { getSocket } from '@socket/socketClient';
 import { formatTime } from '@utils/dateFormatter';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Button from '@ui/Button';
 import Select from '@ui/Select';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
 
@@ -15,8 +14,12 @@ const Orders: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
     const mountedRef = useRef(true);
+    const hasFetchedRef = useRef(false);
+    const isFetchingRef = useRef(false);
 
     const fetchOrders = async () => {
+        if (isFetchingRef.current) return;
+        isFetchingRef.current = true;
         try {
             const res = await safeFetch(() => api.get(`/orders?includeAll=true&t=${Date.now()}`));
             if (mountedRef.current) {
@@ -31,14 +34,32 @@ const Orders: React.FC = () => {
             }
         } finally {
             if (mountedRef.current) setLoading(false);
+            isFetchingRef.current = false;
         }
     };
 
     useEffect(() => {
         mountedRef.current = true;
-        fetchOrders();
-        const interval = setInterval(fetchOrders, 15000); // Auto-refresh every 15s
-        return () => { clearInterval(interval); mountedRef.current = false; };
+        const socket = getSocket();
+        
+        if (!hasFetchedRef.current) {
+            hasFetchedRef.current = true;
+            fetchOrders();
+        }
+        const interval = setInterval(fetchOrders, 60000); // Auto-refresh every 60s
+        
+        // Listen to relevant socket events to update orders
+        socket.on('order:new', fetchOrders);
+        socket.on('order:updated', fetchOrders);
+        socket.on('order:completed', fetchOrders);
+
+        return () => { 
+            clearInterval(interval); 
+            mountedRef.current = false; 
+            socket.off('order:new', fetchOrders);
+            socket.off('order:updated', fetchOrders);
+            socket.off('order:completed', fetchOrders);
+        };
     }, []);
 
     const updateStatus = async (id: number, status: string) => {

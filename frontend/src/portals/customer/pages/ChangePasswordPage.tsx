@@ -4,6 +4,7 @@ import { useAuth } from '@context/AuthContext';
 import toast from 'react-hot-toast';
 import FormField from '../../admin/components/FormField';
 import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
 import '@styles/pages/Profile.css';
 
 const getPasswordStrength = (pw: string): { level: string; class: string } => {
@@ -58,17 +59,16 @@ const ChangePasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="management-page">
-      <div className="page-header">
-        <h1>Change Password</h1>
-        <p>Security check for your SmartDine account.</p>
-      </div>
-
+    <div className="cp-password-center">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="premium-card premium-card-centered"
+        className="cp-card cp-password-card"
       >
+        <div className="cp-password-header">
+          <h1 className="cp-password-title">Change Password</h1>
+        </div>
+
         <form onSubmit={handleSubmit} className="pw-form">
           <div style={{ position: 'relative' }}>
             <FormField
@@ -82,9 +82,9 @@ const ChangePasswordPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowCurrent(!showCurrent)}
-              style={{ position: 'absolute', right: 12, top: 38, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+              className="pw-toggle-btn"
             >
-              {showCurrent ? '🙈' : '👁️'}
+              {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
 
@@ -101,9 +101,9 @@ const ChangePasswordPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowNew(!showNew)}
-                style={{ position: 'absolute', right: 12, top: 38, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+                className="pw-toggle-btn"
               >
-                {showNew ? '🙈' : '👁️'}
+                {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
             {formData.newPassword && (
@@ -128,9 +128,9 @@ const ChangePasswordPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowConfirm(!showConfirm)}
-              style={{ position: 'absolute', right: 12, top: 38, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+              className="pw-toggle-btn"
             >
-              {showConfirm ? '🙈' : '👁️'}
+              {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
 
@@ -138,16 +138,14 @@ const ChangePasswordPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/profile')}
-              className="pf-secondary-btn"
-              style={{ flex: 1 }}
+              className="cancel-btn"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="pf-primary-btn"
-              style={{ flex: 2 }}
+              className="submit-btn"
             >
               {loading ? 'Updating...' : 'Update Password'}
             </button>

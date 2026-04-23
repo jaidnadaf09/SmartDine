@@ -1,0 +1,52 @@
+/* ── Star Rating Design System (Clean Single-SVG Method) ── */
+
+.sd-rating-container {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 24px 0;
+}
+
+/* Star Wrapper */
+.sd-star-wrapper {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Hover Effect */
+.sd-star-wrapper:hover {
+  transform: scale(1.2);
+}
+
+/* Click Pop Effect */
+.sd-star-wrapper:active {
+  transform: scale(0.9);
+}
+
+/* Active Highlight (Glow) */
+.sd-star-wrapper.active .sd-star {
+  filter: drop-shadow(0 2px 8px rgba(182, 141, 83, 0.4));
+}
+
+/* Ripple-like feedback on click */
+.sd-star-wrapper::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--brand-primary);
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+
+.sd-star-wrapper:active::after {
+  opacity: 0.15;
+  transform: scale(1.4);
+  transition: none;
+}

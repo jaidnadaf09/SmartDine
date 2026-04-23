@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@context/AuthContext';
 import { useAuthModal } from '@context/AuthModalContext';
@@ -10,6 +10,8 @@ import { formatDate, formatTime } from '@utils/dateFormatter';
 import Modal from '@ui/Modal';
 import Button from '@ui/Button';
 import Select from '@ui/Select';
+import StarRating from '@ui/StarRating';
+import RatingDisplay from '@ui/RatingDisplay';
 import '@styles/portals/Portals.css';
 import '@styles/portals/CustomerPortal.css';
 
@@ -82,6 +84,12 @@ const MyOrders: React.FC = () => {
   const { openAuthModal } = useAuthModal();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [hasMoreOrders, setHasMoreOrders] = useState(true);
+  const [hasMoreBookings, setHasMoreBookings] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadingBookings, setLoadingBookings] = useState(false);
+  const LIMIT = 5;
+
   const [upcomingBooking, setUpcomingBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -93,6 +101,24 @@ const MyOrders: React.FC = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const mountedRef = useRef(true);
+  const isFetchingRef = useRef(false);
+  const ordersOffsetRef = useRef(0);
+  const bookingsOffsetRef = useRef(0);
+  const loadingOrdersRef = useRef(false);
+  const loadingBookingsRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    // Lock background visually to prevent "white flash" or theme mismatch
+    document.body.style.background = "#f7efe5"; // Using --bg-primary token value for consistency
+    
+    return () => {
+      mountedRef.current = false;
+      document.body.style.background = ""; // Clean up on unmount
+    };
+  }, []);
 
   // ── Filter & Search State ──
   const [searchQuery, setSearchQuery] = useState('');
@@ -101,68 +127,128 @@ const MyOrders: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [showFilters, setShowFilters] = useState(false);
 
+  const fetchOrders = useCallback(async (isLoadMore = false) => {
+    if (loadingOrdersRef.current || !user) return;
+    loadingOrdersRef.current = true;
+    setLoadingOrders(true);
+    try {
+      const offset = isLoadMore ? ordersOffsetRef.current : 0;
+      const res = await api.get(`/orders/my?limit=${LIMIT}&offset=${offset}`);
+      
+      const rawOrders = res.data.orders || [];
+      const totalCount = res.data.total || 0;
+
+      const processedOrders = rawOrders.map((o: any) => {
+        let items = o.items;
+        try {
+          if (typeof items === 'string') items = JSON.parse(items);
+        } catch (e) {
+          items = [];
+        }
+        return {
+          ...o,
+          items: Array.isArray(items) ? items : [],
+        };
+      });
+
+      setOrders(prev => isLoadMore ? [...prev, ...processedOrders] : processedOrders);
+      const nextOffset = offset + LIMIT;
+      ordersOffsetRef.current = nextOffset;
+      setHasMoreOrders(nextOffset < totalCount);
+    } catch (err: any) {
+      console.error('Error fetching orders:', err);
+      if (mountedRef.current && !isLoadMore) setError(`Failed to fetch orders: ${err.message}`);
+    } finally {
+      loadingOrdersRef.current = false;
+      if (mountedRef.current) setLoadingOrders(false);
+    }
+  }, []);
+
+  const fetchBookings = useCallback(async (isLoadMore = false) => {
+    if (loadingBookingsRef.current || !user) return;
+    loadingBookingsRef.current = true;
+    setLoadingBookings(true);
+    try {
+      const offset = isLoadMore ? bookingsOffsetRef.current : 0;
+      const res = await api.get(`/bookings/user/${user.id}?limit=${LIMIT}&offset=${offset}`);
+      
+      const bookingsData = res.data.bookings || [];
+      const totalCount = res.data.total || 0;
+
+      setBookings(prev => isLoadMore ? [...prev, ...bookingsData] : bookingsData);
+      const nextOffset = offset + LIMIT;
+      bookingsOffsetRef.current = nextOffset;
+      setHasMoreBookings(nextOffset < totalCount);
+    } catch (err: any) {
+      console.error('Error fetching bookings:', err);
+      if (mountedRef.current && !isLoadMore) setError(`Failed to fetch bookings: ${err.message}`);
+    } finally {
+      loadingBookingsRef.current = false;
+      if (mountedRef.current) setLoadingBookings(false);
+    }
+  }, []);
+
+  const fetchOtherData = useCallback(async () => {
+    try {
+      const [upcomingRes, reviewsRes] = await Promise.all([
+        api.get('/bookings/upcoming'),
+        api.get('/reviews/my'),
+      ]);
+
+      const upcomingData = upcomingRes.data;
+      const reviewsData = reviewsRes.data || [];
+
+      if (upcomingData.upcomingBooking) {
+        setUpcomingBooking(upcomingData.upcomingBooking);
+      }
+      
+      // Update orders with their reviews if already loaded
+      setOrders(prevOrders => prevOrders.map(o => ({
+        ...o,
+        review: reviewsData.find((r: any) => r.orderId === o.id)
+      })));
+
+    } catch (err: any) {
+      console.error('Error fetching other data:', err);
+    }
+  }, []);
+
   const fetchUserData = useCallback(async () => {
+    if (isFetchingRef.current) return;
     const token = localStorage.getItem('token');
     if (!token) {
       setLoading(false);
       return;
     }
+
+    isFetchingRef.current = true;
+    setLoading(true);
+    
     try {
-      const [bookingsRes, ordersRes, upcomingRes, reviewsRes] = await Promise.all([
-        api.get(`/bookings/user/${user?.id}`),
-        api.get('/orders/my'),
-        api.get('/bookings/upcoming'),
-        api.get('/reviews/my'),
+      await Promise.all([
+        fetchOrders(false),
+        fetchBookings(false),
+        fetchOtherData()
       ]);
-
-      const bookingsData = bookingsRes.data || [];
-      console.log("BOOKINGS API RESPONSE:", bookingsData);
-      const rawOrders = ordersRes.data;
-      const upcomingData = upcomingRes.data;
-      const reviewsData = reviewsRes.data || [];
-
-      if (upcomingData.upcomingBooking && !upcomingBooking) {
-        toast(() => (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Icons.bell size={18} color="var(--brand-primary)" />
-            Reminder: You have a booking at {formatTime(upcomingData.upcomingBooking.time)} today!
-          </span>
-        ), { duration: 6000, id: 'booking-reminder' });
-      }
-
-      setUpcomingBooking(upcomingData.upcomingBooking);
-
-      let processedOrders: Order[] = [];
-      if (Array.isArray(rawOrders)) {
-        processedOrders = rawOrders.map((o: any) => {
-          let items = o.items;
-          try {
-            if (typeof items === 'string') items = JSON.parse(items);
-          } catch (e) {
-            items = [];
-          }
-          return {
-            ...o,
-            items: Array.isArray(items) ? items : [],
-            review: reviewsData.find((r: any) => r.orderId === o.id)
-          };
-        });
-      }
-
-      setBookings(Array.isArray(bookingsData) ? bookingsData : []);
-      setOrders(processedOrders);
     } catch (err: any) {
-      setError(`Failed to fetch your data: ${err.message}`);
+      if (mountedRef.current) setError(`Failed to fetch your data: ${err.message}`);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        isFetchingRef.current = false;
+        setLoading(false);
+      }
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchUserData();
-    const interval = setInterval(fetchUserData, 15000);
+
+    const interval = setInterval(() => {
+      fetchOtherData(); // lightweight polling only
+    }, 60000);
+
     return () => clearInterval(interval);
-  }, [fetchUserData]);
+  }, []);
 
   const handleCancelBooking = async () => {
     if (!bookingToCancel) return;
@@ -545,7 +631,7 @@ const MyOrders: React.FC = () => {
                               <div className="cp-detail-label">Table</div>
                               <div className="cp-detail-value">
                                 {booking.status?.toLowerCase() === "cancelled"
-                                  ? "Booking Cancelled"
+                                  ? "-"
                                   : booking.tableNumber
                                     ? `Table ${booking.tableNumber}`
                                     : booking.table?.tableNumber
@@ -599,6 +685,17 @@ const MyOrders: React.FC = () => {
                     )
                   })}
                 </div>
+              )}
+              {hasMoreBookings && filteredBookings.length > 0 && !searchQuery && (
+                <button 
+                  className="view-more-btn" 
+                  onClick={() => fetchBookings(true)}
+                  disabled={loadingBookings}
+                >
+                  {loadingBookings ? (
+                    <><Icons.loader size={16} className="cp-spin" /> LOADING...</>
+                  ) : "VIEW MORE BOOKINGS ↓"}
+                </button>
               )}
             </section>
           )}
@@ -665,25 +762,38 @@ const MyOrders: React.FC = () => {
                           <Icons.utensilsCrossed size={13} /> Items Ordered
                         </div>
                         {order.items && Array.isArray(order.items)
-                          ? order.items.map((item: any, idx: number) => (
-                            <React.Fragment key={idx}>
-                              <div className="cp-item-row">
-                                <span className="cp-item-name">{item.itemName || item.name}</span>
-                                <span className="cp-item-qty">× {item.quantity}</span>
-                                {item.price && (
-                                  <span className="cp-item-price">
-                                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
-                                  </span>
-                                )}
-                              </div>
-                              {item.specialInstructions && (
-                                <div className="cp-item-instruction" style={{ marginTop: '4px', marginLeft: '0', padding: '6px 10px', borderRadius: '8px', background: 'rgba(198, 167, 105, 0.08)', fontSize: '0.8rem', color: '#8b5a2b', borderLeft: '2px solid var(--brand-primary)' }}>
-                                  <span style={{ fontWeight: 700, fontSize: '0.7rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px', opacity: 0.7 }}>Special Instruction</span>
-                                  {item.specialInstructions}
-                                </div>
-                              )}
-                            </React.Fragment>
-                          ))
+                          ? (() => {
+                              const visibleItems = order.items.slice(0, 2);
+                              const remainingCount = order.items.length - 2;
+                              return (
+                                <>
+                                  {visibleItems.map((item: any, idx: number) => (
+                                    <React.Fragment key={idx}>
+                                      <div className="cp-item-row">
+                                        <span className="cp-item-name">{item.itemName || item.name}</span>
+                                        <span className="cp-item-qty">× {item.quantity}</span>
+                                        {item.price && (
+                                          <span className="cp-item-price">
+                                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(item.price)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {item.specialInstructions && (
+                                        <div className="cp-item-instruction" style={{ marginTop: '4px', marginLeft: '0', padding: '6px 10px', borderRadius: '8px', background: 'rgba(198, 167, 105, 0.08)', fontSize: '0.8rem', color: '#8b5a2b', borderLeft: '2px solid var(--brand-primary)' }}>
+                                          <span style={{ fontWeight: 700, fontSize: '0.7rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px', opacity: 0.7 }}>Special Instruction</span>
+                                          {item.specialInstructions}
+                                        </div>
+                                      )}
+                                    </React.Fragment>
+                                  ))}
+                                  {remainingCount > 0 && (
+                                    <div className="cp-more-items">
+                                      +{remainingCount} more item{remainingCount !== 1 ? 's' : ''}
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()
                           : <p className="cp-pending-text" style={{ fontSize: '0.85rem', padding: '4px 0' }}>No item details available</p>
                         }
                       </div>
@@ -713,9 +823,7 @@ const MyOrders: React.FC = () => {
                           {order.review ? (
                             <div className="cp-submitted-review">
                               <div className="cp-review-stars">
-                                {[1, 2, 3, 4, 5].map(s => (
-                                  <Icons.star key={s} size={14} fill={s <= order.review!.rating ? 'var(--brand-primary)' : 'none'} color={s <= order.review!.rating ? 'var(--brand-primary)' : 'var(--text-dim)'} />
-                                ))}
+                                <RatingDisplay rating={order.review!.rating} size={14} />
                               </div>
                               <p className="cp-review-comment">"{order.review.comment}"</p>
                             </div>
@@ -738,6 +846,17 @@ const MyOrders: React.FC = () => {
                   ))}
                 </div>
               )}
+              {hasMoreOrders && filteredOrders.length > 0 && !searchQuery && (
+                <button 
+                  className="view-more-btn" 
+                  onClick={() => fetchOrders(true)}
+                  disabled={loadingOrders}
+                >
+                  {loadingOrders ? (
+                    <><Icons.loader size={16} className="cp-spin" /> LOADING...</>
+                  ) : "VIEW MORE ORDERS ↓"}
+                </button>
+              )}
             </section>
           )}
         </div>
@@ -745,26 +864,13 @@ const MyOrders: React.FC = () => {
         {/* ── REVIEW MODAL ── */}
         <Modal
           isOpen={!!reviewOrder}
-          onClose={() => setReviewOrder(null)}
+          onClose={() => {
+            setReviewOrder(null);
+          }}
           title={`Rate Order #${String(reviewOrder?.id || '').slice(-6).toUpperCase()}`}
           size="md"
         >
-          <div className="cp-star-rating" style={{ display: 'flex', justifyContent: 'center', gap: '10px', margin: '20px 0' }}>
-            {[1, 2, 3, 4, 5].map(s => (
-              <button
-                key={s}
-                onClick={() => setRating(s)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                <Icons.star
-                  size={32}
-                  fill={s <= rating ? 'var(--brand-primary)' : 'none'}
-                  color={s <= rating ? 'var(--brand-primary)' : 'var(--text-dim)'}
-                  style={{ transition: 'all 0.2s' }}
-                />
-              </button>
-            ))}
-          </div>
+          <StarRating rating={rating} setRating={setRating} />
           <textarea
             className="cp-modal-textarea"
             placeholder="Share your experience (optional)..."

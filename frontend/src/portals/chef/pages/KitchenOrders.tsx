@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@utils/api';
 import { formatTime } from '@utils/dateFormatter';
 import { useAuth } from '@context/AuthContext';
@@ -10,7 +10,7 @@ import ConfirmModal from '@ui/ConfirmModal';
 import {
 } from 'lucide-react';
 import '@styles/portals/ChefPortal.css';
-import socket from '@socket/socketClient';
+import { getSocket } from '@socket/socketClient';
 
 const ORDER_STATUS = {
     PENDING: 'pending',
@@ -48,8 +48,7 @@ interface Order {
 }
 
 const KitchenOrders: React.FC = () => {
-    const { user } = useAuth();
-    const token = user?.token;
+  useAuth();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(Date.now());
@@ -58,6 +57,8 @@ const KitchenOrders: React.FC = () => {
     const prevOrdersRef = useRef<Order[]>([]);
     const soundRef = useRef<HTMLAudioElement | null>(null);
     const [newOrderIds, setNewOrderIds] = useState<number[]>([]);
+    const isFetchingRef = useRef(false);
+    const hasFetchedRef = useRef(false);
 
     // Initialize sound and timer
     useEffect(() => {
@@ -72,26 +73,23 @@ const KitchenOrders: React.FC = () => {
         return () => clearInterval(timer);
     }, []);
 
-    const fetchOrders = async () => {
-    const fetchToken = localStorage.getItem('token');
-        if (!fetchToken) return;
-        if (document.hidden) return; // skip when tab is hidden
+    const fetchOrders = useCallback(async () => {
+        if (document.hidden || isFetchingRef.current) return;
+        isFetchingRef.current = true;
+        
         try {
             const ordersRes = await api.get('/chef/orders');
-
             const newOrders = ordersRes.data;
             
-            // Detect newly arrived orders
+            // Detect newly arrived orders for sound/visual alerts
             const existingIds = prevOrdersRef.current.map((o: Order) => o.id);
             const freshIds = newOrders
                 .filter((o: Order) => o.status === ORDER_STATUS.PENDING && !existingIds.includes(o.id))
                 .map((o: Order) => o.id);
 
-            // Sound notification + glow for new orders
             if (freshIds.length > 0 && prevOrdersRef.current.length > 0) {
                 soundRef.current?.play().catch(() => {});
                 toast('New Order Received!', { icon: <Icons.bell size={20} className="icon-primary" /> });
-
                 setNewOrderIds(prev => [...prev, ...freshIds]);
                 setTimeout(() => {
                     setNewOrderIds(prev => prev.filter(id => !freshIds.includes(id)));
@@ -100,55 +98,61 @@ const KitchenOrders: React.FC = () => {
 
             setOrders(newOrders);
             prevOrdersRef.current = newOrders;
-            setLoading(false);
         } catch (error) {
             console.error('Error fetching kitchen data:', error);
+        } finally {
             setLoading(false);
+            isFetchingRef.current = false;
         }
-    };
-
-    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    }, []);
 
     useEffect(() => {
-        fetchOrders();
-        if (intervalRef.current) return; // prevent stacking
-        intervalRef.current = setInterval(fetchOrders, 15000);
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
+        let interval: any;
+
+        const startPolling = () => {
+            if (interval) clearInterval(interval);
+            interval = setInterval(fetchOrders, 60000);
+        };
+
+        const stopPolling = () => {
+            if (interval) clearInterval(interval);
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                stopPolling();
+            } else {
+                fetchOrders();
+                startPolling();
             }
         };
-    }, [token]);
+
+        // Initial launch
+        if (!hasFetchedRef.current) {
+            hasFetchedRef.current = true;
+            fetchOrders();
+        }
+        startPolling();
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            stopPolling();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, []); // Step 1: Empty dependency array
 
     // Real-time: receive instant order updates via WebSocket
     useEffect(() => {
-        const handleNewOrder = (newOrder: any) => {
-            setOrders(prev => {
-                // Deduplicate
-                if (prev.some(o => o.id === newOrder.id)) return prev;
-                return [newOrder, ...prev];
-            });
-            // Visual/Audio feedback for chef
-            if (soundRef.current) soundRef.current.play().catch(() => {});
-        };
-
-        const handleOrderUpdated = (updatedOrder: any) => {
-            setOrders(prev => {
-                // If it's cancelled or completed, it might need to be moved to history
-                // But for now, just update the existing item and let the component filter it
-                return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o);
-            });
-        };
-
-        socket.on('order:new', handleNewOrder);
-        socket.on('order:updated', handleOrderUpdated);
+        const socket = getSocket();
+        socket.on('order:new', fetchOrders);
+        socket.on('order:updated', fetchOrders);
         
         return () => {
-            socket.off('order:new', handleNewOrder);
-            socket.off('order:updated', handleOrderUpdated);
+            socket.off('order:new', fetchOrders);
+            socket.off('order:updated', fetchOrders);
         };
-    }, []);
+    }, [fetchOrders]); // Step 2: Stable reference
 
     const handleUpdateStatus = async (id: number, status: string) => {
         try {
@@ -201,12 +205,8 @@ const KitchenOrders: React.FC = () => {
 
     return (
         <div className="chef-page">
-            <div style={{ marginBottom: '32px' }}>
-                <div className="tab-btn active" style={{ display: 'inline-flex', alignItems: 'center' }}>
-                    <Icons.chef size={18} style={{ marginRight: '8px' }} /> Kitchen Orders
-                    <span className="chef-tab-count" style={{ marginLeft: '8px', background: 'white', color: 'var(--brand-primary)' }}>{orders.length}</span>
-                </div>
-            </div>
+
+
 
             {orders.length === 0 ? (
                 <div className="admin-card" style={{ textAlign: 'center', padding: '60px 20px', background: 'transparent' }}>

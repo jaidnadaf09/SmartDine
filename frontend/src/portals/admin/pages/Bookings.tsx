@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Icons } from '@components/icons/IconSystem';
@@ -26,6 +26,7 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
     const [customReason, setCustomReason] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
+    const hasFetchedBookingsRef = useRef(false);
 
     const fetchData = async () => {
         setLoading(true);
@@ -46,7 +47,10 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
     };
 
     useEffect(() => {
-        fetchData();
+        if (!hasFetchedBookingsRef.current) {
+            hasFetchedBookingsRef.current = true;
+            fetchData();
+        }
     }, []);
 
     const updateStatus = async (id: number, status: string) => {

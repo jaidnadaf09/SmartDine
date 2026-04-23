@@ -1,54 +1,38 @@
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
+/**
+ * AuthModalContext — Compatibility Shim
+ *
+ * Modal state has been merged into AuthContext.
+ * This file re-exports the same API surface so existing imports continue to work
+ * without requiring changes to every consumer file.
+ *
+ * You may migrate individual files to import from '@context/AuthContext' directly
+ * using `useAuth()` when convenient; this shim is safe to keep indefinitely.
+ */
+import { useAuth, type AuthType, type AuthModalOptions } from './AuthContext';
 
-type AuthType = 'login' | 'signup' | null;
+export type { AuthType, AuthModalOptions };
 
-export interface AuthModalOptions {
-  redirectTo?: string;
-}
+/** Drop-in replacement for the old useAuthModal() hook. */
+export const useAuthModal = () => {
+  const {
+    authType,
+    authOptions,
+    isOpen,
+    openAuthModal,
+    closeAuthModal,
+    setAuthType,
+  } = useAuth();
 
-interface AuthModalContextType {
-  authType: AuthType;
-  authOptions?: AuthModalOptions;
-  isOpen: boolean;
-  openAuthModal: (type: 'login' | 'signup', options?: AuthModalOptions) => void;
-  closeAuthModal: () => void;
-  setAuthType: (type: AuthType) => void;
-}
-
-const AuthModalContext = createContext<AuthModalContextType | undefined>(undefined);
-
-export const AuthModalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [authType, setAuthType] = useState<AuthType>(null);
-  const [authOptions, setAuthOptions] = useState<AuthModalOptions | undefined>();
-
-  const openAuthModal = (type: 'login' | 'signup', options?: AuthModalOptions) => {
-    setAuthType(type);
-    if (options) {
-      setAuthOptions(options);
-      if (options.redirectTo) {
-        sessionStorage.setItem("redirectScroll", window.scrollY.toString());
-      }
-    }
-  };
-  
-  const closeAuthModal = () => {
-    setAuthType(null);
-    setTimeout(() => setAuthOptions(undefined), 300);
-  };
-
-  const isOpen = !!authType;
-
-  return (
-    <AuthModalContext.Provider value={{ authType, authOptions, isOpen, openAuthModal, closeAuthModal, setAuthType }}>
-      {children}
-    </AuthModalContext.Provider>
-  );
+  return { authType, authOptions, isOpen, openAuthModal, closeAuthModal, setAuthType };
 };
 
-export const useAuthModal = () => {
-  const context = useContext(AuthModalContext);
-  if (context === undefined) {
-    throw new Error('useAuthModal must be used within an AuthModalProvider');
-  }
-  return context;
+/**
+ * AuthModalProvider — now a no-op passthrough.
+ * AuthModalProvider is no longer needed because state lives in AuthContext.
+ * Kept here so any import of AuthModalProvider doesn't crash.
+ */
+import React, { type ReactNode } from 'react';
+
+export const AuthModalProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  return <>{children}</>;
 };

@@ -56,6 +56,10 @@ MenuItem.init(
     {
         sequelize,
         tableName: 'menu_items',
+        indexes: [
+            { fields: ['category'] },
+            { fields: ['status'] }
+        ]
     }
 );
 

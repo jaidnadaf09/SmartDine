@@ -25,7 +25,10 @@ export const loadRazorpayScript = (): Promise<boolean> => {
     );
     if (existingScript) {
       existingScript.addEventListener("load", () => resolve(true));
-      existingScript.addEventListener("error", () => resolve(false));
+      existingScript.addEventListener("error", () => {
+        console.warn("Razorpay analytics blocked by browser (normal in privacy-focused browsers)");
+        resolve(false);
+      });
       return;
     }
 
@@ -35,7 +38,11 @@ export const loadRazorpayScript = (): Promise<boolean> => {
     script.async = true;
     script.id = "razorpay-script";
     script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
+    script.onerror = () => {
+      console.warn("Razorpay analytics blocked by browser (normal in privacy-focused browsers)");
+      resolve(false);
+    };
     document.body.appendChild(script);
+
   });
 };

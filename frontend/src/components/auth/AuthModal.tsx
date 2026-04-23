@@ -1,32 +1,26 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthModal } from '../../context/AuthModalContext';
 import { useAuth } from '../../context/AuthContext';
 import { Icons } from '../icons/IconSystem';
 import LoginForm from './LoginForm';
 import SignupForm from './SignupForm';
 import './AuthModal.css';
 
-interface AuthModalProps {
-  isOpen: boolean;
-  type: 'login' | 'signup';
-  setType: (type: 'login' | 'signup') => void;
-  onClose: () => void;
-}
-
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose }) => {
-  const { authOptions } = useAuthModal();
+const AuthModal: React.FC = () => {
+  // All state sourced from global auth context — no internal useState
+  const { isOpen, authType, setAuthType, closeAuthModal, authOptions } = useAuth();
   const navigate = useNavigate();
 
   const handleSuccess = () => {
-    onClose();
+    // closeAuthModal() is already called inside login/signup in AuthContext
+    // This handles post-close navigation
     if (authOptions?.redirectTo) {
       navigate(authOptions.redirectTo);
       setTimeout(() => {
-        const scrollY = sessionStorage.getItem("redirectScroll");
+        const scrollY = sessionStorage.getItem('redirectScroll');
         if (scrollY) {
           window.scrollTo(0, Number(scrollY));
-          sessionStorage.removeItem("redirectScroll");
+          sessionStorage.removeItem('redirectScroll');
         }
       }, 50);
     }
@@ -36,7 +30,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose })
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        closeAuthModal();
       }
     };
 
@@ -47,9 +41,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose })
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, closeAuthModal]);
 
-  const { user } = useAuth();
   // Prevent background scroll
   useEffect(() => {
     if (isOpen) {
@@ -66,26 +59,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, type, setType, onClose })
   if (!isOpen) return null;
 
   return (
-    <div className="auth-overlay" onClick={onClose}>
-      <div 
-        className="auth-modal" 
+    <div className="auth-overlay" onClick={closeAuthModal}>
+      <div
+        className="auth-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <button className="modal-close-btn" onClick={onClose} aria-label="Close modal">
+        <button className="modal-close-btn" onClick={closeAuthModal} aria-label="Close modal">
           <Icons.close size={24} />
         </button>
 
-        {type === 'login' ? (
-          <LoginForm 
-            isModal={true} 
-            onSuccess={handleSuccess} 
-            onSwitchToSignup={() => setType('signup')} 
+        {authType === 'login' ? (
+          <LoginForm
+            isModal={true}
+            onSuccess={handleSuccess}
+            onSwitchToSignup={() => setAuthType('signup')}
           />
         ) : (
-          <SignupForm 
-            isModal={true} 
-            onSuccess={handleSuccess} 
-            onSwitchToLogin={() => setType('login')} 
+          <SignupForm
+            isModal={true}
+            onSuccess={handleSuccess}
+            onSwitchToLogin={() => setAuthType('login')}
           />
         )}
       </div>

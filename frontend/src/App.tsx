@@ -1,8 +1,9 @@
+import { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
 import { AuthProvider } from './context/AuthContext';
+
 import { ThemeProvider } from './context/ThemeContext';
-import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
+
 import { Toaster } from "react-hot-toast";
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import ThemeToggleButton from './components/ui/ThemeToggleButton';
@@ -39,8 +40,6 @@ const PageLoader = () => (
 );
 
 const AppContent = () => {
-  const { authType, setAuthType, closeAuthModal } = useAuthModal();
-
   return (
     <>
       <ScrollProgress />
@@ -145,32 +144,39 @@ const AppContent = () => {
       </Suspense>
       <ThemeToggleButton />
 
-      <AuthModal
-        isOpen={!!authType}
-        type={authType || 'login'}
-        setType={(type) => setAuthType(type)}
-        onClose={closeAuthModal}
-      />
+      <AuthModal />
+
     </>
   );
 };
 
+import { getSocket } from './socket/socketClient';
+
 function App() {
+  useEffect(() => {
+    if (localStorage.getItem('token')) {
+      getSocket();
+    }
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AuthModalProvider>
-          <Toaster
+        <Toaster
             position="top-right"
             containerStyle={{
               top: 72,
               right: 24,
-              zIndex: 9999,
+              zIndex: 999999,
             }}
             toastOptions={{
-              duration: 2000,
+              duration: 2600,
               style: {
-                zIndex: 9999,
+                zIndex: 999999,
+                backdropFilter: 'blur(12px)',
+                background: 'rgba(255, 255, 255, 0.85)',
+                borderRadius: '14px',
+                border: '1px solid rgba(255, 255, 255, 0.4)',
               },
               className: 'hot-toast-premium',
               success: {
@@ -184,7 +190,6 @@ function App() {
           <Router>
             <AppContent />
           </Router>
-        </AuthModalProvider>
       </AuthProvider>
     </ThemeProvider>
   );

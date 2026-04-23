@@ -1,0 +1,86 @@
+/* =====================================================
+   AdminMenu.css — Scoped Menu Management Styles
+   SmartDine Admin Portal — Layout Refinement (v4.0)
+   ===================================================== */
+
+/* ── Form Layout ─────────────────────────────────────── */
+.sd-dish-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+    margin-bottom: 4px;
+}
+
+/* Normalize column alignment */
+.sd-dish-row > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.sd-dish-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+}
+
+/* Remove margin-top for fields inside a row for perfect leveling */
+.sd-dish-row .sd-dish-form-group {
+    margin-top: 0;
+}
+
+.sd-dish-row + .sd-dish-form-group {
+    margin-top: 18px;
+}
+
+.sd-dish-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+/* Standardize trigger and input heights for alignment */
+.sd-dish-row .select-trigger,
+.sd-dish-row .sd-select-trigger,
+.sd-dish-row input {
+    height: 44px;
+}
+
+.sd-dish-textarea {
+    width: 100%;
+    min-height: 70px;
+    max-height: 160px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    outline: none;
+    resize: none;
+    overflow-y: auto;
+    transition: border-color 0.2s ease;
+}
+
+.sd-dish-textarea:focus {
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(var(--brand-primary-rgb), 0.1);
+}
+
+.sd-dish-visibility {
+    margin-top: 18px;
+}
+
+/* ── Responsive Refinements ─────────────────────────── */
+@media (max-width: 640px) {
+    .sd-dish-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
