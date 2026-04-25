@@ -1,223 +1,63 @@
-import React, { useState, useEffect, useRef } from 'react';
-import toast from 'react-hot-toast';
-import api, { safeFetch } from '@utils/api';
-import { getSocket } from '@socket/socketClient';
-import { formatTime } from '@utils/dateFormatter';
-import DataTable, { type TableFilterConfig } from '../components/DataTable';
-import Select from '@ui/Select';
-import GlobalErrorState from '@components/ui/GlobalErrorState';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ActiveOrders from './ActiveOrders';
+import OrderHistory from './OrderHistory';
+
+type Tab = 'active' | 'history';
+
+const tabs: { id: Tab; label: string }[] = [
+    { id: 'active', label: 'Active Orders' },
+    { id: 'history', label: 'Order History' },
+];
 
 const Orders: React.FC = () => {
-    const [orders, setOrders] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
-    const mountedRef = useRef(true);
-    const hasFetchedRef = useRef(false);
-    const isFetchingRef = useRef(false);
-
-    const fetchOrders = async () => {
-        if (isFetchingRef.current) return;
-        isFetchingRef.current = true;
-        try {
-            const res = await safeFetch(() => api.get(`/orders?includeAll=true&t=${Date.now()}`));
-            if (mountedRef.current) {
-                setOrders(Array.isArray(res.data) ? res.data : []);
-                setError(null);
-            }
-        } catch (err: any) {
-            console.error('Failed to fetch orders:', err);
-            // Only show error if we have no data (first load failure)
-            if (mountedRef.current && orders.length === 0) {
-                setError(err.response?.data?.message || err.message || 'Failed to load orders.');
-            }
-        } finally {
-            if (mountedRef.current) setLoading(false);
-            isFetchingRef.current = false;
-        }
-    };
-
-    useEffect(() => {
-        mountedRef.current = true;
-        const socket = getSocket();
-        
-        if (!hasFetchedRef.current) {
-            hasFetchedRef.current = true;
-            fetchOrders();
-        }
-        const interval = setInterval(fetchOrders, 60000); // Auto-refresh every 60s
-        
-        // Listen to relevant socket events to update orders
-        socket.on('order:new', fetchOrders);
-        socket.on('order:updated', fetchOrders);
-        socket.on('order:completed', fetchOrders);
-
-        return () => { 
-            clearInterval(interval); 
-            mountedRef.current = false; 
-            socket.off('order:new', fetchOrders);
-            socket.off('order:updated', fetchOrders);
-            socket.off('order:completed', fetchOrders);
-        };
-    }, []);
-
-    const updateStatus = async (id: number, status: string) => {
-        try {
-            await api.patch(`/orders/${id}/status`, { status });
-            setOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
-            await fetchOrders();
-            toast.success('Order status updated');
-        } catch (err: any) {
-            console.error('Failed to update order status:', err);
-            toast.error(err.response?.data?.message || 'Failed to update status');
-        }
-    };
-
-    const columns = [
-        { header: 'Order ID', key: 'id', render: (order: any) => <strong style={{ color: 'var(--brand-primary)' }}>#{order.id}</strong> },
-        { 
-            header: 'Customer', 
-            key: 'customer', 
-            render: (order: any) => <span>{order.customer?.name || 'Guest'}</span>
-        },
-        { 
-            header: 'Items', 
-            key: 'items',
-            render: (order: any) => (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                    {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
-                        <div key={idx} style={{ marginBottom: '4px' }}>
-                            <div>{item.quantity}x {item.itemName}</div>
-                            {item.specialInstructions && (
-                                <div style={{ fontSize: '0.75rem', color: '#d97706', fontStyle: 'italic', marginLeft: '12px' }}>
-                                    ↳ "{item.specialInstructions}"
-                                </div>
-                            )}
-                        </div>
-                    )) : 'No items data'}
-                </div>
-            )
-        },
-        { 
-            header: 'Location', 
-            key: 'tableNumber',
-            render: (order: any) => (
-                <span style={{ fontWeight: 600 }}>
-                    {order.orderType === 'TAKEAWAY' ? 'Parcel' : `Table ${order.tableNumber || order.Table?.tableNumber || 'N/A'}`}
-                </span>
-            )
-        },
-        { 
-            header: 'Amount', 
-            key: 'totalAmount',
-            render: (order: any) => (
-                <span style={{ fontWeight: 700, color: 'var(--brand-primary)' }}>
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}
-                </span>
-            )
-        },
-        { 
-            header: 'Time', 
-            key: 'createdAt',
-            render: (order: any) => <span style={{ color: 'var(--text-muted)' }}>{formatTime(order.createdAt)}</span>
-        },
-        { 
-            header: 'Update', 
-            key: 'update',
-            render: (order: any) => {
-                const isFinalized = order.status === 'cancelled' || order.status === 'completed';
-                
-                if (isFinalized) {
-                    return (
-                        <div style={{ padding: '8px 0' }}>
-                            <span className={`status-pill-modern status-modern-${order.status?.toLowerCase()}`} style={{ opacity: 0.85, cursor: 'default' }}>
-                                {order.status?.charAt(0).toUpperCase() + order.status?.slice(1)}
-                            </span>
-                        </div>
-                    );
-                }
-
-                return (
-                    <Select
-                        value={order.status}
-                        onChange={(value: string) => updateStatus(order.id, value)}
-                        options={[
-                            { label: 'Pending', value: 'pending' },
-                            { label: 'Preparing', value: 'preparing' },
-                            { label: 'Completed', value: 'completed' }
-                        ]}
-                        style={{ width: '120px' }}
-                    />
-                );
-            }
-        }
-    ];
-
-    const filterConfig: TableFilterConfig[] = [
-        {
-            key: 'status',
-            label: 'All Statuses',
-            options: [
-                { label: 'Pending', value: 'pending' },
-                { label: 'Preparing', value: 'preparing' },
-                { label: 'Completed', value: 'completed' },
-                { label: 'Cancelled', value: 'cancelled' }
-            ]
-        },
-        {
-            key: 'orderType',
-            label: 'All Types',
-            options: [
-                { label: 'Dine In', value: 'DINE_IN' },
-                { label: 'Takeaway', value: 'TAKEAWAY' }
-            ]
-        }
-    ];
-
-    const filteredOrders = orders?.filter(order => {
-        const matchesSearch = 
-            order.id.toString().includes(searchTerm) || 
-            (order.customer?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-        
-        const matchesStatus = !activeFilters.status || order.status === activeFilters.status;
-        const matchesType = !activeFilters.orderType || order.orderType === activeFilters.orderType;
-
-        return matchesSearch && matchesStatus && matchesType;
-    }) || [];
-
-    const clearAllFilters = () => {
-        setSearchTerm('');
-        setActiveFilters({});
-    };
+    const [activeTab, setActiveTab] = useState<Tab>('active');
 
     return (
         <div className="management-page">
-
-            {loading ? (
-                <div style={{ padding: '3rem', textAlign: 'center' }}>
-                    <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
-                    <p style={{ color: 'var(--text-muted)' }}>Fetching all orders...</p>
+            <div className="tb-module-container orders-module">
+                {/* ── Attached Header (Tabs) ─────────────────── */}
+                <div className="tb-tabs-header">
+                    <div className="tb-tabs">
+                        {tabs.map((tab) => (
+                            <div
+                                key={tab.id}
+                                className={`tb-tab ${activeTab === tab.id ? 'active' : ''}`}
+                                onClick={() => setActiveTab(tab.id)}
+                            >
+                                {tab.label}
+                                {tab.id === 'active' && (
+                                    <span className="live-indicator">
+                                        <span className="dot" />
+                                    </span>
+                                )}
+                                {activeTab === tab.id && (
+                                    <motion.div
+                                        layoutId="orders-tab-indicator"
+                                        className="tb-tab-underline"
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            ) : error ? (
-                <GlobalErrorState 
-                    title="Failed to load orders" 
-                    description={error} 
-                    onRetry={fetchOrders} 
-                />
-            ) : (
-                <DataTable 
-                    columns={columns} 
-                    data={filteredOrders} 
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    filters={filterConfig}
-                    activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
-                    onClearAll={clearAllFilters}
-                    searchPlaceholder="Search order ID or customer name..."
-                />
-            )}
+
+                {/* ── Content Area (Seamless) ───────────────────────── */}
+                <div className="tb-content">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeTab}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.15, ease: 'easeOut' }}
+                        >
+                            {activeTab === 'active' && <ActiveOrders />}
+                            {activeTab === 'history' && <OrderHistory />}
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
+            </div>
         </div>
     );
 };

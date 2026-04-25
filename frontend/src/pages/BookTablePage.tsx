@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { Icons } from '@components/icons/IconSystem';
 import GuestStepper from '@shared/GuestStepper';
 import BookingCalendar from '@shared/BookingCalendar';
@@ -32,6 +33,7 @@ const BookTablePage: React.FC = () => {
   const { user, updateUser, isGuest } = useAuth();
   const { openAuthModal } = useAuthModal();
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'wallet'>('online');
+  const [step, setStep] = useState<'schedule' | 'payment'>('schedule');
 
   // Compute date boundaries (Local Time)
   const getLocalTodayStr = () => {
@@ -45,10 +47,9 @@ const BookTablePage: React.FC = () => {
   const todayStr = getLocalTodayStr();
   const maxDateObj = new Date();
   maxDateObj.setDate(maxDateObj.getDate() + 30);
-  // maxDate is used by BookingCalendar internally (30 days ahead)
 
   const [formData, setFormData] = useState({
-    date: todayStr, // Default to today
+    date: todayStr,
     time: '',
     guests: '2',
     name: isGuest ? "" : user?.name || "",
@@ -61,12 +62,7 @@ const BookTablePage: React.FC = () => {
 
   React.useEffect(() => {
     if (isGuest) {
-      setFormData(prev => ({
-        ...prev,
-        name: "",
-        email: "",
-        phone: ""
-      }));
+      setFormData(prev => ({ ...prev, name: "", email: "", phone: "" }));
     } else if (user) {
       setFormData(prev => ({
         ...prev,
@@ -76,6 +72,7 @@ const BookTablePage: React.FC = () => {
       }));
     }
   }, [isGuest, user]);
+
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
@@ -87,7 +84,6 @@ const BookTablePage: React.FC = () => {
 
   React.useEffect(() => {
     const checkAvailability = async () => {
-      // Avoid firing if any field is missing
       if (formData.date && formData.time && formData.guests) {
         try {
           const res = await api.post('/bookings/check-availability', {
@@ -97,7 +93,7 @@ const BookTablePage: React.FC = () => {
           });
           setAvailability(res.data.available);
         } catch {
-          setAvailability(false); // If check fails entirely, treat as unavailable
+          setAvailability(false);
         }
       } else {
         setAvailability(null);
@@ -106,33 +102,27 @@ const BookTablePage: React.FC = () => {
     checkAvailability();
   }, [formData.date, formData.time, formData.guests]);
 
+  // Premium Cursor Glow Logic
   React.useEffect(() => {
-    if (availability === false) {
-      toast.error('No suitable tables available for selected guest count', {
-        duration: 3000,
-        position: 'top-center',
-        style: {
-          borderRadius: "12px",
-          background: "#2b2118",
-          color: "#f5efe7",
-          border: "1px solid rgba(224,185,122,0.25)"
-        },
-        iconTheme: {
-          primary: "#e0b97a",
-          secondary: "#2b2118"
-        }
-      });
-    }
-  }, [availability]);
+    const card = document.querySelector('.book-table-box') as HTMLElement;
+    if (!card) return;
 
-  // ── New booking extras state ──
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--x', `${e.clientX - rect.left}px`);
+      card.style.setProperty('--y', `${e.clientY - rect.top}px`);
+    };
+
+    card.addEventListener('mousemove', handleMouseMove);
+    return () => card.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   const [preference, setPreference] = useState('');
   const [occasion, setOccasion] = useState('');
 
   const seatPreferences = ['Window Seat', 'Outdoor', 'Family Table', 'Quiet Corner', 'AC', 'Non-AC'];
   const occasionOptions = ['Birthday', 'Anniversary', 'Date Night', 'Business Meeting', 'Casual Dining'];
 
-  // Calculate min time if date is today (rounded to next 5 mins)
   const minTimeForToday = (() => {
     if (formData.date !== todayStr) return undefined;
     const now = new Date();
@@ -143,7 +133,6 @@ const BookTablePage: React.FC = () => {
     return tempDate.getHours().toString().padStart(2, '0') + ':' + tempDate.getMinutes().toString().padStart(2, '0');
   })();
 
-  // Skeleton loader: triggered when user changes date
   const handleDateChange = (date: string) => {
     setFormData(prev => ({ ...prev, date, time: '' }));
     setIsLoadingSlots(true);
@@ -151,29 +140,39 @@ const BookTablePage: React.FC = () => {
   };
 
   const bookingInProgress = useRef(false);
-
   const isAdmin = user?.role?.toLowerCase() === 'admin';
 
-  // Helper: build booking extras payload
   const getBookingExtras = () => ({
     ...(preference ? { preference } : {}),
     ...(occasion ? { occasion } : {}),
   });
 
-
-  // Success micro-interaction helper
   const showSuccessAndFinish = (details: any) => {
     setBookingDetails(details);
     setShowSuccess(true);
     setTimeout(() => {
       setShowSuccess(false);
       setSubmitted(true);
+      setTimeout(() => {
+        navigate('/my-bookings');
+      }, 2000);
     }, 800);
+  };
+
+  const handleProceedToPayment = () => {
+    if (!formData.date || !formData.time || !formData.guests) {
+      toast.error("Please select date, time and number of guests");
+      return;
+    }
+    if (availability === false) {
+      toast.error("The selected slot is no longer available");
+      return;
+    }
+    setStep('payment');
   };
 
   const handleAdminBook = async () => {
     if (isGuest) {
-      toast.error('Session expired. Please login again.');
       openAuthModal('login', { redirectTo: location.pathname });
       return;
     }
@@ -186,16 +185,9 @@ const BookTablePage: React.FC = () => {
         status: 'confirmed',
         ...getBookingExtras(),
       });
-
-      const data = res.data;
-      if (data.tableNumber) {
-        toast.success(`Admin Booking Confirmed! Assigned Table: ${data.tableNumber}`);
-      } else {
-        toast.success('Admin Booking Confirmed! (Table pending assignment)');
-      }
-      showSuccessAndFinish(data);
+      showSuccessAndFinish(res.data);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || 'Admin booking failed');
+      toast.error(err.response?.data?.message || 'Admin booking failed');
     } finally {
       setLoading(false);
     }
@@ -203,22 +195,15 @@ const BookTablePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (isGuest) {
       openAuthModal('login', { redirectTo: location.pathname });
       return;
     }
-
-    if (bookingInProgress.current) {
-      console.warn("Booking already in progress");
-      return;
-    }
-
+    if (bookingInProgress.current) return;
     bookingInProgress.current = true;
 
     try {
       setLoading(true);
-
       if (!user) {
         toast.error('You must be logged in to book a table.');
         setLoading(false);
@@ -226,31 +211,8 @@ const BookTablePage: React.FC = () => {
         return;
       }
 
-
-      console.log('Initiating booking flow for:', formData.date, formData.time);
-
-      // Verify not past date/time
-      const selectedDateTime = new Date(`${formData.date}T${formData.time}`);
-      if (selectedDateTime < new Date()) {
-        toast.error('Booking time cannot be in the past.');
-        setLoading(false);
-        bookingInProgress.current = false;
-        return;
-      }
-      const availRes = await api.post('/bookings/check-availability', {
-        date: formData.date,
-        time: formData.time,
-        guests: formData.guests
-      });
-
-      const availData = availRes.data;
-      if (!availData.available) {
-        throw new Error(availData.message || 'No tables available for this slot.');
-      }
-
       const paymentAmount = 10;
 
-      // -- BRAND NEW: WALLET PAYMENT BRANCH --
       if (paymentMethod === 'wallet') {
         if (Number(user.walletBalance || 0) < paymentAmount) {
           toast.error('Insufficient wallet balance.');
@@ -270,39 +232,21 @@ const BookTablePage: React.FC = () => {
           }
         });
 
-        const walletData = walletRes.data;
-
-        if (walletData.walletBalance !== undefined && user) {
-          updateUser({ walletBalance: walletData.walletBalance });
+        if (walletRes.data.walletBalance !== undefined) {
+          updateUser({ walletBalance: walletRes.data.walletBalance });
         }
-
-        console.log('Wallet Payment verified and booking created:', walletData.booking);
-
-        if (walletData.booking?.tableNumber) {
-          toast.success(`Booking Confirmed! Assigned Table: ${walletData.booking.tableNumber}`);
-        } else {
-          toast.success('Booking Confirmed! (Table pending assignment)');
-        }
-
-        showSuccessAndFinish(walletData.booking);
+        showSuccessAndFinish(walletRes.data.booking);
         setLoading(false);
         bookingInProgress.current = false;
         return;
       }
-
-      // -- ORIGINAL RAZORPAY PAYMENT BRANCH --
-      console.log('Creating Razorpay Order for amount:', paymentAmount);
 
       const orderResponse = await api.post('/payment/create-order', {
         amount: paymentAmount
       });
 
       const orderData = orderResponse.data;
-      console.log('Order created successfully on backend:', orderData.orderId);
-
-      // 3. Open Razorpay
       const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
-
       const scriptLoaded = await loadRazorpayScript();
 
       if (!scriptLoaded) {
@@ -319,10 +263,8 @@ const BookTablePage: React.FC = () => {
         name: "SmartDine",
         description: "Table Booking Payment",
         handler: async (response: any) => {
-          console.log('Payment success callback from Razorpay:', response.razorpay_payment_id);
           setLoading(true);
           try {
-            // Send only booking details – backend resolves customer info from token
             const verifyRes = await api.post('/payment/verify', {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
@@ -335,17 +277,8 @@ const BookTablePage: React.FC = () => {
                 ...getBookingExtras(),
               }
             });
-
-            const result = verifyRes.data;
-            console.log('Payment verified and booking created:', result.booking);
-            if (result.booking.tableNumber) {
-              toast.success(`Booking Confirmed! Assigned Table: ${result.booking.tableNumber}`);
-            } else {
-              toast.success('Booking Confirmed! (Table pending assignment)');
-            }
-            showSuccessAndFinish(result.booking);
+            showSuccessAndFinish(verifyRes.data.booking);
           } catch (err: any) {
-            console.error('VERIFICATION ERROR:', err);
             toast.error(err.message || 'Booking Error');
           } finally {
             setLoading(false);
@@ -359,41 +292,15 @@ const BookTablePage: React.FC = () => {
         theme: { color: "#d4af37" },
         modal: {
           ondismiss: function () {
-            console.log('Razorpay modal closed by user');
             setLoading(false);
           }
         }
       };
 
-      console.log('Opening Razorpay Checkout with options...');
       const rzp = new (window as any).Razorpay(options);
-      rzp.on('payment.failed', function (response: any) {
-        console.error('Razorpay Payment Failed Detailed:', response.error);
-        setLoading(false);
-      });
       rzp.open();
     } catch (err: any) {
-      console.error('BOOKING FLOW ERROR:', err);
-      if (err.message && err.message.toLowerCase().includes('cancel')) {
-        toast.error('Payment was cancelled — your table has not been reserved.');
-      } else if (err.message && err.message.includes('No tables')) {
-        toast.error('No suitable tables available for selected guest count', {
-          duration: 3000,
-          position: 'top-center',
-          style: {
-            borderRadius: "12px",
-            background: "#2b2118",
-            color: "#f5efe7",
-            border: "1px solid rgba(224,185,122,0.25)"
-          },
-          iconTheme: {
-            primary: "#e0b97a",
-            secondary: "#2b2118"
-          }
-        });
-      } else {
-        toast.error(err.message || 'Booking failed');
-      }
+      toast.error(err.message || 'Booking failed');
       setLoading(false);
     } finally {
       bookingInProgress.current = false;
@@ -413,7 +320,6 @@ const BookTablePage: React.FC = () => {
               <p className="reserve-subtitle">Premium Dining Experience</p>
             </div>
 
-            {/* Success micro-interaction overlay */}
             {showSuccess && (
               <div className="bt-success-overlay">
                 <div className="bt-success-icon">
@@ -447,218 +353,191 @@ const BookTablePage: React.FC = () => {
                     <span className="success-detail-label">Guests</span>
                     <span className="success-detail-value">{bookingDetails?.guests || formData.guests}</span>
                   </div>
-                  {formData.preference && (
-                    <div className="success-detail-row">
-                      <span className="success-detail-label">Preference</span>
-                      <span className="success-detail-value">{formData.preference}</span>
-                    </div>
-                  )}
-                  {formData.occasion && (
-                    <div className="success-detail-row">
-                      <span className="success-detail-label">Occasion</span>
-                      <span className="success-detail-value">{formData.occasion}</span>
-                    </div>
-                  )}
                 </div>
-                {bookingDetails?.paymentId && (
-                  <div className="success-ref">Ref: {bookingDetails.paymentId}</div>
-                )}
                 <button onClick={() => navigate('/')} className="pf-primary-btn">Go Home</button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="booking-form">
-
-                {/* User Info Row */}
-                <div className="user-info-row" style={{ marginBottom: "14px" }}>
-                  <div className="user-info-pill">
-                    <Icons.user size={16} className="pill-icon" />
-                    <span className="pill-label">Name:</span>
-                    <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
-                      {isGuest ? "Login required" : user?.name || "tester"}
-                    </span>
-                  </div>
-                  <div className="user-info-pill">
-                    <Icons.mail size={16} className="pill-icon" />
-                    <span className="pill-label">Email:</span>
-                    <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
-                      {isGuest ? "Login required" : user?.email || "test@gmail.com"}
-                    </span>
-                  </div>
-                  <div className="user-info-pill">
-                    <Icons.phone size={16} className="pill-icon" />
-                    <span className="pill-label">Phone:</span>
-                    <span className={`pill-value ${isGuest ? "guest-text" : ""}`}>
-                      {isGuest ? "Login required" : user?.phone || "9823743793"}
-                    </span>
-                  </div>
+              <div className="booking-form-wrapper">
+                {/* ── Booking Progress ── */}
+                <div className="booking-progress">
+                  <span className={`progress-step ${step === 'schedule' ? 'active' : 'completed'}`}>
+                    <span className="step-num">
+                      {step === 'payment' ? '✓' : '1'}
+                    </span> Details
+                  </span>
+                  <Icons.right size={12} className="progress-arrow" />
+                  <span className={`progress-step ${step === 'payment' ? 'active' : ''}`}>
+                    <span className="step-num">2</span> Payment
+                  </span>
                 </div>
 
-                <div className="booking-card">
-                  <div className="booking-row-horizontal">
-                    <div className="booking-field-compact">
-                      <label><span className="icon-box"><Icons.calendar size={14} className="lucide" /></span> DATE</label>
-                      <BookingCalendar
-                        selectedDate={formData.date}
-                        onChange={handleDateChange}
-                      />
-                    </div>
-
-                    <div className="booking-field-compact time-field-auto">
-                      <label><span className="icon-box"><Icons.clock size={14} className="lucide" /></span> TIME</label>
-                      {isLoadingSlots ? (
-                        <div className="skeleton"></div>
-                      ) : (
-                        <TimeDropdown
-                          value={formData.time}
-                          onChange={(time) => {
-                            if (isGuest) {
-                              openAuthModal('login', { redirectTo: location.pathname });
-                              return;
-                            }
-                            setFormData(prev => ({ ...prev, time }));
-                          }}
-                          minTime={minTimeForToday}
-                        />
-                      )}
-                    </div>
-
-                    <div className="booking-field-compact">
-                      <label><span className="icon-box"><Icons.user size={14} className="lucide" /></span> GUESTS</label>
-                      {isLoadingSlots ? (
-                        <div className="skeleton"></div>
-                      ) : (
-                        <GuestStepper
-                          value={parseInt(formData.guests, 10)}
-                          onChange={(guests) => setFormData(prev => ({ ...prev, guests: guests.toString() }))}
-                          min={1}
-                          max={20}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="panel-trigger" onClick={() => setIsPanelOpen(true)}>
-                  <Icons.calendar size={18} />
-                  <span>View Availability of Tables</span>
-                </div>
-
-                {/* ── BOOKING EXTRAS ── */}
-                <div className="bt-extras-section">
-                  {/* Seating Preference */}
-                  <div className="bt-extras-field">
-                    <span className="bt-section-header">
-                      <Icons.armchair size={16} className="bt-section-icon" />
-                      Seating Preference
-                    </span>
-                    <div className="bt-chip-group">
-                      {seatPreferences.map(opt => (
-                        <button
-                          key={opt}
-                          type="button"
-                          className={`bt-chip ${preference === opt ? 'selected' : ''}`}
-                          onClick={() => setPreference(preference === opt ? '' : opt)}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Occasion */}
-                  <div className="bt-extras-field">
-                    <span className="bt-section-header">
-                      <Icons.star size={16} className="bt-section-icon" />
-                      Occasion
-                    </span>
-                    <div className="bt-chip-group">
-                      {occasionOptions.map(opt => (
-                        <button
-                          key={opt}
-                          type="button"
-                          className={`bt-chip ${occasion === opt ? 'selected' : ''}`}
-                          onClick={() => setOccasion(occasion === opt ? '' : opt)}
-                        >
-                          {opt}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <span className="bt-section-label">Payment Method</span>
-                  <div className="payment-methods">
-                    <div
-                      className={`payment-option ${paymentMethod === 'online' ? 'active' : ''}`}
-                      onClick={() => setPaymentMethod('online')}
-                    >
-                      <div className="payment-card-icon"><span className="icon-box"><Icons.card size={24} className="lucide" /></span></div>
-                      <div className="payment-card-info">
-                        <span className="payment-card-title">Online Payment</span>
-                        <span className="payment-card-subtitle">Pay via Razorpay</span>
+                <form onSubmit={handleSubmit} className="booking-form">
+                  <motion.div
+                    key={step}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="card-step"
+                  >
+                    {/* ✅ ALWAYS VISIBLE USER INFO */}
+                    <div className="user-info-row" style={{ marginBottom: "14px" }}>
+                      <div className="user-info-pill">
+                        <Icons.user size={16} className="pill-icon" />
+                        <span className="pill-value">
+                          <span className="pill-label">Name:</span> {isGuest ? "Login required" : user?.name || "Guest"}
+                        </span>
                       </div>
-                    </div>
 
-                    <div
-                      className={`payment-option ${paymentMethod === 'wallet' ? 'active' : ''}`}
-                      onClick={() => {
-                        if (isGuest) {
-                          openAuthModal('login', { redirectTo: location.pathname });
-                          return;
-                        }
-                        setPaymentMethod('wallet');
-                      }}
-                    >
-                      <div className="payment-card-icon"><span className="icon-box"><Icons.wallet size={24} className="lucide" /></span></div>
-                      <div className="payment-card-info">
-                        <span className="payment-card-title">SmartDine Wallet</span>
-                        <span className="payment-card-subtitle">
-                          {user ? `Balance: ₹${Number(user.walletBalance || 0)}` : 'Login to view'}
+                      <div className="user-info-pill">
+                        <Icons.mail size={16} className="pill-icon" />
+                        <span className="pill-value">
+                          <span className="pill-label">Email:</span> {isGuest ? "Login required" : user?.email || "Not available"}
+                        </span>
+                      </div>
+
+                      <div className="user-info-pill">
+                        <Icons.phone size={16} className="pill-icon" />
+                        <span className="pill-value">
+                          <span className="pill-label">Phone:</span> {isGuest ? "Login required" : user?.phone || "Not available"}
                         </span>
                       </div>
                     </div>
-                  </div>
-                </div>
-                <div className="booking-actions-group" style={{ position: 'relative' }}>
-                  {isGuest ? (
-                    <button
-                      type="button"
-                      className="premium-login-cta"
-                      onClick={() => openAuthModal('login', { redirectTo: location.pathname })}
-                    >
-                      <Icons.lock size={16} />
-                      Unlock Reservation Experience
-                    </button>
-                  ) : (
-                    <button type="submit" className={`reserve-btn ${loading ? 'loading' : ''}`} disabled={loading}>
-                      {loading ? (
-                        <>
-                          <span className="icon-box" style={{ marginRight: 10 }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
-                              <circle cx="12" cy="12" r="10" strokeDasharray="32" strokeDashoffset="10" />
-                            </svg>
-                          </span>
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <span className="icon-box" style={{ marginRight: 10 }}>
-                            <Icons.card size={20} className="lucide" />
-                          </span>
-                          Pay ₹10 & Reserve Table
-                        </>
-                      )}
-                    </button>
-                  )}
 
-                  {!isGuest && isAdmin && (
-                    <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn">
-                      Admin: Instant Booking
-                    </button>
-                  )}
-                </div>
-              </form>
+                    {step === 'schedule' ? (
+                      <>
+
+                        <div className="booking-card">
+                          <div className="booking-row-horizontal">
+                            <div className="booking-field-compact">
+                              <label><span className="icon-box"><Icons.calendar size={14} className="lucide" /></span> DATE</label>
+                              <BookingCalendar selectedDate={formData.date} onChange={handleDateChange} />
+                            </div>
+                            <div className="booking-field-compact time-field-auto">
+                              <label><span className="icon-box"><Icons.clock size={14} className="lucide" /></span> TIME</label>
+                              {isLoadingSlots ? <div className="skeleton"></div> : (
+                                <TimeDropdown
+                                  value={formData.time}
+                                  onChange={(time) => {
+                                    if (isGuest) {
+                                      openAuthModal('login', { redirectTo: location.pathname });
+                                      return;
+                                    }
+                                    setFormData(prev => ({ ...prev, time }));
+                                  }}
+                                  minTime={minTimeForToday}
+                                />
+                              )}
+                            </div>
+                            <div className="booking-field-compact">
+                              <label><span className="icon-box"><Icons.user size={14} className="lucide" /></span> GUESTS</label>
+                              {isLoadingSlots ? <div className="skeleton"></div> : (
+                                <GuestStepper
+                                  value={parseInt(formData.guests, 10)}
+                                  onChange={(guests) => setFormData(prev => ({ ...prev, guests: guests.toString() }))}
+                                  min={1} max={20}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="panel-trigger" onClick={() => setIsPanelOpen(true)}>
+                          <Icons.calendar size={18} />
+                          <span>View Availability of Tables</span>
+                        </div>
+
+                        <div className="section-block bt-extras-section">
+                          <div className="bt-extras-field">
+                            <span className="bt-section-header"><Icons.armchair size={16} className="bt-section-icon" /> Seating Preference</span>
+                            <div className="bt-chip-group">
+                              {seatPreferences.map(opt => (
+                                <button key={opt} type="button" className={`bt-chip preference-chip ${preference === opt ? 'selected active' : ''}`} onClick={() => setPreference(preference === opt ? '' : opt)}>{opt}</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="bt-extras-field">
+                            <span className="bt-section-header"><Icons.star size={16} className="bt-section-icon" /> Occasion</span>
+                            <div className="bt-chip-group">
+                              {occasionOptions.map(opt => (
+                                <button key={opt} type="button" className={`bt-chip preference-chip ${occasion === opt ? 'selected active' : ''}`} onClick={() => setOccasion(occasion === opt ? '' : opt)}>{opt}</button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="booking-actions-group">
+                          {availability === true && <div className="availability-success">✔ Tables available</div>}
+                          {availability === false && <div className="availability-error">✖ No tables available</div>}
+                          
+                          <button type="button" className="reserve-btn" onClick={handleProceedToPayment}>
+                            <span className="icon-box" style={{ marginRight: 10 }}><Icons.right size={20} /></span>
+                            Continue to Payment
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="booking-summary-card">
+                          <div className="summary-header">
+                            <span className="summary-title">Booking Summary</span>
+                            <button type="button" className="edit-summary-btn" onClick={() => setStep('schedule')}>
+                              <Icons.edit size={14} /> Edit
+                            </button>
+                          </div>
+                          <div className="summary-row">
+                            <span><Icons.calendar size={14} /> {formatDate(formData.date)}</span>
+                            <span><Icons.clock size={14} /> {formatTime(formData.time)}</span>
+                            <span><Icons.user size={14} /> {formData.guests} Guests</span>
+                          </div>
+                          {(preference || occasion) && (
+                            <div className="summary-extras">
+                              <Icons.info size={14} /> 
+                              <span>{preference}{preference && occasion ? ' • ' : ''}{occasion}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="section-block form-group">
+                          <span className="bt-section-label">Payment Method</span>
+                          <div className="payment-methods">
+                            <div className={`payment-option ${paymentMethod === 'online' ? 'active' : ''}`} onClick={() => setPaymentMethod('online')}>
+                              <div className="payment-card-icon"><Icons.card size={24} /></div>
+                              <div className="payment-card-info">
+                                <span className="payment-card-title">Online Payment</span>
+                                <span className="payment-card-subtitle">Razorpay Secure</span>
+                              </div>
+                            </div>
+                            <div className={`payment-option ${paymentMethod === 'wallet' ? 'active' : ''}`} onClick={() => setPaymentMethod('wallet')}>
+                              <div className="payment-card-icon"><Icons.wallet size={24} /></div>
+                              <div className="payment-card-info">
+                                <span className="payment-card-title">Wallet</span>
+                                <span className="payment-card-subtitle">Balance: ₹{Number(user?.walletBalance || 0)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="booking-actions-group">
+                          <button type="submit" className={`reserve-btn ${loading ? 'loading' : ''}`} disabled={loading}>
+                            {loading ? "Processing..." : <>
+                              <span className="icon-box" style={{ marginRight: 10 }}><Icons.card size={20} /></span>
+                              Pay ₹10 & Reserve Table
+                            </>}
+                          </button>
+                          {isAdmin && (
+                            <button type="button" onClick={handleAdminBook} className="submit-btn admin-book-btn">
+                              Admin: Instant Booking
+                            </button>
+                          )}
+                          <button type="button" className="back-btn-text" onClick={() => setStep('schedule')}>
+                            <Icons.left size={14} /> Back to Details
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                </form>
+              </div>
             )}
           </div>
         </div>

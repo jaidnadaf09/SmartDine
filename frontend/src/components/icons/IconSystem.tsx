@@ -67,7 +67,8 @@ import {
   Lock,
   LayoutList,
   Volume2,
-  VolumeX
+  VolumeX,
+  Info
 } from "lucide-react";
 
 export const Icons = {
@@ -142,4 +143,5 @@ export const Icons = {
   list: LayoutList,
   volume2: Volume2,
   volumeX: VolumeX,
+  info: Info,
 };

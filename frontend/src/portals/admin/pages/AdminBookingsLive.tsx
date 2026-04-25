@@ -18,8 +18,8 @@ import {
 } from '../../../services/bookingService';
 import '@styles/portals/AdminBookingsLive.css';
 import { getSocket } from '@socket/socketClient';
+import { useLiveStatus } from '../../../hooks/useLiveStatus';
 
-const POLL_INTERVAL = 60_000; // 60 seconds backup poll
 
 const REJECT_REASONS = ['Customer cancelled', 'No show', 'Restaurant issue', 'Full capacity'];
 
@@ -117,18 +117,8 @@ const AdminBookingsLive: React.FC = () => {
         loadData(true);
     }, [loadData]);
 
-    // Polling every 20 seconds with stacking protection
-    const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-    useEffect(() => {
-        if (pollIntervalRef.current) return;
-        pollIntervalRef.current = setInterval(() => loadData(false), POLL_INTERVAL);
-        return () => {
-            if (pollIntervalRef.current) {
-                clearInterval(pollIntervalRef.current);
-                pollIntervalRef.current = null;
-            }
-        };
-    }, [loadData]);
+    // Standardized Live Polling
+    useLiveStatus(() => loadData(false), []);
 
     // Real-time: receive instant booking updates via WebSocket
     useEffect(() => {
@@ -157,9 +147,9 @@ const AdminBookingsLive: React.FC = () => {
                     return [booking, ...prev];
                 });
             }
-            
+
             // Still refresh available tables in background
-            fetchAvailableTables().then(tables => setAvailableTables(tables)).catch(() => {});
+            fetchAvailableTables().then(tables => setAvailableTables(tables)).catch(() => { });
         };
 
         const handleBookingUpdated = (updatedBooking: any) => {
@@ -181,7 +171,7 @@ const AdminBookingsLive: React.FC = () => {
             }
 
             // Sync tables
-            fetchAvailableTables().then(tables => setAvailableTables(tables)).catch(() => {});
+            fetchAvailableTables().then(tables => setAvailableTables(tables)).catch(() => { });
         };
 
         const socket = getSocket();
@@ -301,9 +291,9 @@ const AdminBookingsLive: React.FC = () => {
             <span className="booking-section-title">{title}</span>
             <span className={`booking-section-count ${countClass}`}>{count}</span>
             <div className="booking-section-divider" />
-            <div className="polling-indicator">
-                <span className="polling-dot" />
-                <span>Live</span>
+            <div className="live-indicator">
+                <span className="dot"></span>
+                Live
             </div>
         </div>
     );
@@ -353,10 +343,13 @@ const AdminBookingsLive: React.FC = () => {
                                 key="pending-empty"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="booking-empty-state"
+                                className="sd-empty-state"
                             >
-                                <Icons.calendar size={32} className="booking-empty-state-icon" />
-                                <p>No pending booking requests</p>
+                                <div className="sd-empty-icon">
+                                    <Icons.calendar size={28} />
+                                </div>
+                                <h3>No pending booking requests</h3>
+                                <p>Incoming booking requests from customers will appear here.</p>
                             </motion.div>
                         ) : (
                             <div className="booking-cards-grid">
@@ -392,10 +385,13 @@ const AdminBookingsLive: React.FC = () => {
                                 key="confirmed-empty"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="booking-empty-state"
+                                className="sd-empty-state"
                             >
-                                <Icons.check size={32} className="booking-empty-state-icon" />
-                                <p>No confirmed bookings right now</p>
+                                <div className="sd-empty-icon">
+                                    <Icons.checkCircle size={28} />
+                                </div>
+                                <h3>No confirmed bookings right now</h3>
+                                <p>Confirmed and active bookings will be listed in this section.</p>
                             </motion.div>
                         ) : (
                             <div className="booking-cards-grid">

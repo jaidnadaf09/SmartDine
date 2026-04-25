@@ -165,7 +165,7 @@ export const getChefReviews = async (req: Request, res: Response) => {
                 {
                     model: Order,
                     as: 'order',
-                    attributes: ["id"]
+                    attributes: ["id", "items"]
                 },
                 {
                     model: User,

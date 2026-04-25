@@ -38,7 +38,8 @@
       "@socket/*": ["src/socket/*"],
       "@styles/*": ["src/styles/*"],
       "@ui/*": ["src/components/ui/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@hooks/*": ["src/hooks/*"]
     }
   },
   "include": ["src"]

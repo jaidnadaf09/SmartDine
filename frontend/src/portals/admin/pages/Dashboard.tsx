@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
                             </div>
                             <div className="dashboard-recent-list">
                                 {(stats?.recentBookings || []).slice(0, 4).map((b: any) => (
-                                    <div key={b.id} style={{ padding: '12px 0', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div key={b.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
                                             <span style={{ fontWeight: 600, display: 'block', color: 'var(--text-primary)' }}>{b.customerName}</span>
                                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{formatDate(b.date)} · {formatTime(b.time)}</span>
@@ -169,21 +169,18 @@ const Dashboard: React.FC = () => {
                                 <Button variant="secondary" size="sm" onClick={() => navigate('/admin/orders')}>View All</Button>
                             </div>
                             <div className="dashboard-recent-list" style={{ display: 'flex', flexDirection: 'column' }}>
-                                {(stats?.recentOrders || []).slice(0, 4).map((o: any, idx: number) => (
-                                    <React.Fragment key={o.id}>
-                                        <div style={{ padding: '8px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div>
-                                                <span style={{ fontWeight: 600, display: 'block', color: 'var(--text-primary)', fontSize: '0.9rem' }}>{o.customer?.name || 'Guest'}</span>
-                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                                                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(o.totalAmount)}
-                                                </span>
-                                            </div>
-                                            <span className={`status-pill-modern status-modern-${o.status?.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
-                                                {o.status}
+                                {(stats?.recentOrders || []).slice(0, 4).map((o: any) => (
+                                    <div key={o.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <span style={{ fontWeight: 600, display: 'block', color: 'var(--text-primary)', fontSize: '0.9rem' }}>{o.customer?.name || 'Guest'}</span>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(o.totalAmount)}
                                             </span>
                                         </div>
-                                        {idx < (Math.min(stats?.recentOrders?.length || 0, 4) - 1) && <div style={{ height: '1px', background: 'var(--border-color)', opacity: 0.4, margin: '4px 0' }} />}
-                                    </React.Fragment>
+                                        <span className={`status-pill-modern status-modern-${o.status?.toLowerCase()}`} style={{ fontSize: '0.65rem', padding: '2px 8px' }}>
+                                            {o.status}
+                                        </span>
+                                    </div>
                                 ))}
                                 {(!stats?.recentOrders || stats.recentOrders.length === 0) && <p style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No recent orders</p>}
                             </div>

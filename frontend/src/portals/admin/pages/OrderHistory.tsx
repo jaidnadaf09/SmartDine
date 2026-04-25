@@ -1,22 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api, { safeFetch } from '@utils/api';
-import { formatDate, formatTime } from '@utils/dateFormatter';
-import DataTable from '../components/DataTable';
+import OrderTable from '../components/orders/OrderTable';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
+import { type TableFilterConfig } from '../components/DataTable';
 
 const OrderHistory: React.FC = () => {
     const [orders, setOrders] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
     const [currentPage, setCurrentPage] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const mountedRef = useRef(true);
 
     const fetchOrderHistory = async () => {
-        setLoading(true);
         try {
-            const res = await safeFetch(() => api.get(`/admin/orders/history?page=${currentPage}&limit=10&search=${searchTerm}`));
+            const params = new URLSearchParams();
+            params.append('page', currentPage.toString());
+            params.append('limit', '10');
+            if (searchTerm) params.append('search', searchTerm);
+            if (activeFilters.status && activeFilters.status !== 'all') params.append('status', activeFilters.status);
+            if (activeFilters.orderType && activeFilters.orderType !== 'all') params.append('orderType', activeFilters.orderType);
+            if (activeFilters.dateRange && activeFilters.dateRange !== 'all') params.append('dateRange', activeFilters.dateRange);
+
+            const res = await safeFetch(() => api.get(`/admin/orders/history?${params.toString()}`));
             if (mountedRef.current) {
                 setOrders(res.data.orders || []);
                 setTotalItems(res.data.total || 0);
@@ -28,7 +35,7 @@ const OrderHistory: React.FC = () => {
                 setError(err.response?.data?.message || err.message || 'Failed to load order history.');
             }
         } finally {
-            if (mountedRef.current) setLoading(false);
+            // No action needed
         }
     };
 
@@ -36,99 +43,70 @@ const OrderHistory: React.FC = () => {
         mountedRef.current = true;
         fetchOrderHistory();
         return () => { mountedRef.current = false; };
-    }, [currentPage, searchTerm]);
+    }, [currentPage, searchTerm, activeFilters]);
 
-    const columns = [
-        { 
-            header: 'Order ID', 
-            key: 'id',
-            render: (order: any) => <strong style={{ color: 'var(--brand-primary)' }}>#{order.id}</strong>
-        },
-        { 
-            header: 'Customer', 
-            key: 'customer',
-            render: (order: any) => <span>{order.customer?.name || 'Guest User'}</span>
-        },
-        { 
-            header: 'Type', 
-            key: 'orderType',
-            render: (order: any) => (
-                <span className={`status-pill-modern ${order.orderType === 'TAKEAWAY' ? 'status-modern-pending' : 'status-modern-confirmed'}`} style={{ fontSize: '0.75rem' }}>
-                    {order.orderType}
-                </span>
-            )
-        },
-        { 
-            header: 'Items', 
-            key: 'items',
-            render: (order: any) => (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                    {order.items && Array.isArray(order.items) ? order.items.map((item: any, idx: number) => (
-                        <span key={idx} style={{ fontSize: '0.75rem', padding: '2px 8px', background: 'var(--bg-secondary)', borderRadius: '12px', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
-                            {item.quantity}x {item.itemName}
-                        </span>
-                    )) : 'No items'}
-                </div>
-            )
-        },
-        { 
-            header: 'Amount', 
-            key: 'totalAmount',
-            render: (order: any) => (
-                <span style={{ fontWeight: 800, color: 'var(--brand-primary)' }}>
-                    {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(Number(order.totalAmount))}
-                </span>
-            )
-        },
-        { 
-            header: 'Completed At', 
-            key: 'updatedAt',
-            render: (order: any) => (
-                <div style={{ fontSize: '0.85rem' }}>
-                    <div style={{ fontWeight: 600 }}>{formatTime(order.updatedAt)}</div>
-                    <div style={{ opacity: 0.6 }}>{formatDate(order.updatedAt)}</div>
-                </div>
-            )
-        },
-        { 
-            header: 'Status', 
+    const filterConfig: TableFilterConfig[] = [
+        {
             key: 'status',
-            render: () => (
-                <span className="status-pill-modern status-modern-confirmed">
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', marginRight: '8px' }}></span>
-                    Completed
-                </span>
-            )
+            label: 'All Statuses',
+            options: [
+                { label: 'Completed', value: 'completed' },
+                { label: 'Cancelled', value: 'cancelled' }
+            ]
+        },
+        {
+            key: 'orderType',
+            label: 'All Types',
+            options: [
+                { label: 'Dine In', value: 'DINE_IN' },
+                { label: 'Takeaway', value: 'TAKEAWAY' }
+            ]
+        },
+        {
+            key: 'dateRange',
+            label: 'All Dates',
+            options: [
+                { label: 'Today', value: 'today' },
+                { label: 'Last 7 Days', value: 'week' },
+                { label: 'Last 30 Days', value: 'month' }
+            ]
         }
     ];
 
+    const clearAllFilters = () => {
+        setSearchTerm('');
+        setActiveFilters({});
+    };
+
     return (
-        <div className="management-page">
-            {loading ? (
-                <div style={{ padding: '3rem', textAlign: 'center' }}>
-                    <div className="chef-spinner" style={{ margin: '0 auto 1rem' }}></div>
-                    <p style={{ color: 'var(--text-muted)' }}>Retrieving order history...</p>
-                </div>
-            ) : error ? (
+        <div style={{ marginTop: '20px' }}>
+            {error ? (
                 <GlobalErrorState 
                     title="Failed to load order history" 
                     description={error} 
                     onRetry={fetchOrderHistory} 
                 />
             ) : (
-                <DataTable 
-                    columns={columns} 
-                    data={orders} 
+                <OrderTable
+                    variant="history"
+                    data={orders}
                     searchValue={searchTerm}
                     onSearchChange={(val) => {
                         setSearchTerm(val);
                         setCurrentPage(1);
                     }}
-                    searchPlaceholder="Search order ID or customer..."
+                    filters={filterConfig}
+                    activeFilters={activeFilters}
+                    onFilterChange={(key, value) => {
+                        setActiveFilters(prev => ({ ...prev, [key]: value }));
+                        setCurrentPage(1);
+                    }}
+                    onClearAll={clearAllFilters}
                     isServerSide={true}
                     totalCount={totalItems}
                     currentPage={currentPage}
                     onPageChange={setCurrentPage}
+                    emptyMessage="No orders found for selected filters"
                 />
             )}
         </div>

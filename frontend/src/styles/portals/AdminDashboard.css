@@ -7,12 +7,13 @@
 .sd-stats-grid {
     display: grid;
     grid-template-columns: repeat(5, minmax(180px, 1fr));
-    gap: 1.125rem; /* 18px */
+    gap: 1.125rem;
+    /* 18px */
     margin-bottom: 2rem;
 }
 
 /* Ensure cards maintain consistent visual hierarchy */
-.sd-stats-grid > * {
+.sd-stats-grid>* {
     min-height: 110px;
 }
 
@@ -21,7 +22,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 1.125rem 1.25rem; /* 18px 20px */
+    padding: 1.125rem 1.25rem;
+    /* 18px 20px */
     border-radius: 16px;
     background: var(--card-bg);
     backdrop-filter: blur(12px);
@@ -99,7 +101,8 @@
 .dashboard-recent-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem; /* 24px */
+    gap: 1.5rem;
+    /* 24px */
     align-items: stretch;
 }
 
@@ -109,7 +112,8 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 1.25rem; /* 20px compact */
+    padding: 1.25rem;
+    /* 20px compact */
     border-radius: 16px;
 }
 
@@ -119,16 +123,17 @@
     flex: 1;
 }
 
-.dashboard-recent-list > div {
+.dashboard-recent-list>div {
     padding: 12px 0;
+    border-bottom: 1px solid var(--border-subtle);
     transition: background 0.2s ease;
 }
 
-.dashboard-recent-list > div:hover {
-    background: rgba(255, 255, 255, 0.02);
+.dashboard-recent-list>div:hover {
+    background: transparent;
 }
 
-.dashboard-recent-list > div:last-child {
+.dashboard-recent-list>div:last-child {
     border-bottom: none !important;
 }
 
@@ -150,11 +155,314 @@
 }
 
 @keyframes trendUp {
-    0% { transform: translateY(4px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+    0% {
+        transform: translateY(4px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
 @keyframes trendDown {
-    0% { transform: translateY(-4px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+    0% {
+        transform: translateY(-4px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Live Indicator Style */
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.live-indicator .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+    }
+
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+}
+
+/* Table Density Optimization */
+.order-row td {
+    padding: 10px 8px;
+    font-size: 13.5px;
+}
+
+/* Review Card Layout Fixes */
+.review-card {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: nowrap;
+}
+
+.review-stars {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    max-width: 140px;
+}
+
+/* Override potential large scale from component */
+.review-stars>div {
+    transform: none !important;
+    gap: 6px !important;
+    filter: none !important;
+}
+
+.review-stars svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+}
+
+.review-card:hover .review-stars svg {
+    transform: scale(1.05);
+}
+
+/* ── Tables & Bookings Unified Module ──────────────── */
+.tb-module-container {
+    width: 100%;
+    max-width: 100%;
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    margin-top: 1.5rem;
+}
+
+/* Max Width for Ultra-Large Screens */
+@media (min-width: 1600px) {
+    .tb-module-container {
+        max-width: 1500px;
+        margin: 1.5rem auto 0;
+    }
+}
+
+.tb-tabs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.tb-tabs {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.tb-tab {
+    position: relative;
+    padding: 10px 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tb-tab:hover {
+    color: var(--text-primary);
+}
+
+.tb-tab.active {
+    color: var(--brand-primary);
+}
+
+.tb-tab-underline {
+    position: absolute;
+    bottom: 0px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--brand-primary);
+    border-radius: 2px;
+    z-index: 2;
+}
+
+.tb-content {
+    padding: 16px 20px;
+}
+
+/* ── Standardized Table Smoothing (Inside Module) ──── */
+.user-table-container table,
+.tb-content table {
+    border: none;
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+.tb-content table th,
+.tb-content table td {
+    padding: 14px 18px;
+    /* Improved spacing for wide layout */
+}
+
+/* Round Top Rows */
+.user-table-container table thead tr:first-child th:first-child,
+.tb-content table thead tr:first-child th:first-child {
+    border-top-left-radius: 12px;
+}
+
+.user-table-container table thead tr:first-child th:last-child,
+.tb-content table thead tr:first-child th:last-child {
+    border-top-right-radius: 12px;
+}
+
+/* Round Bottom Rows */
+.user-table-container table tbody tr:last-child td:first-child,
+.tb-content table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 12px;
+}
+
+.user-table-container table tbody tr:last-child td:last-child,
+.tb-content table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 12px;
+}
+
+/* Subtle Row Separators & Hover */
+.user-table-container table tbody tr,
+.tb-content table tbody tr {
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.2s ease;
+}
+
+.user-table-container table tbody tr:last-child,
+.tb-content table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.user-table-container table tbody tr:hover,
+.tb-content table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* ── Remove Inner Table Card (FINAL MERGE) ────────── */
+.tb-content .admin-table-container {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.tb-content .admin-table-header {
+    background: transparent !important;
+    padding: 0.75rem 0.5rem 1.25rem 0.5rem !important;
+    /* Tighten header spacing */
+    border-bottom-color: var(--border-subtle) !important;
+}
+
+.tb-content .admin-table thead th {
+    background: transparent !important;
+}
+
+/* ── Orders Module Synchronization ────────────────── */
+.orders-module .tb-tabs {
+    display: flex;
+    flex-direction: row !important;
+}
+
+.orders-module .tb-tab {
+    white-space: nowrap;
+}
+
+/* Seamless Table Merge for Orders */
+.orders-module .tb-content .admin-table-container {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+}
+
+.orders-module .tb-content .admin-table-header {
+    background: transparent !important;
+    border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+/* ── Order Status Dropdown Theme Fix ──────────────── */
+body:not([data-theme="dark"]) .order-status-dropdown .select-control {
+    background: #f8f5f0 !important;
+    color: #3d2b1f !important;
+    border: 1px solid rgba(120, 90, 60, 0.15) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+    border-radius: 999px !important;
+    padding: 6px 14px !important;
+    font-weight: 500 !important;
+    min-height: unset !important;
+    height: 36px !important;
+    font-size: 0.85rem !important;
+}
+
+body:not([data-theme="dark"]) .order-status-dropdown .select-control:hover {
+    border-color: #c8a96a !important;
+    background: #f3ece4 !important;
+}
+
+body:not([data-theme="dark"]) .order-status-dropdown .select-control:focus,
+body:not([data-theme="dark"]) .order-status-dropdown.is-open .select-control {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(200, 169, 106, 0.2) !important;
+}
+
+[data-theme="dark"] .order-status-dropdown .select-control {
+    background: #1f1b18 !important;
+    color: #f5efe8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 999px !important;
+    min-height: unset !important;
+    height: 36px !important;
+    font-size: 0.85rem !important;
 }

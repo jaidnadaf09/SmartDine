@@ -78,19 +78,24 @@ const TimeDropdown: React.FC<TimeDropdownProps> = ({ value, onChange, minTime })
               <div className="time-section" key={section.label}>
                 <p className="time-label">{section.label}</p>
                 <div className="time-grid">
-                  {filteredSlots.map(time => {
-                    const isSelected = value === time;
-                    return (
-                      <button
-                        key={time}
-                        type="button"
-                        className={`time-slot ${isSelected ? 'selected' : ''}`}
-                        onClick={() => { onChange(time); setIsOpen(false); }}
-                      >
-                        <span className="time-slot-text">{formatTo12Hr(time)}</span>
-                      </button>
-                    );
-                  })}
+                      {filteredSlots.map(time => {
+                        const isSelected = value === time;
+                        const isPeak = time === '20:00' || time === '21:00';
+                        const isBest = time === '19:00';
+                        
+                        return (
+                          <button
+                            key={time}
+                            type="button"
+                            className={`time-slot ${isSelected ? 'selected' : ''}`}
+                            onClick={() => { onChange(time); setIsOpen(false); }}
+                          >
+                            <span className="time-slot-text">{formatTo12Hr(time)}</span>
+                            {isPeak && <span className="fast-filling">🔥 Filling Fast</span>}
+                            {isBest && <span className="recommended-slot">⭐ Recommended</span>}
+                          </button>
+                        );
+                      })}
                 </div>
               </div>
             );

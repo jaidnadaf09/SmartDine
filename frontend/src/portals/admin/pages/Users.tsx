@@ -172,17 +172,19 @@ const Users: React.FC = () => {
                     onRetry={fetchUsers} 
                 />
             ) : (
-                <DataTable 
-                    columns={columns} 
-                    data={filteredUsers} 
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    filters={filterConfig}
-                    activeFilters={activeFilters}
-                    onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
-                    onClearAll={clearAllFilters}
-                    searchPlaceholder="Search by name or email..."
-                />
+                <div className="user-table-container">
+                    <DataTable 
+                        columns={columns} 
+                        data={filteredUsers} 
+                        searchValue={searchTerm}
+                        onSearchChange={setSearchTerm}
+                        filters={filterConfig}
+                        activeFilters={activeFilters}
+                        onFilterChange={(key, value) => setActiveFilters(prev => ({ ...prev, [key]: value }))}
+                        onClearAll={clearAllFilters}
+                        searchPlaceholder="Search by name or email..."
+                    />
+                </div>
             )}
 
             {confirmDeleteOpen && (

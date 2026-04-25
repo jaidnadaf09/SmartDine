@@ -449,6 +449,97 @@ body[data-theme="dark"] .booking-card--active::after {
     }
 }
 
+/* ── Premium Empty State Styles ─────────────────────── */
+.sd-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2.5rem 1rem;
+    gap: 12px;
+    position: relative;
+    overflow: hidden;
+    min-height: 180px;
+}
+
+/* Subtle background glow */
+.sd-empty-state::after {
+    content: "";
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(
+        circle,
+        rgba(212, 175, 55, 0.05),
+        transparent 70%
+    );
+    filter: blur(30px);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.sd-empty-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brand-primary);
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sd-empty-state:hover .sd-empty-icon {
+    transform: translateY(-4px) scale(1.08);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.sd-empty-state h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 4px 0 0;
+    position: relative;
+    z-index: 1;
+}
+
+.sd-empty-state p {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    max-width: 340px;
+    line-height: 1.5;
+    margin: 0;
+    opacity: 0.8;
+    position: relative;
+    z-index: 1;
+}
+
+.sd-empty-badge {
+    margin-top: 10px;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(16, 185, 129, 0.08);
+    color: #10b981;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+}
+
+.sd-empty-badge.success {
+    background: rgba(59, 130, 246, 0.08);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.15);
+}
+
 /* ── Scoped Table Form Styles (Modal Only) ───────────────── */
 .sd-table-form-group {
     display: flex;

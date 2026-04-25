@@ -1,15 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Icons } from '@components/icons/IconSystem';
 import api from '@utils/api';
 import toast from 'react-hot-toast';
-import { formatDate } from '@utils/dateFormatter';
 import { motion } from 'framer-motion';
 import Button from '@ui/Button';
 import Select from '@ui/Select';
-import Card from '@ui/Card';
 import SearchInput from '@ui/SearchInput';
-import RatingDisplay from '@ui/RatingDisplay';
 import useDebounce from '../../../hooks/useDebounce';
+import FeedbackCard from '@components/feedback/FeedbackCard';
+import FeedbackSummary from '@components/feedback/FeedbackSummary';
+import {
+    ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    LineChart,
+    Line
+} from 'recharts';
+
+// Admin styles (if any) should come first
+import '@styles/portals/AdminDashboard.css';
+// STRICT UI CLONE: Chef Dashboard styles MUST come last to ensure priority
+import '@styles/portals/ChefPortal.css';
 
 interface Review {
     id: number;
@@ -33,6 +48,7 @@ const AdminReviews: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
     const [activeFilters, setActiveFilters] = useState<Record<string, string>>({
+        rating: '',
         date: ''
     });
     const hasFetchedReviewsRef = useRef(false);
@@ -56,20 +72,14 @@ const AdminReviews: React.FC = () => {
         }
     };
 
-    const calculateAvgRating = () => {
-        if (reviews.length === 0) return 0;
-        const sum = reviews.reduce((acc, curr) => acc + curr.rating, 0);
-        return (sum / reviews.length).toFixed(1);
-    };
-
     const filteredReviews = reviews?.filter(review => {
-        const matchesSearch = 
+        const matchesSearch =
             review.user?.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
             review.comment?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
             review.orderId?.toString().includes(debouncedSearchTerm);
-        
+
         const matchesRating = !activeFilters.rating || review.rating === parseInt(activeFilters.rating);
-        
+
         return matchesSearch && matchesRating;
     })?.sort((a, b) => {
         if (activeFilters.date === 'oldest') {
@@ -77,6 +87,41 @@ const AdminReviews: React.FC = () => {
         }
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+
+    // ── Analytics Computation (Directly Reused from Chef) ──
+    const ratingDistribution = useMemo(() => {
+        const counts: { [key: number]: number } = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        reviews.forEach(r => {
+            const rating = Math.round(r.rating);
+            if (counts[rating] !== undefined) counts[rating]++;
+        });
+        return Object.entries(counts).map(([star, count]) => ({
+            name: `${star}★`,
+            count
+        }));
+    }, [reviews]);
+
+    const weeklyTrend = useMemo(() => {
+        const dailyData: { [key: string]: { sum: number, count: number } } = {};
+        const sortedReviews = [...reviews].sort((a, b) => 
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+
+        sortedReviews.forEach(r => {
+            const dateObj = new Date(r.createdAt);
+            const key = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+            if (!dailyData[key]) {
+                dailyData[key] = { sum: 0, count: 0 };
+            }
+            dailyData[key].sum += r.rating;
+            dailyData[key].count++;
+        });
+
+        return Object.entries(dailyData).map(([date, data]) => ({
+            date,
+            avg: Number((data.sum / data.count).toFixed(2))
+        }));
+    }, [reviews]);
 
     if (loading) {
         return (
@@ -88,33 +133,58 @@ const AdminReviews: React.FC = () => {
     }
 
     return (
-        <div className="reviews-page">
-            <div className="reviews-top-section">
-                <Card variant="glass" padding="md" className="average-rating-card" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ padding: '12px', background: 'rgba(139, 90, 43, 0.1)', color: 'var(--brand-primary)', borderRadius: '12px' }}>
-                        <Icons.star size={28} />
+        <div className="reviews-page admin-reviews chef-theme-clone">
+            {/* 1. Feedback Summary Row (Top Level) */}
+            <FeedbackSummary reviews={reviews} />
+
+            {/* 2. Analytics Visualizations (Mandatory UI Parity) */}
+            <div className="feedback-analytics">
+                <div className="analytics-card">
+                    <h4>Rating Distribution</h4>
+                    <div className="chart-container">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={ratingDistribution}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <Tooltip 
+                                    cursor={{ fill: 'var(--brand-primary-light)', opacity: 0.4 }}
+                                    contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '12px' }}
+                                />
+                                <Bar dataKey="count" fill="var(--brand-primary)" radius={[4, 4, 0, 0]} barSize={30} />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
-                    <div>
-                        <h3 style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Average Rating</h3>
-                        <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                            {calculateAvgRating()} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>/ 5.0</span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Based on {reviews.length} reviews</p>
+                </div>
+
+                <div className="analytics-card">
+                    <h4>Weekly Rating Trend</h4>
+                    <div className="chart-container-large">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={weeklyTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <YAxis domain={[0, 5]} axisLine={false} tickLine={false} tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} />
+                                <Tooltip contentStyle={{ background: 'var(--card-bg)', border: '1px solid var(--border-subtle)', borderRadius: '8px', fontSize: '12px' }} />
+                                <Line type="monotone" dataKey="avg" stroke="var(--brand-primary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--brand-primary)', strokeWidth: 2, stroke: 'var(--card-bg)' }} />
+                            </LineChart>
+                        </ResponsiveContainer>
                     </div>
-                </Card>
+                </div>
             </div>
 
-            <div className="reviews-filter-container">
-                <div style={{ flex: 1 }}>
-                    <SearchInput 
+            {/* 3. Horizontal Filter Bar (Admin-only Features) */}
+            <div className="admin-review-controls" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                <div style={{ flex: 1, minWidth: '250px' }}>
+                    <SearchInput
                         placeholder="Search customer, comment or order ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onClear={() => setSearchTerm('')}
                     />
                 </div>
-                
-                <div className="reviews-filters">
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <Select
                         value={activeFilters.rating}
                         onChange={(value: string) => setActiveFilters({ ...activeFilters, rating: value })}
@@ -126,7 +196,7 @@ const AdminReviews: React.FC = () => {
                             { label: '1 Star', value: '1' }
                         ]}
                         placeholder="All Ratings"
-                        style={{ width: '150px' }}
+                        style={{ minWidth: '160px' }}
                     />
 
                     <Select
@@ -137,12 +207,12 @@ const AdminReviews: React.FC = () => {
                             { label: 'Oldest First', value: 'oldest' }
                         ]}
                         placeholder="Sort by Date"
-                        style={{ width: '160px' }}
+                        style={{ minWidth: '160px' }}
                     />
-                    
+
                     {(searchTerm || activeFilters.rating || activeFilters.date) && (
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => {
                                 setSearchTerm('');
@@ -156,27 +226,28 @@ const AdminReviews: React.FC = () => {
                 </div>
             </div>
 
+            {/* 4. Reviews Grid (Shared Design) */}
             <div className="reviews-grid">
                 {filteredReviews.length === 0 ? (
-                    <div style={{ 
-                        gridColumn: '1/-1', 
-                        textAlign: 'center', 
-                        padding: '5rem 2rem', 
-                        background: 'var(--glass-bg)', 
-                        borderRadius: '24px', 
-                        border: '1px dashed var(--border-color)',
+                    <div className="empty-state-container" style={{
+                        gridColumn: '1/-1',
+                        textAlign: 'center',
+                        padding: '5rem 2rem',
+                        background: 'var(--glass-bg)',
+                        borderRadius: '24px',
+                        border: '1px dashed var(--border-subtle)',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         gap: '16px'
                     }}>
-                        <div style={{ 
-                            width: '80px', 
-                            height: '80px', 
-                            borderRadius: '50%', 
-                            background: 'var(--bg-secondary)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <div style={{
+                            width: '80px',
+                            height: '80px',
+                            borderRadius: '50%',
+                            background: 'var(--bg-secondary)',
+                            display: 'flex',
+                            alignItems: 'center',
                             justifyContent: 'center',
                             color: 'var(--text-muted)',
                             opacity: 0.5
@@ -184,46 +255,16 @@ const AdminReviews: React.FC = () => {
                             <Icons.star size={40} />
                         </div>
                         <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>No reviews found</h3>
-                        <p style={{ margin: 0, color: 'var(--text-muted)', maxWidth: '300px', lineHeight: 1.5 }}>
-                            Try adjusting your search or filters to find what you're looking for.
-                        </p>
                     </div>
                 ) : (
                     filteredReviews.map((review, index) => (
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            key={review.id} 
-                            className="review-card admin-card"
-                            style={{ position: 'relative' }}
+                            key={review.id}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                <div>
-                                    <span className="status-pill-modern status-modern-confirmed" style={{ fontSize: '0.7rem', padding: '2px 8px', marginBottom: '8px', display: 'inline-block' }}>
-                                        Order #{review.orderId}
-                                    </span>
-                                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>{review.user?.name}</h4>
-                                </div>
-                                <RatingDisplay rating={review.rating} size={16} />
-                            </div>
-                            
-                            <div className="review-comment" style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: '12px', minHeight: '80px', position: 'relative' }}>
-                                <Icons.quote size={24} style={{ position: 'absolute', top: '10px', left: '10px', opacity: 0.05, color: 'var(--brand-primary)' }} />
-                                <p style={{ margin: 0, fontSize: '0.95rem', color: 'var(--text-secondary)', fontStyle: 'italic', lineHeight: 1.6 }}>
-                                    {review.comment || 'No comment provided by the customer.'}
-                                </p>
-                            </div>
-                            
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)' }}>
-                                    <Icons.mail size={12} />
-                                    <span>{review.user?.email}</span>
-                                </div>
-                                <div style={{ color: 'var(--text-muted)', fontWeight: 600 }}>
-                                    {formatDate(review.createdAt)}
-                                </div>
-                            </div>
+                            <FeedbackCard review={review} variant="admin" />
                         </motion.div>
                     ))
                 )}

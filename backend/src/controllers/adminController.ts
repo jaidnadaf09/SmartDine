@@ -678,14 +678,38 @@ export const getOrders = async (req: Request, res: Response) => {
 export const getOrdersHistory = async (req: Request, res: Response) => {
     console.log("Admin: Fetching order history");
     try {
+        const { search, status, orderType, dateRange } = req.query;
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const offset = (page - 1) * limit;
-        const search = req.query.search as string;
 
-        const whereClause: any = {
-            status: { [Op.in]: ['completed', 'cancelled'] }
-        };
+        const whereClause: any = {};
+
+        if (status) {
+            whereClause.status = status;
+        } else {
+            whereClause.status = { [Op.in]: ['completed', 'cancelled'] };
+        }
+
+        if (orderType) {
+            whereClause.orderType = orderType;
+        }
+
+        if (dateRange) {
+            const now = new Date();
+            let calculatedDate = new Date();
+
+            if (dateRange === 'today') {
+                calculatedDate.setHours(0, 0, 0, 0);
+                whereClause.createdAt = { [Op.gte]: calculatedDate };
+            } else if (dateRange === 'week') {
+                calculatedDate.setDate(now.getDate() - 7);
+                whereClause.createdAt = { [Op.gte]: calculatedDate };
+            } else if (dateRange === 'month') {
+                calculatedDate.setDate(now.getDate() - 30);
+                whereClause.createdAt = { [Op.gte]: calculatedDate };
+            }
+        }
 
         if (search) {
             whereClause[Op.or] = [
@@ -770,6 +794,7 @@ export const updateOrderStatus = async (req: Request, res: Response) => {
 
         // Silent UI refresh for all stakeholders
         emitOrderUpdate(order.toJSON());
+        res.json(order);
     } catch (error) {
         res.status(500).json({ message: 'Server Error' });
     }

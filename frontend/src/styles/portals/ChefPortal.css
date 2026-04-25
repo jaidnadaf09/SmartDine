@@ -1456,21 +1456,240 @@ body.dark .new-order-glow {
   display: block;
 }
 
-/* Single Stylized Pill Surface */
+/* Single Stylized Pill Surface - Theme Aware */
+/* LIGHT THEME */
+body:not([data-theme="dark"]) 
 .status-select .select-control {
-  background: rgba(28, 25, 23, 0.95) !important;
-  border: 1px solid rgba(224, 185, 122, 0.35) !important;
-  border-radius: 999px !important;
-  padding: 8px 14px;
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-sm) !important;
+    border-radius: 999px !important;
+    padding: 8px 14px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+/* DARK THEME */
+[data-theme="dark"] 
+.status-select .select-control {
+    background: #1c1917 !important; /* Preserving the original deep dark */
+    color: #f5efe8 !important;
+    border: 1px solid rgba(224, 185, 122, 0.35) !important;
+    border-radius: 999px !important;
+    padding: 8px 14px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+/* Hover polish for Light Theme */
+body:not([data-theme="dark"]) 
+.status-select .select-control:hover {
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+    transform: translateY(-1px);
+}
+
+/* DARK THEME Hover */
+[data-theme="dark"] 
+.status-select .select-control:hover {
+  border-color: rgba(198, 146, 91, 0.6) !important;
+}
+
+.status-select .select-control.is-open,
+.status-select:focus-within .select-control {
+  outline: none;
+  border-color: #C6925B !important;
   box-shadow: 
-    0 4px 10px rgba(0,0,0,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.05);
-  height: 44px;
+    0 0 0 2px rgba(198, 146, 91, 0.25),
+    0 4px 10px rgba(0,0,0,0.25) !important;
+}
+
+/* ═══════════════════════════════════════════
+   PREMIUM MODAL REFINEMENTS
+═══════════════════════════════════════════ */
+
+.confirm-modal-premium {
+  padding: 26px !important;
+  border-radius: 18px !important;
+}
+
+.confirm-modal-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  margin-bottom: 6px !important;
+}
+
+.confirm-modal-description {
+  font-size: 14px !important;
+  opacity: 0.8 !important;
+  line-height: 1.5 !important;
+}
+
+.confirm-modal-actions .confirm-modal-btn {
+  height: 42px !important;
+  min-width: 120px !important;
+  border-radius: 12px !important;
+}
+
+/* ── Premium Order Card Redesign (Bento Aesthetic) ── */
+.order-card-premium {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+  border-radius: 20px;
+  padding: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  position: relative;
   display: flex;
+  flex-direction: column;
+}
+
+.order-card-premium:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.order-id {
+  font-size: 18px;
+  font-weight: 600;
+  opacity: 0.85;
+  color: var(--text-primary);
+}
+
+.order-meta {
+  display: flex;
+  gap: 10px;
   align-items: center;
 }
 
-/* Hover & Focus Interaction Tuning */
+.prep-time {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+}
+
+.prep-time.timer-green { 
+  background: rgba(16, 185, 129, 0.15); 
+  color: #10b981; 
+}
+.prep-time.timer-amber { 
+  background: rgba(245, 158, 11, 0.15); 
+  color: #f59e0b; 
+}
+.prep-time.timer-red { 
+  background: rgba(239, 68, 68, 0.15); 
+  color: #ef4444; 
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: capitalize;
+}
+
+.status-badge.pending {
+  background: rgba(255, 170, 0, 0.15);
+  color: #ffb020;
+}
+
+.status-badge.preparing {
+  background: rgba(0, 140, 255, 0.15);
+  color: #4da3ff;
+}
+
+.status-badge.ready {
+  background: rgba(0, 200, 120, 0.15);
+  color: #00c87a;
+}
+
+.status-badge.completed {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.status-badge.cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+.btn-danger-action:hover {
+  background: rgba(255, 59, 59, 0.12);
+  border-color: rgba(255, 80, 80, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Layout Wrapper only - Removes nesting borders */
+.status-select {
+  min-width: 150px;
+  height: auto;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  display: block;
+}
+
+/* Single Stylized Pill Surface - Theme Aware */
+/* LIGHT THEME */
+body:not([data-theme="dark"]) 
+.status-select .select-control {
+    background: var(--card-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-sm) !important;
+    border-radius: 999px !important;
+    padding: 8px 14px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+/* DARK THEME */
+[data-theme="dark"] 
+.status-select .select-control {
+    background: #1c1917 !important; /* Preserving the original deep dark */
+    color: #f5efe8 !important;
+    border: 1px solid rgba(224, 185, 122, 0.35) !important;
+    border-radius: 999px !important;
+    padding: 8px 14px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+}
+
+/* Hover polish for Light Theme */
+body:not([data-theme="dark"]) 
+.status-select .select-control:hover {
+    border-color: var(--brand-primary) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+    transform: translateY(-1px);
+}
+
+/* DARK THEME Hover */
+[data-theme="dark"] 
 .status-select .select-control:hover {
   border-color: rgba(198, 146, 91, 0.6) !important;
 }
@@ -1668,49 +1887,6 @@ body.dark .new-order-glow {
   gap: 8px;
   align-items: center;
   font-size: 0.95rem;
-}
-
-.item-qty {
-  font-weight: 700;
-  color: var(--brand-primary);
-  opacity: 0.8;
-}
-
-.item-name {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-/* Maintain New Order Glow */
-.order-card-premium.new-order-glow {
-  animation: glowFadeIn 8s ease forwards;
-}
-
-/* Urgency Accents for Bento Cards */
-.order-card-premium.urgent-red { border-left: 4px solid #ef4444; }
-.order-card-premium.warning-yellow { border-left: 4px solid #f59e0b; }
-.order-card-premium.normal-green { border-left: 4px solid #10b981; }
-
-/* Responsive Grid Fix */
-@media (max-width: 480px) {
-  .order-info-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* ── Pagination ── */
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 32px;
-  padding: 16px 20px;
-  border-top: 1px solid var(--card-border);
-  background: var(--bg-secondary);
-  border-radius: 12px;
-}
-
-.pagination-info {
   font-size: 0.85rem;
   color: var(--text-muted);
   font-weight: 500;
@@ -1723,8 +1899,8 @@ body.dark .new-order-glow {
 }
 
 .pagination-btn {
-  width: 40px;
   height: 40px;
+  width: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1758,13 +1934,144 @@ body.dark .new-order-glow {
   text-align: center;
 }
 
-/* ── Order History Refinements ── */
-.history-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
+/* -- Feedback Analytics Section -- */
+.feedback-analytics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-bottom: 28px;
 }
 
-.history-card:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12) !important;
+@media (max-width: 1024px) {
+    .feedback-analytics {
+        grid-template-columns: 1fr;
+    }
 }
+
+.analytics-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.analytics-card:hover {
+    transform: translateY(-2px);
+}
+
+.analytics-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin: 0 0 20px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chart-container {
+    width: 100%;
+    height: 260px;
+}
+
+.chart-container-large {
+    width: 100%;
+    height: 300px;
+}
+
+/* ═══════════════════════════════════════════
+   STRICT UI CLONING OVERRIDES (Admin Portal)
+   ═══════════════════════════════════════════ */
+
+.admin-reviews.chef-theme-clone .review-card,
+.admin-reviews.chef-theme-clone .feedback-summary-row,
+.admin-reviews.chef-theme-clone .summary-card,
+.admin-reviews.chef-theme-clone .review-rating-row,
+.admin-reviews.chef-theme-clone .review-badge {
+    all: unset;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Montserrat', sans-serif;
+}
+
+.admin-reviews.chef-theme-clone .feedback-summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.admin-reviews.chef-theme-clone .summary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-subtle);
+    padding: 20px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease;
+}
+
+.admin-reviews.chef-theme-clone .review-card {
+    display: block;
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    border-left: 4px solid transparent;
+    margin-bottom: 0;
+}
+
+.admin-reviews.chef-theme-clone .review-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+}
+
+/* Force Rating Accents */
+.admin-reviews.chef-theme-clone .review-card.high-rating { border-left-color: #22c55e !important; }
+.admin-reviews.chef-theme-clone .review-card.mid-rating { border-left-color: #f59e0b !important; }
+.admin-reviews.chef-theme-clone .review-card.low-rating { border-left-color: #ef4444 !important; }
+
+.admin-reviews.chef-theme-clone .review-rating-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.admin-reviews.chef-theme-clone .review-rating-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 0.02em;
+    background: rgba(200, 169, 106, 0.1);
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: baseline;
+}
+
+.admin-reviews.chef-theme-clone .review-badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.admin-reviews.chef-theme-clone .reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+

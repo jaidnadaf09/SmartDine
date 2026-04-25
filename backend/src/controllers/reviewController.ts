@@ -11,6 +11,11 @@ export const createReview = async (req: AuthRequest, res: Response) => {
         const { orderId, rating, comment } = req.body;
         const userId = req.user!.id;
 
+        // Strict Validation
+        if (!orderId || !rating || rating < 1) {
+            return res.status(400).json({ message: 'Invalid review data. Rating is required (min: 1).' });
+        }
+
         // Check if order exists and belongs to user
         const order = await Order.findOne({ where: { id: orderId, userId } });
 

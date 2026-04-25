@@ -299,6 +299,12 @@ const MyOrders: React.FC = () => {
 
   const handleSubmitReview = async () => {
     if (!reviewOrder || !user) return;
+
+    if (!rating || rating < 1) {
+      toast.error('Please select a rating of at least 1 star.');
+      return;
+    }
+
     setSubmittingReview(true);
     try {
       await api.post('/reviews', {
@@ -821,11 +827,41 @@ const MyOrders: React.FC = () => {
                       {order.status?.toLowerCase() === 'completed' && (
                         <div className="cp-review-section" style={{ marginTop: 14, borderTop: '1px solid var(--card-border)', paddingTop: 14 }}>
                           {order.review ? (
-                            <div className="cp-submitted-review">
-                              <div className="cp-review-stars">
-                                <RatingDisplay rating={order.review!.rating} size={14} />
+                            <div className="cp-submitted-review" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  <Icons.check size={14} /> Review Submitted
+                                </span>
+                                <div className="cp-review-stars">
+                                  <RatingDisplay rating={order.review.rating} size={14} />
+                                </div>
                               </div>
-                              <p className="cp-review-comment">"{order.review.comment}"</p>
+                              {order.review.comment && (
+                                <p className="cp-review-comment" style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', background: 'rgba(0,0,0,0.02)', padding: '8px 12px', borderRadius: '8px', borderLeft: '3px solid #10b981' }}>
+                                  "{order.review.comment}"
+                                </p>
+                              )}
+                              
+                              <button
+                                onClick={() => {
+                                  setReviewOrder(order);
+                                  setRating(order.review!.rating);
+                                  setComment(order.review!.comment);
+                                }}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--brand-primary)',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  padding: '4px 0',
+                                  alignSelf: 'flex-start',
+                                  textDecoration: 'underline'
+                                }}
+                              >
+                                Edit Review
+                              </button>
                             </div>
                           ) : (
                             <button

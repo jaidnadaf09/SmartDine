@@ -31,6 +31,7 @@ interface DataTableProps<T> {
     onClearAll?: () => void;
     itemsPerPage?: number;
     headerActions?: React.ReactNode;
+    emptyMessage?: string;
     // Server-side pagination props
     isServerSide?: boolean;
     totalCount?: number;
@@ -51,6 +52,7 @@ const DataTable = <T extends { id: string | number }>({
     onClearAll,
     itemsPerPage = 10,
     headerActions,
+    emptyMessage,
     isServerSide = false,
     totalCount = 0,
     currentPage: parentPage,
@@ -173,6 +175,7 @@ const DataTable = <T extends { id: string | number }>({
                         {paginatedData.map((item) => (
                             <tr 
                                 key={item.id} 
+                                className="order-row"
                                 onClick={() => onRowClick?.(item)}
                                 style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                             >
@@ -185,8 +188,10 @@ const DataTable = <T extends { id: string | number }>({
                         ))}
                         {paginatedData.length === 0 && (
                             <tr>
-                                <td colSpan={columns.length} style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                                    No records found
+                                <td colSpan={columns.length}>
+                                    <div className="sd-empty-state">
+                                        {emptyMessage || "No records found"}
+                                    </div>
                                 </td>
                             </tr>
                         )}

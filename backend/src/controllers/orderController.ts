@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { Order, User, Table, Booking, WalletTransaction, sequelize, Notification, RestaurantSetting } from '../models';
+import { Order, User, Table, Booking, WalletTransaction, sequelize, Notification, RestaurantSetting, Review } from '../models';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Op } from 'sequelize';
 import { isRestaurantOpen } from '../utils/workingHours';
@@ -296,6 +296,13 @@ export const getMyOrders = async (req: AuthRequest, res: Response) => {
 
         const { rows, count } = await Order.findAndCountAll({
             where: { userId: req.user.id },
+            include: [
+                {
+                    model: Review,
+                    as: 'review',
+                    required: false
+                }
+            ],
             order: [['createdAt', 'DESC']],
             limit,
             offset
