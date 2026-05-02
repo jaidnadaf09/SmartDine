@@ -98,7 +98,7 @@ const ChefLayout: React.FC<ChefLayoutProps> = ({ children }) => {
                         <span className="nav-icon">
                             <Icons.logout size={22} />
                         </span>
-                        <span className="nav-label">Sign Out</span>
+                        <span className="nav-label">Logout</span>
                     </div>
                 </div>
             </aside>

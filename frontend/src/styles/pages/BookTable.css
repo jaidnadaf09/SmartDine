@@ -55,96 +55,25 @@ body[data-theme="dark"],
   --bt-hover-glow: 0 0 0 3px rgba(215, 180, 122, 0.1);
 }
 
-/* ── Premium Background Glows ── */
-@keyframes ambientShift {
-  0% { transform: translateX(-2%) translateY(-2%) scale(1); }
-  50% { transform: translateX(2%) translateY(2%) scale(1.05); }
-  100% { transform: translateX(-2%) translateY(-2%) scale(1); }
-}
-
-body {
-  background: var(--bg-primary);
-  position: relative;
-  overflow-x: hidden;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      circle at 50% 35%,
-      rgba(200, 169, 106, 0.12),
-      transparent 55%
-    ),
-    radial-gradient(
-      circle at 20% 80%,
-      rgba(200, 169, 106, 0.06),
-      transparent 60%
-    ),
-    radial-gradient(
-      circle at 80% 20%,
-      rgba(200, 169, 106, 0.05),
-      transparent 60%
-    );
-  filter: blur(40px);
-  animation: ambientShift 18s ease-in-out infinite;
-}
-
-body[data-theme="dark"]::before {
-  background:
-    radial-gradient(
-      circle at 50% 35%,
-      rgba(215, 180, 122, 0.14),
-      transparent 55%
-    ),
-    radial-gradient(
-      circle at 20% 80%,
-      rgba(215, 180, 122, 0.08),
-      transparent 60%
-    );
-}
-
 /* ── Container ── */
 .book-table-container {
   min-height: calc(100vh - 64px);
-  overflow-x: auto;
-  background: transparent; /* Clean base */
-  padding: 32px 16px 40px;
+  overflow-x: auto; /* ✅ allow horizontal scroll if needed */
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.04),
+    transparent 70%
+  );
+  padding-top: 32px;
+  padding-bottom: 40px;
+  padding-left: 16px;
+  padding-right: 16px;
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative;
-  z-index: 1;
   transition: background 0.3s ease;
   animation: bt-fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.book-table-container::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: radial-gradient(
-    circle at center,
-    rgba(255, 255, 255, 0.06),
-    transparent 70%
-  );
-  filter: blur(20px);
-}
-
-@keyframes premiumEntry {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  backdrop-filter: none; /* ✅ Remove redundant blur */
 }
 
 @keyframes bt-fadeUp {
@@ -167,66 +96,15 @@ body[data-theme="dark"]::before {
   );
   border-radius: 20px;
   padding: 26px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   position: relative;
-  z-index: 2;
-  overflow: visible;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.35s ease;
-  backdrop-filter: blur(14px);
-  animation: premiumEntry 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 0 40px rgba(200, 169, 106, 0.08); /* subtle glow */
-}
-
-.book-table-box:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.35),
-    0 0 60px rgba(200, 169, 106, 0.12);
-}
-
-/* Glass Reflection */
-.book-table-box::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0.12),
-    rgba(255, 255, 255, 0.04) 40%,
-    transparent 60%
-  );
-  opacity: 0.6;
-  z-index: 1;
-}
-
-/* Cursor Reactive Glow */
-.book-table-box::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(
-    200px circle at var(--x, 50%) var(--y, 50%),
-    rgba(200, 169, 106, 0.15),
-    transparent 60%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1;
-}
-
-.book-table-box:hover::after {
-  opacity: 1;
+  overflow: visible; /* ✅ allows pills to expand beyond box */
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px); /* ✅ Keep blur here */
 }
 
 .book-table-wrapper {
@@ -244,10 +122,7 @@ body[data-theme="dark"] .book-table-box {
     rgba(31, 27, 24, 0.4)
   );
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    0 20px 50px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.03),
-    0 0 60px rgba(215, 180, 122, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 /* ── Section Block ── */
@@ -1088,29 +963,6 @@ body[data-theme="dark"] .payment-option.active {
   margin-top: 8px !important;
   border-radius: 12px !important;
   border: 1px solid var(--bt-border-soft) !important;
-}
-
-/* ── Recommended / Fast Filling ── */
-.recommended-slot {
-  font-size: 10px;
-  color: #1c7c54;
-  margin-left: 4px;
-  font-weight: 600;
-}
-
-.fast-filling {
-  font-size: 10px;
-  color: #b54708;
-  margin-left: 4px;
-  font-weight: 500;
-}
-
-body[data-theme="dark"] .recommended-slot {
-  color: #34d399;
-}
-
-body[data-theme="dark"] .fast-filling {
-  color: #fb923c;
 }
 
 /* ── Slot Dot ── */

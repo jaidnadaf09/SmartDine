@@ -102,21 +102,6 @@ const BookTablePage: React.FC = () => {
     checkAvailability();
   }, [formData.date, formData.time, formData.guests]);
 
-  // Premium Cursor Glow Logic
-  React.useEffect(() => {
-    const card = document.querySelector('.book-table-box') as HTMLElement;
-    if (!card) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = card.getBoundingClientRect();
-      card.style.setProperty('--x', `${e.clientX - rect.left}px`);
-      card.style.setProperty('--y', `${e.clientY - rect.top}px`);
-    };
-
-    card.addEventListener('mousemove', handleMouseMove);
-    return () => card.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
   const [preference, setPreference] = useState('');
   const [occasion, setOccasion] = useState('');
 

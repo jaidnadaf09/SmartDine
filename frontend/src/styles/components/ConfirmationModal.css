@@ -1,0 +1,43 @@
+/* ═══════════════════════════════════════════
+   ConfirmationModal — centralized, theme-safe
+   ═══════════════════════════════════════════ */
+
+.cm-description {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0 0 4px;
+}
+
+.cm-highlight {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.cm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Reason textarea (used in Cancel Reservation) */
+.cm-reason-textarea {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  min-height: 80px;
+  resize: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.cm-reason-textarea:focus {
+  border-color: var(--brand-primary);
+}
+

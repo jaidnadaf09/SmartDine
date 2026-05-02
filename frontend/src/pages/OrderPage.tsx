@@ -148,7 +148,8 @@ const OrderPage: React.FC = () => {
       if (user && !isGuest) {
         try {
           const res = await api.get(`/bookings/user/${user.id}`);
-          const bookings = res.data;
+          const raw = res.data;
+          const bookings = Array.isArray(raw) ? raw : (raw.bookings || []);
           const active = bookings.find((b: any) => b.status === 'confirmed' && b.tableNumber);
           if (mountedRef.current && active) {
             setAssignedTable(active.tableNumber);

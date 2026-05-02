@@ -9,9 +9,14 @@ import WalletTransaction from './WalletTransaction';
 import Notification from './Notification';
 import Review from './Review';
 import RestaurantSetting from './RestaurantSetting';
-// import OrderItem from './OrderItem';
+import RefreshToken from './RefreshToken';
+import OrderItem from './OrderItem';
 
 // Define Associations
+
+// RefreshToken -> User (Many-to-One)
+RefreshToken.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(RefreshToken, { foreignKey: 'userId', as: 'refreshTokens' });
 
 // Booking -> User (Customer) (Many-to-One)
 Booking.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -41,6 +46,10 @@ User.hasMany(Review, { foreignKey: 'userId', as: 'reviews' });
 Review.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
 Order.hasOne(Review, { foreignKey: 'orderId', as: 'review' });
 
+// Order -> OrderItem
+Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'orderItems' });
+OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
+
 export {
     sequelize,
     User,
@@ -53,4 +62,6 @@ export {
     Notification,
     Review,
     RestaurantSetting,
+    RefreshToken,
+    OrderItem,
 };

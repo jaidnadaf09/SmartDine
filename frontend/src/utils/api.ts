@@ -1,4 +1,5 @@
 import axios from "axios";
+import { reconnectSocket } from "../socket/socketClient";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -8,7 +9,7 @@ const api = axios.create({
 // Add a request interceptor to attach the JWT token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -22,17 +23,40 @@ api.interceptors.request.use(
 // Add a response interceptor to handle expired tokens
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Only auto-logout and redirect if we were already logged in (token exists)
-    // and the error is a 401 Unauthorized. Login failures shouldn't redirect.
-    if (error.response?.status === 401) {
-      const wasLoggedIn = !!localStorage.getItem("token");
-      if (wasLoggedIn) {
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login' && originalRequest.url !== '/auth/refresh') {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) {
+          throw new Error("No refresh token available");
+        }
+
+        const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/auth/refresh`, {
+          refreshToken,
+        });
+
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+        localStorage.setItem("token", data.accessToken); // Backward compatibility
+
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        
+        reconnectSocket();
+
+        return api(originalRequest);
+      } catch (err) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         localStorage.removeItem("token");
         localStorage.removeItem("smartdine_user");
-        window.location.href = "/"; // Redirect to landing page instead of potentially non-existent /login
+        window.location.reload();
       }
     }
+
     return Promise.reject(error);
   }
 );

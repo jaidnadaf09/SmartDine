@@ -2075,3 +2075,155 @@ body:not([data-theme="dark"])
     gap: 20px;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   PREMIUM SEGMENTED FILTER CONTROL — Chef Feedback Page
+   ═══════════════════════════════════════════════════════════ */
+
+.chef-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  width: fit-content;
+  margin-bottom: 24px;
+}
+
+/* ── Base Chip ── */
+.chef-filter-chip {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition:
+    color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.12s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+/* ── Hover ── */
+.chef-filter-chip:hover {
+  color: var(--text-primary);
+  background: rgba(198, 167, 105, 0.08);
+}
+
+/* ── Active (default brand tint) ── */
+.chef-filter-chip.active {
+  background: linear-gradient(
+    135deg,
+    rgba(198, 167, 105, 0.25),
+    rgba(198, 167, 105, 0.12)
+  );
+  color: var(--brand-primary);
+  box-shadow: 0 4px 14px rgba(198, 167, 105, 0.18);
+}
+
+/* ── Subtle press feedback ── */
+.chef-filter-chip:active {
+  transform: scale(0.96);
+}
+
+/* ── Semantic active tints ── */
+.chef-filter-chip.active[data-type="excellent"] {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0.08));
+  color: #22c55e;
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.14);
+}
+
+.chef-filter-chip.active[data-type="average"] {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.08));
+  color: #f59e0b;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.14);
+}
+
+.chef-filter-chip.active[data-type="issues"] {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.08));
+  color: #ef4444;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.14);
+}
+
+/* ── Light mode refinement ── */
+.light .chef-filter-bar {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* ── Responsive: full-width pill row on small screens ── */
+@media (max-width: 600px) {
+  .chef-filter-bar {
+    border-radius: 16px;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* -- Customer Special Instructions Highlight -- */
+.chef-instructions {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08); /* subtle red tint */
+  border-left: 3px solid #ef4444;
+  animation: fadeIn 0.3s ease;
+  width: 100%;
+}
+
+.chef-instructions.critical {
+  background: rgba(239, 68, 68, 0.15);
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.25);
+  border-left-width: 4px;
+}
+
+.chef-instructions-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #ef4444;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.chef-instructions-text {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .chef-instructions-text {
+  color: #ffffff;
+}
+
+/* -- Dish-Level Special Instructions -- */
+.chef-item-block {
+  margin-bottom: 10px;
+}
+
+.chef-item-instructions {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 3px solid #ef4444;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+[data-theme="dark"] .chef-item-instructions {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ffffff;
+}

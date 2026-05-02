@@ -1,7 +1,7 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
 import rateLimit from 'express-rate-limit';
-import { registerUser, loginUser, updateProfile, changePassword, getMe, removeProfilePhoto } from '../controllers/authController';
+import { registerUser, loginUser, updateProfile, changePassword, getMe, removeProfilePhoto, refreshToken, logoutUser } from '../controllers/authController';
 import { protect } from '../middleware/authMiddleware';
 
 const router = express.Router();
@@ -11,6 +11,14 @@ const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 10, // Limit each IP to 10 login attempts per windowMs
     message: "Too many login attempts. Please try again after 15 minutes",
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const refreshLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50, // Limit each IP to 50 refresh requests per windowMs
+    message: "Too many refresh attempts. Please try again after 15 minutes",
     standardHeaders: true,
     legacyHeaders: false,
 });
@@ -50,5 +58,7 @@ router.put('/profile', protect, updateProfile);
 router.put('/change-password', protect, changePassword);
 router.get('/me', protect, getMe);
 router.delete('/profile/photo', protect, removeProfilePhoto);
+router.post('/refresh', refreshLimiter, refreshToken);
+router.post('/logout', protect, logoutUser);
 
 export default router;

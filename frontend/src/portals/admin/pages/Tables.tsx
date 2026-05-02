@@ -7,7 +7,7 @@ interface TablesProps {
     tables: any[];
     loading: boolean;
     onEditClick: (table: any) => void;
-    onDeleteClick: (id: number) => void;
+    onDeleteClick: (table: any) => void;
 }
 
 const Tables: React.FC<TablesProps> = ({ 
@@ -71,7 +71,7 @@ const Tables: React.FC<TablesProps> = ({
                         variant="danger" 
                         size="sm"
                         icon={<Icons.trash size={14} />}
-                        onClick={() => onDeleteClick(table.id)} 
+                        onClick={() => onDeleteClick(table)} 
                     >
                         Delete
                     </Button>

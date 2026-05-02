@@ -9,6 +9,7 @@ import Button from '@ui/Button';
 import Modal from '@ui/Modal';
 import Select from '@ui/Select';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
+import ConfirmationModal from '@ui/ConfirmationModal';
 
 interface BookingsProps {
     hideHeader?: boolean;
@@ -439,36 +440,21 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
                 </div>
             </Modal>
 
-            <Modal
+            <ConfirmationModal
                 isOpen={isCancelModalOpen}
-                onClose={() => setIsCancelModalOpen(false)}
                 title="Cancel Reservation"
-                size="md"
+                description="Are you sure you want to cancel this booking? This will release the assigned table and notify the customer."
+                confirmText="Confirm Cancellation"
+                cancelText="Keep Booking"
+                onConfirm={handleCancelBooking}
+                onCancel={() => setIsCancelModalOpen(false)}
             >
-                <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                    <div style={{ 
-                        width: '64px', 
-                        height: '64px', 
-                        borderRadius: '20px', 
-                        background: 'rgba(239, 68, 68, 0.1)', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        margin: '0 auto 16px',
-                        color: '#ef4444'
-                    }}>
-                        <Icons.alertCircle size={32} />
-                    </div>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', lineHeight: 1.5 }}>
-                        Are you sure you want to cancel this booking? This action will release the assigned table and notify the customer.
-                    </p>
-                </div>
-                
-                <div style={{ marginBottom: '32px' }}>
+                {/* Reason selector — preserved as children */}
+                <div style={{ marginTop: '20px' }}>
                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>
                         Reason for Cancellation
                     </label>
-                    <Select 
+                    <Select
                         value={cancelReason}
                         onChange={(value: string) => setCancelReason(value)}
                         options={[
@@ -478,38 +464,22 @@ const Bookings: React.FC<BookingsProps> = ({ hideHeader = false }) => {
                             { label: 'Other', value: 'Other' }
                         ]}
                     />
-
                     {cancelReason === 'Other' && (
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             style={{ marginTop: '16px' }}
                         >
-                            <textarea 
+                            <textarea
                                 value={customReason}
                                 onChange={(e) => setCustomReason(e.target.value)}
                                 placeholder="Please specify the reason..."
-                                style={{ 
-                                    width: '100%', 
-                                    padding: '14px', 
-                                    borderRadius: '14px', 
-                                    background: 'var(--bg-secondary)', 
-                                    border: '1px solid var(--border-color)',
-                                    minHeight: '80px',
-                                    resize: 'none',
-                                    outline: 'none',
-                                    color: 'var(--text-primary)',
-                                    fontSize: '0.95rem'
-                                }}
+                                className="cm-reason-textarea"
                             />
                         </motion.div>
                     )}
                 </div>
-                <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                    <Button variant="ghost" onClick={() => setIsCancelModalOpen(false)}>Keep Booking</Button>
-                    <Button variant="danger" onClick={handleCancelBooking} style={{ padding: '12px 24px' }}>Confirm Cancellation</Button>
-                </div>
-            </Modal>
+            </ConfirmationModal>
         </div>
     );
 };

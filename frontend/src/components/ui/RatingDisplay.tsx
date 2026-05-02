@@ -13,11 +13,9 @@ const RatingDisplay: React.FC<RatingDisplayProps> = ({
   return (
     <div style={{ 
       display: "flex", 
-      gap: "12px", 
+      gap: "3px", 
       alignItems: "center",
-      transform: "scale(1.2)", // Maximum visual presence
-      transformOrigin: "left center",
-      filter: "drop-shadow(0 3px 8px rgba(182, 141, 83, 0.3))" // Enhanced premium glow
+      whiteSpace: "nowrap"
     }}>
       {[1, 2, 3, 4, 5].map((i) => {
         // Calculate fill percentage: 100% for full, 50% for half, 0% for empty

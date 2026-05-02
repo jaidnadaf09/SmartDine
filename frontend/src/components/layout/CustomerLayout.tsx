@@ -97,7 +97,7 @@ const CustomerLayout: React.FC = () => {
   return (
     <div className="customer-layout">
       <Navbar />
-      <main className="page-content min-h-screen" style={{ paddingBottom: '70px' }}>
+      <main className="page-content" style={{ paddingBottom: '70px' }}>
         <Outlet />
       </main>
       <MobileBottomNav />

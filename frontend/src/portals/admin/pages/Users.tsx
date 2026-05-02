@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Icons } from '@components/icons/IconSystem';
-import { AlertTriangle } from 'lucide-react';
 import api from '@utils/api';
 import DataTable, { type TableFilterConfig } from '../components/DataTable';
 import Button from '@ui/Button';
 import Select from '@ui/Select';
 import GlobalErrorState from '@components/ui/GlobalErrorState';
+import ConfirmationModal from '@ui/ConfirmationModal';
 
 const Users: React.FC = () => {
     const [users, setUsers] = useState<any[]>([]);
@@ -187,30 +187,18 @@ const Users: React.FC = () => {
                 </div>
             )}
 
-            {confirmDeleteOpen && (
-                <div className="modal-overlay">
-                    <div className="delete-user-modal">
-                        <div className="modal-icon">
-                            <AlertTriangle size={20} />
-                        </div>
-                        <h3 className="modal-title">Delete User</h3>
-                        <p className="modal-description">
-                            Are you sure you want to delete this user? This action cannot be undone.
-                        </p>
-                        <div className="modal-actions">
-                            <button className="btn-cancel" onClick={() => {
-                                setConfirmDeleteOpen(false);
-                                setUserToDelete(null);
-                            }}>
-                                Cancel
-                            </button>
-                            <button className="btn-delete" onClick={confirmDelete}>
-                                Delete User
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <ConfirmationModal
+                isOpen={confirmDeleteOpen}
+                title="Delete User"
+                description="Are you sure you want to delete this user? This action cannot be undone."
+                confirmText="Delete User"
+                cancelText="Cancel"
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setConfirmDeleteOpen(false);
+                    setUserToDelete(null);
+                }}
+            />
         </div>
     );
 };

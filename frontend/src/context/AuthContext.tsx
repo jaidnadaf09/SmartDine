@@ -86,7 +86,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [user?.token, connectSocket]);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
     
     if (!token) {
       setLoading(false);
@@ -137,6 +137,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           } catch (retryErr) {
             console.error('Auth Hydration retry failed');
             localStorage.removeItem('token');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
             setUser(null);
             getSocket().disconnect();
           } finally {
@@ -180,9 +182,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Clear old data first to ensure clean state
       localStorage.removeItem('smartdine_user');
       localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       
       localStorage.setItem('smartdine_user', JSON.stringify(loggedInUser));
-      localStorage.setItem('token', data.token);
+      localStorage.setItem('token', data.accessToken || data.token);
+      localStorage.setItem('accessToken', data.accessToken || data.token);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
       setUser(loggedInUser);
       connectSocket(); // connect socket after successful login
       closeAuthModal(); // IMPORTANT: close modal BEFORE caller can navigate
@@ -194,6 +200,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       /* IMPORTANT: ensure failed login does not persist state */
       setUser(null);
       localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       
       throw new Error(
         error?.response?.data?.message ||
@@ -227,10 +235,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       localStorage.removeItem('smartdine_user');
       localStorage.removeItem('token');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       
       localStorage.setItem('smartdine_user', JSON.stringify(newUser));
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      if (data.token || data.accessToken) {
+        localStorage.setItem('token', data.accessToken || data.token);
+        localStorage.setItem('accessToken', data.accessToken || data.token);
+        if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
         connectSocket(); // connect socket after signup
       }
       setUser(newUser);
@@ -244,9 +256,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      api.post('/auth/logout', { refreshToken }).catch(console.error);
+    }
     setUser(null);
     localStorage.removeItem('smartdine_user');
     localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     getSocket().disconnect(); // clean up socket on logout
   };
 

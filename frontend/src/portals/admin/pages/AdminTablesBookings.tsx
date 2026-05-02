@@ -10,6 +10,7 @@ import Button from '@ui/Button';
 import Modal from '@ui/Modal';
 import FormField from '../components/FormField';
 import Select from '@ui/Select';
+import ConfirmationModal from '@ui/ConfirmationModal';
 import '@styles/portals/AdminBookingsLive.css';
 
 type Tab = 'tables' | 'live-bookings' | 'history';
@@ -31,6 +32,8 @@ const AdminTablesBookings: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [newTable, setNewTable] = useState({ tableNumber: '', capacity: 2, status: 'available' });
     const hasFetchedTablesRef = useRef(false);
+    const [tableToDelete, setTableToDelete] = useState<any | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchTables = useCallback(async () => {
         try {
@@ -93,16 +96,23 @@ const AdminTablesBookings: React.FC = () => {
         }
     };
 
-    const handleDeleteTable = async (id: number) => {
-        if (!window.confirm('Are you sure you want to delete this table?')) return;
-        
+    const handleDeleteTable = (table: any) => {
+        setTableToDelete(table);
+    };
+
+    const confirmDeleteTable = async () => {
+        if (!tableToDelete) return;
+        setIsDeleting(true);
         try {
-            await api.delete(`/admin/tables/${id}`);
+            await api.delete(`/admin/tables/${tableToDelete.id}`);
             toast.success('Table deleted!');
             fetchTables();
         } catch (err: any) {
             console.error('Failed to delete table:', err);
             toast.error(err.response?.data?.message || 'Failed to delete table');
+        } finally {
+            setIsDeleting(false);
+            setTableToDelete(null);
         }
     };
 
@@ -247,6 +257,17 @@ const AdminTablesBookings: React.FC = () => {
                     </Button>
                 </div>
             </Modal>
+
+            <ConfirmationModal
+                isOpen={!!tableToDelete}
+                title="Delete Table"
+                description="Are you sure you want to delete"
+                highlightText={`Table ${tableToDelete?.tableNumber}?`}
+                confirmText="Delete Table"
+                onConfirm={confirmDeleteTable}
+                onCancel={() => setTableToDelete(null)}
+                loading={isDeleting}
+            />
         </div>
     );
 };

@@ -945,10 +945,18 @@ body[data-theme='dark'] .navbar-theme-toggle:hover {
   animation: spin 0.75s linear infinite;
 }
 
+/* ── Layout Shell ── */
+.customer-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+}
+
 /* ── Page wrapper ── */
 .page-content {
+  flex: 1; /* fills remaining height between navbar and bottom nav */
   padding-top: 0;
-  min-height: calc(100vh - 68px);
   scroll-behavior: auto;
 }
 

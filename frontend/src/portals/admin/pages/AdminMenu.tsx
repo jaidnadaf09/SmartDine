@@ -8,6 +8,7 @@ import GlobalErrorState from '@components/ui/GlobalErrorState';
 import FormField from '../components/FormField';
 import Modal from '@ui/Modal';
 import Select from '@ui/Select';
+import ConfirmationModal from '@ui/ConfirmationModal';
 import '@styles/portals/AdminMenu.css';
 
 interface MenuItem {
@@ -511,33 +512,16 @@ const AdminMenu: React.FC = () => {
                 </div>
             </Modal>
 
-            {/* ── Delete Confirmation Modal ─────────────────── */}
-            <Modal
+            <ConfirmationModal
                 isOpen={!!deleteTarget}
-                onClose={() => setDeleteTarget(null)}
                 title="Delete Dish"
-                size="sm"
-            >
-                <div style={{ marginBottom: '24px', lineHeight: '1.6', color: 'var(--text-primary)' }}>
-                    Are you sure you want to delete <strong>{deleteTarget?.name}</strong>?
-                    <br />
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                        This action cannot be undone and will remove it from the menu.
-                    </span>
-                </div>
-
-                <div className="modal-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '32px' }}>
-                    <Button variant="ghost" onClick={() => setDeleteTarget(null)}>Cancel</Button>
-                    <Button 
-                        variant="danger" 
-                        onClick={handleDeleteDish}
-                        loading={isDeleting}
-                        style={{ padding: '10px 24px' }}
-                    >
-                        Delete Dish
-                    </Button>
-                </div>
-            </Modal>
+                description="Are you sure you want to delete"
+                highlightText={`${deleteTarget?.name}?`}
+                confirmText="Delete Dish"
+                onConfirm={handleDeleteDish}
+                onCancel={() => setDeleteTarget(null)}
+                loading={isDeleting}
+            />
         </div>
     );
 };

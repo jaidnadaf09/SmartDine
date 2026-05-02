@@ -12,6 +12,7 @@ export interface OrderAttributes {
     paymentStatus?: 'pending' | 'paid' | 'failed';
     tableNumber?: number | null;
     orderType?: 'DINE_IN' | 'TAKEAWAY';
+    specialInstructions?: string | null;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -27,6 +28,7 @@ export class Order extends Model<OrderAttributes> implements OrderAttributes {
     public paymentStatus!: 'pending' | 'paid' | 'failed';
     public tableNumber!: number | null;
     public orderType!: 'DINE_IN' | 'TAKEAWAY';
+    public specialInstructions!: string | null;
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
@@ -76,6 +78,10 @@ Order.init(
             type: DataTypes.ENUM('DINE_IN', 'TAKEAWAY'),
             allowNull: false,
             defaultValue: 'TAKEAWAY',
+        },
+        specialInstructions: {
+            type: DataTypes.TEXT,
+            allowNull: true,
         },
     },
     {

@@ -2,11 +2,27 @@ import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import User from '../models/User';
+import RefreshToken from '../models/RefreshToken';
 
 const generateToken = (id: number) => {
     const secret = process.env.JWT_SECRET || 'fallback_secret_key_12345';
-    return jwt.sign({ id }, secret, { expiresIn: '2h' });
+    return jwt.sign({ id }, secret, { expiresIn: '15m' });
+};
+
+const hashToken = (token: string) => {
+    return crypto.createHash('sha256').update(token).digest('hex');
+};
+
+const generateRefreshToken = async (userId: number) => {
+    const rawToken = crypto.randomBytes(64).toString('hex');
+    await RefreshToken.create({
+        userId,
+        token: hashToken(rawToken),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    });
+    return rawToken;
 };
 
 export const registerUser = async (req: Request, res: Response) => {
@@ -40,6 +56,8 @@ export const registerUser = async (req: Request, res: Response) => {
                 role: user.role.toLowerCase(),
                 walletBalance: Number(user.walletBalance || 0),
                 token: generateToken(user.id),
+                accessToken: generateToken(user.id),
+                refreshToken: await generateRefreshToken(user.id),
             });
         } else {
             res.status(400).json({ message: 'Invalid user data' });
@@ -81,6 +99,8 @@ export const loginUser = async (req: Request, res: Response) => {
             role: user.role.toLowerCase(),
             walletBalance: Number(user.walletBalance || user.dataValues?.walletBalance || 0),
             token: generateToken(user.id),
+            accessToken: generateToken(user.id),
+            refreshToken: await generateRefreshToken(user.id),
         });
 
     } catch (error: any) {
@@ -127,6 +147,8 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             walletBalance: Number(user.walletBalance || 0),
             createdAt: user.createdAt,
             token: generateToken(user.id),
+            accessToken: generateToken(user.id),
+            refreshToken: await generateRefreshToken(user.id),
         });
     } catch (error: any) {
         console.error("Update profile error:", error);
@@ -206,5 +228,58 @@ export const removeProfilePhoto = async (req: AuthRequest, res: Response) => {
             success: false,
             message: "Failed to remove photo"
         });
+    }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token is required' });
+    }
+
+    try {
+        const hashedToken = hashToken(refreshToken);
+        const storedToken = await RefreshToken.findOne({ where: { token: hashedToken } });
+
+        if (!storedToken) {
+            return res.status(403).json({ message: 'Invalid refresh token' });
+        }
+
+        if (storedToken.expiresAt < new Date()) {
+            await storedToken.destroy();
+            return res.status(403).json({ message: 'Refresh token expired' });
+        }
+
+        const userId = storedToken.userId;
+
+        // Rotate token
+        await storedToken.destroy();
+        const newAccessToken = generateToken(userId);
+        const newRefreshToken = await generateRefreshToken(userId);
+
+        res.json({
+            token: newAccessToken,
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+        });
+
+    } catch (error: any) {
+        console.error("Refresh token error:", error);
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+export const logoutUser = async (req: AuthRequest, res: Response) => {
+    const { refreshToken } = req.body;
+    try {
+        if (refreshToken) {
+            const hashedToken = hashToken(refreshToken);
+            await RefreshToken.destroy({ where: { token: hashedToken } });
+        }
+        res.json({ message: 'Logged out successfully' });
+    } catch (error: any) {
+        console.error("Logout error:", error);
+        res.status(500).json({ message: "Server Error" });
     }
 };

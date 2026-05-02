@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Op } from 'sequelize';
-import { Order, Table, Booking, User, Review, MenuItem, Notification } from '../models';
+import { Order, Table, Booking, User, Review, MenuItem, Notification, OrderItem } from '../models';
 import { emitOrderUpdate, emitNotification } from '../socket/socketServer';
 
 
@@ -45,11 +45,18 @@ export const getKitchenOrders = async (req: Request, res: Response) => {
                     [Op.in]: ['pending', 'preparing', 'ready']
                 }
             },
-            include: [{
-                model: User,
-                as: 'customer',
-                attributes: ['id', 'name']
-            }],
+            include: [
+                {
+                    model: User,
+                    as: 'customer',
+                    attributes: ['id', 'name']
+                },
+                {
+                    model: OrderItem,
+                    as: 'orderItems',
+                    attributes: ['id', 'dishName', 'quantity', 'price', 'specialInstructions']
+                }
+            ],
             order: [['createdAt', 'ASC']]
         });
         res.json(orders);

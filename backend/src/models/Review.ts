@@ -20,10 +20,12 @@ Review.init(
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: 'user_order_unique',
     },
     orderId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: 'user_order_unique',
     },
     rating: {
       type: DataTypes.FLOAT,

@@ -272,9 +272,16 @@ const KitchenOrders: React.FC = () => {
                                     <span className="section-label">Items</span>
                                     <div className="items-list-modern">
                                         {order.items.map((item, idx) => (
-                                            <div key={idx} className="modern-item-line">
-                                                <span className="item-qty">{item.quantity}x</span>
-                                                <span className="item-name">{item.itemName}</span>
+                                            <div key={idx} className="chef-item-block">
+                                                <div className="chef-item-name">
+                                                    <span className="item-qty">{item.quantity}x</span>
+                                                    <span className="item-name">{item.itemName}</span>
+                                                </div>
+                                                {item.specialInstructions && (
+                                                    <div className="chef-item-instructions">
+                                                        {item.specialInstructions}
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

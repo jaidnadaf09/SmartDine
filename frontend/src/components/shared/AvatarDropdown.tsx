@@ -102,7 +102,7 @@ const AvatarDropdown: React.FC = () => {
               onClick={handleLogout}
               style={{ background: 'transparent', border: 'none', textAlign: 'left', color: '#ef4444' }}
             >
-              <Icons.logout size={16} /> Sign Out
+              <Icons.logout size={16} /> Logout
             </button>
           </div>
         </div>

@@ -14,6 +14,7 @@ import StarRating from '@ui/StarRating';
 import RatingDisplay from '@ui/RatingDisplay';
 import '@styles/portals/Portals.css';
 import '@styles/portals/CustomerPortal.css';
+import { getSocket } from '../../../socket/socketClient';
 
 
 // Using centralized api instance
@@ -108,15 +109,19 @@ const MyOrders: React.FC = () => {
   const loadingOrdersRef = useRef(false);
   const loadingBookingsRef = useRef(false);
 
+  // Real-time synchronization and frame locks
+  const lastSyncRef = useRef(0);
+  const orderQueueRef = useRef<Map<string, any>>(new Map());
+  const orderFrameRef = useRef(false);
+  const bookingQueueRef = useRef<Map<string, any>>(new Map());
+  const bookingFrameRef = useRef(false);
+  const reviewQueueRef = useRef<Map<string, any>>(new Map());
+  const reviewFrameRef = useRef(false);
+
   useEffect(() => {
     mountedRef.current = true;
-    
-    // Lock background visually to prevent "white flash" or theme mismatch
-    document.body.style.background = "#f7efe5"; // Using --bg-primary token value for consistency
-    
     return () => {
       mountedRef.current = false;
-      document.body.style.background = ""; // Clean up on unmount
     };
   }, []);
 
@@ -129,6 +134,7 @@ const MyOrders: React.FC = () => {
 
   const fetchOrders = useCallback(async (isLoadMore = false) => {
     if (loadingOrdersRef.current || !user) return;
+    const fetchTime = Date.now();
     loadingOrdersRef.current = true;
     setLoadingOrders(true);
     try {
@@ -151,21 +157,24 @@ const MyOrders: React.FC = () => {
         };
       });
 
+      if (fetchTime < lastSyncRef.current) return;
       setOrders(prev => isLoadMore ? [...prev, ...processedOrders] : processedOrders);
       const nextOffset = offset + LIMIT;
       ordersOffsetRef.current = nextOffset;
       setHasMoreOrders(nextOffset < totalCount);
     } catch (err: any) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
       console.error('Error fetching orders:', err);
       if (mountedRef.current && !isLoadMore) setError(`Failed to fetch orders: ${err.message}`);
     } finally {
       loadingOrdersRef.current = false;
       if (mountedRef.current) setLoadingOrders(false);
     }
-  }, []);
+  }, [user]);
 
   const fetchBookings = useCallback(async (isLoadMore = false) => {
     if (loadingBookingsRef.current || !user) return;
+    const fetchTime = Date.now();
     loadingBookingsRef.current = true;
     setLoadingBookings(true);
     try {
@@ -175,51 +184,27 @@ const MyOrders: React.FC = () => {
       const bookingsData = res.data.bookings || [];
       const totalCount = res.data.total || 0;
 
+      if (fetchTime < lastSyncRef.current) return;
       setBookings(prev => isLoadMore ? [...prev, ...bookingsData] : bookingsData);
       const nextOffset = offset + LIMIT;
       bookingsOffsetRef.current = nextOffset;
       setHasMoreBookings(nextOffset < totalCount);
     } catch (err: any) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
       console.error('Error fetching bookings:', err);
       if (mountedRef.current && !isLoadMore) setError(`Failed to fetch bookings: ${err.message}`);
     } finally {
       loadingBookingsRef.current = false;
       if (mountedRef.current) setLoadingBookings(false);
     }
-  }, []);
-
-  const fetchOtherData = useCallback(async () => {
-    try {
-      const [upcomingRes, reviewsRes] = await Promise.all([
-        api.get('/bookings/upcoming'),
-        api.get('/reviews/my'),
-      ]);
-
-      const upcomingData = upcomingRes.data;
-      const reviewsData = reviewsRes.data || [];
-
-      if (upcomingData.upcomingBooking) {
-        setUpcomingBooking(upcomingData.upcomingBooking);
-      }
-      
-      // Update orders with their reviews if already loaded
-      setOrders(prevOrders => prevOrders.map(o => ({
-        ...o,
-        review: reviewsData.find((r: any) => r.orderId === o.id)
-      })));
-
-    } catch (err: any) {
-      console.error('Error fetching other data:', err);
-    }
-  }, []);
+  }, [user]);
 
   const fetchUserData = useCallback(async () => {
-    if (isFetchingRef.current) return;
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    if (isFetchingRef.current || !user?.id) return; // wait for auth to resolve
+
+    // Reset pagination to prevent stale data on refetch
+    ordersOffsetRef.current = 0;
+    bookingsOffsetRef.current = 0;
 
     isFetchingRef.current = true;
     setLoading(true);
@@ -227,10 +212,27 @@ const MyOrders: React.FC = () => {
     try {
       await Promise.all([
         fetchOrders(false),
-        fetchBookings(false),
-        fetchOtherData()
+        fetchBookings(false)
       ]);
+
+      const [upcomingRes, reviewsRes] = await Promise.all([
+        api.get('/bookings/upcoming'),
+        api.get('/reviews/my'),
+      ]);
+
+      if (!mountedRef.current) return;
+
+      if (upcomingRes.data?.upcomingBooking) {
+        setUpcomingBooking(upcomingRes.data.upcomingBooking);
+      }
+      
+      const reviewsData = reviewsRes.data || [];
+      setOrders(prevOrders => prevOrders.map(o => ({
+        ...o,
+        review: reviewsData.find((r: any) => r.orderId === o.id) || o.review
+      })));
     } catch (err: any) {
+      if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
       if (mountedRef.current) setError(`Failed to fetch your data: ${err.message}`);
     } finally {
       if (mountedRef.current) {
@@ -238,26 +240,173 @@ const MyOrders: React.FC = () => {
         setLoading(false);
       }
     }
-  }, []);
+  }, [user?.id, fetchOrders, fetchBookings]);
 
   useEffect(() => {
-    fetchUserData();
+    if (user?.id) {
+      fetchUserData();
+    }
+  }, [user?.id, fetchUserData]);
 
-    const interval = setInterval(() => {
-      fetchOtherData(); // lightweight polling only
-    }, 60000);
+  useEffect(() => {
+    if (!user) return;
+    
+    const socket = getSocket();
 
-    return () => clearInterval(interval);
-  }, []);
+    const flushOrders = () => {
+      if (!mountedRef.current || orderQueueRef.current.size === 0) return;
+      const batch = Array.from(orderQueueRef.current.values());
+      orderQueueRef.current.clear();
+      
+      setOrders(prev => {
+        const updated = [...prev];
+        const indexMap = new Map<string, number>();
+        updated.forEach((o, i) => indexMap.set(String(o.id), i));
+
+        batch.forEach(data => {
+          const key = String(data.id);
+          const idx = indexMap.get(key);
+          if (idx !== undefined) {
+            updated[idx] = { ...updated[idx], ...data };
+          } else {
+            updated.unshift(data);
+          }
+        });
+        return updated;
+      });
+    };
+
+    const flushBookings = () => {
+      if (!mountedRef.current || bookingQueueRef.current.size === 0) return;
+      const batch = Array.from(bookingQueueRef.current.values());
+      bookingQueueRef.current.clear();
+      
+      setBookings(prev => {
+        const updated = [...prev];
+        const indexMap = new Map<string, number>();
+        updated.forEach((b, i) => indexMap.set(String(b.id), i));
+
+        batch.forEach(data => {
+          const key = String(data.id);
+          const idx = indexMap.get(key);
+          if (idx !== undefined) {
+            updated[idx] = { ...updated[idx], ...data };
+          } else {
+            updated.unshift(data);
+          }
+        });
+        return updated;
+      });
+    };
+
+    const flushReviews = () => {
+      if (!mountedRef.current || reviewQueueRef.current.size === 0) return;
+      const batch = Array.from(reviewQueueRef.current.values());
+      reviewQueueRef.current.clear();
+      
+      setOrders(prev => {
+        const updated = [...prev];
+        const indexMap = new Map<string, number>();
+        updated.forEach((o, i) => indexMap.set(String(o.id), i));
+
+        batch.forEach(data => {
+          const key = String(data.orderId);
+          const idx = indexMap.get(key);
+          if (idx !== undefined) {
+            updated[idx] = { ...updated[idx], review: data };
+          }
+        });
+        return updated;
+      });
+    };
+
+    const handleOrderUpdated = (data: any) => {
+      lastSyncRef.current = Date.now();
+      orderQueueRef.current.set(String(data.id), data);
+      if (!orderFrameRef.current) {
+        orderFrameRef.current = true;
+        requestAnimationFrame(() => {
+          if (mountedRef.current) {
+            flushOrders();
+          }
+          orderFrameRef.current = false;
+        });
+      }
+    };
+
+    const handleBookingUpdated = (data: any) => {
+      lastSyncRef.current = Date.now();
+      bookingQueueRef.current.set(String(data.id), data);
+      if (!bookingFrameRef.current) {
+        bookingFrameRef.current = true;
+        requestAnimationFrame(() => {
+          if (mountedRef.current) {
+            flushBookings();
+          }
+          bookingFrameRef.current = false;
+        });
+      }
+      
+      setUpcomingBooking((prev: any) => {
+        if (prev && String(prev.id) === String(data.id)) {
+          if (data.status === 'cancelled' || data.status === 'completed') return null;
+          return { ...prev, ...data };
+        }
+        return prev;
+      });
+    };
+
+    const handleReviewUpdated = (data: any) => {
+      lastSyncRef.current = Date.now();
+      reviewQueueRef.current.set(String(data.orderId), data);
+      if (!reviewFrameRef.current) {
+        reviewFrameRef.current = true;
+        requestAnimationFrame(() => {
+          if (mountedRef.current) {
+            flushReviews();
+          }
+          reviewFrameRef.current = false;
+        });
+      }
+    };
+
+    socket.on('order:updated', handleOrderUpdated);
+    socket.on('booking:updated', handleBookingUpdated);
+    socket.on('review:updated', handleReviewUpdated);
+    
+    // Resync and UX on reconnect
+    const handleConnect = () => {
+      toast.dismiss('socket-disconnect');
+      toast.success("Reconnected!", { id: 'socket-connect', duration: 2000 });
+      fetchUserData();
+    };
+    
+    const handleDisconnect = () => {
+      toast.error("Connection lost. Reconnecting...", { id: 'socket-disconnect' });
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
+    return () => {
+      socket.off('order:updated', handleOrderUpdated);
+      socket.off('booking:updated', handleBookingUpdated);
+      socket.off('review:updated', handleReviewUpdated);
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
+    };
+  }, [user, fetchUserData]);
 
   const handleCancelBooking = async () => {
     if (!bookingToCancel) return;
     setCancellingId(bookingToCancel.id);
+
+    // Optimistic UI update
+    setBookings((prev) => prev.map((b) => b.id === bookingToCancel.id ? { ...b, status: 'cancelled' } : b));
+
     try {
       const res = await api.delete(`/bookings/${bookingToCancel.id}/cancel`);
       const data = res.data;
-
-      setBookings((prev) => prev.map((b) => b.id === bookingToCancel.id ? { ...b, status: 'cancelled' } : b));
 
       if (data.walletBalance !== undefined && user) {
         updateUser({ walletBalance: data.walletBalance });
@@ -266,6 +415,8 @@ const MyOrders: React.FC = () => {
         toast.success('Booking cancelled successfully.');
       }
     } catch (err: any) {
+      // Functional rollback on failure to avoid stale closure
+      setBookings((prev) => prev.map((b) => b.id === bookingToCancel.id ? { ...b, status: 'pending' } : b));
       toast.error(err.message || 'Could not cancel booking.');
     } finally {
       setCancellingId(null);
@@ -276,21 +427,23 @@ const MyOrders: React.FC = () => {
   const handleCancelOrder = async () => {
     if (!orderToCancel) return;
     setCancellingOrderId(orderToCancel.id);
+
+    // Optimistic UI update
+    setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: 'cancelled' } : o));
+
     try {
       const res = await api.post(`/orders/${orderToCancel.id}/cancel`);
       const data = res.data;
       toast.success('Order cancelled. Refund credited to your wallet.');
 
-      setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: 'cancelled' } : o));
-
       if (data.walletBalance !== undefined && user) {
         updateUser({ walletBalance: data.walletBalance });
-      } else {
-        fetchUserData();
       }
 
       setOrderToCancel(null);
     } catch (err: any) {
+      // Functional rollback on failure to avoid stale closure
+      setOrders(prev => prev.map(o => o.id === orderToCancel.id ? { ...o, status: 'pending' } : o));
       toast.error(err.message || 'Could not cancel order.');
     } finally {
       setCancellingOrderId(null);
@@ -305,21 +458,34 @@ const MyOrders: React.FC = () => {
       return;
     }
 
+    const targetOrderId = reviewOrder.id;
+    const optimisticReview = { rating, comment };
+
     setSubmittingReview(true);
     try {
-      await api.post('/reviews', {
-        orderId: reviewOrder.id,
-        rating,
-        comment
-      });
+      if (reviewOrder.review) {
+        // ✅ EDIT FLOW
+        await api.put(`/reviews/${targetOrderId}`, { rating, comment });
+      } else {
+        // ✅ CREATE FLOW
+        await api.post('/reviews', { orderId: targetOrderId, rating, comment });
+      }
 
-      toast.success('Thank you for your feedback!');
+      // ✅ Instant optimistic UI update — no socket wait needed
+      setOrders(prev =>
+        prev.map(o =>
+          o.id === targetOrderId
+            ? { ...o, review: optimisticReview }
+            : o
+        )
+      );
+
+      toast.success('Review saved!');
       setReviewOrder(null);
       setRating(5);
       setComment('');
-      fetchUserData();
     } catch (err: any) {
-      toast.error(err.message || 'Could not submit review.');
+      toast.error(err?.response?.data?.message || err.message || 'Could not submit review.');
     } finally {
       setSubmittingReview(false);
     }
@@ -731,18 +897,27 @@ const MyOrders: React.FC = () => {
                     <div key={order.id} className="cp-card">
                       <div className="cp-card-header">
                         <span className="cp-card-id">#{String(order.id).slice(-6).toUpperCase()}</span>
-                        {order.status && (
-                          <span className={getStatusClass(order.status)}>{order.status}</span>
-                        )}
+                        <div className="cp-card-header-right">
+                          {order.status && (
+                            <span className={getStatusClass(order.status)}>{order.status}</span>
+                          )}
+                          {order.review && order.status?.toLowerCase() === 'completed' && (
+                            <button
+                              className="cp-edit-review-header-btn"
+                              onClick={() => {
+                                setReviewOrder(order);
+                                setRating(order.review!.rating);
+                                setComment(order.review!.comment);
+                              }}
+                            >
+                              <Icons.edit size={13} />
+                              Edit
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="cp-order-total">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
-                          Number(order.totalAmount || order.total || 0)
-                        )}
-                      </div>
-
-                      <div className="cp-details-row" style={{ marginBottom: 12 }}>
+                      <div className="cp-details-row order-info-grid" style={{ marginBottom: 12 }}>
                         <div className="cp-detail-item">
                           <Icons.calendar className="cp-detail-icon" size={16} />
                           <div>
@@ -758,6 +933,16 @@ const MyOrders: React.FC = () => {
                             <div className="cp-detail-label">Time</div>
                             <div className="cp-detail-value">
                               {formatTime(order.createdAt)}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="cp-detail-item price">
+                          <div>
+                            <div className="cp-detail-label">Amount</div>
+                            <div className="cp-detail-value">
+                              {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(
+                                Number(order.totalAmount || order.total || 0)
+                              )}
                             </div>
                           </div>
                         </div>
@@ -825,45 +1010,34 @@ const MyOrders: React.FC = () => {
                       ) : null}
 
                       {order.status?.toLowerCase() === 'completed' && (
-                        <div className="cp-review-section" style={{ marginTop: 14, borderTop: '1px solid var(--card-border)', paddingTop: 14 }}>
-                          {order.review ? (
-                            <div className="cp-submitted-review" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                  <Icons.check size={14} /> Review Submitted
-                                </span>
-                                <div className="cp-review-stars">
-                                  <RatingDisplay rating={order.review.rating} size={14} />
-                                </div>
+                        order.review ? (
+                          <div className="cp-review-row">
+                            {/* LEFT: ICON + TITLE */}
+                            <div className="cp-review-left">
+                              <div className="cp-review-icon">
+                                <Icons.check size={14} />
                               </div>
-                              {order.review.comment && (
-                                <p className="cp-review-comment" style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', fontStyle: 'italic', background: 'rgba(0,0,0,0.02)', padding: '8px 12px', borderRadius: '8px', borderLeft: '3px solid #10b981' }}>
-                                  "{order.review.comment}"
-                                </p>
-                              )}
-                              
-                              <button
-                                onClick={() => {
-                                  setReviewOrder(order);
-                                  setRating(order.review!.rating);
-                                  setComment(order.review!.comment);
-                                }}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: 'var(--brand-primary)',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  padding: '4px 0',
-                                  alignSelf: 'flex-start',
-                                  textDecoration: 'underline'
-                                }}
-                              >
-                                Edit Review
-                              </button>
+                              <span className="cp-review-title">REVIEW SUBMITTED</span>
                             </div>
-                          ) : (
+
+                            {/* MESSAGE — flex:1 spacer */}
+                            <div className="cp-review-message">
+                              Thank you for your feedback!
+                            </div>
+
+                            {/* RIGHT: RATING — pinned to edge via margin-left: auto */}
+                            <div className="cp-review-rating">
+                              <span className="cp-review-label">YOUR RATING</span>
+                              <div className="cp-review-stars">
+                                <RatingDisplay rating={order.review.rating} size={18} />
+                                <span className="cp-review-score">
+                                  {order.review.rating.toFixed(1)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="cp-review-container">
                             <button
                               className="cp-review-btn"
                               onClick={() => {
@@ -871,12 +1045,11 @@ const MyOrders: React.FC = () => {
                                 setRating(5);
                                 setComment('');
                               }}
-                              style={{ width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--brand-primary-light)', color: 'var(--brand-primary)', border: '1px solid var(--card-border)', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             >
-                              <Icons.star size={16} /> Rate & Review
+                              <Icons.star size={16} /> Rate &amp; Review
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )
                       )}
                     </div>
                   ))}

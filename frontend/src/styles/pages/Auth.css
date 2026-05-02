@@ -448,6 +448,8 @@ body[data-theme="light"] .auth-back-btn {
   text-align: center;
   color: var(--text-secondary);
   font-size: 0.95rem;
+  margin-top: 16px;
+  opacity: 0.85;
 }
 
 body[data-theme="light"] .auth-link {

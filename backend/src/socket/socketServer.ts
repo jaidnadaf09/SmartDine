@@ -80,6 +80,14 @@ export const emitBookingUpdate = (booking: any): void => {
     }
 };
 
+export const emitReviewUpdate = (review: any): void => {
+    if (!io) return;
+    io.to("admin").emit("review:updated", review);
+    if (review && review.userId) {
+        io.to(`user:${review.userId}`).emit("review:updated", review);
+    }
+};
+
 export const getIO = (): Server => {
     if (!io) throw new Error("[WS] Socket.io not initialized");
     return io;

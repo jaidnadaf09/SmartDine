@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/authMiddleware';
 import { Review, Order, User } from '../models';
-import { emitNotification } from '../socket/socketServer';
+import { emitNotification, emitReviewUpdate } from '../socket/socketServer';
 
 // @desc    Create a review
 // @route   POST /api/reviews
@@ -29,9 +29,11 @@ export const createReview = async (req: AuthRequest, res: Response) => {
         }
 
         // Check if review already exists
-        const existingReview = await Review.findOne({ where: { orderId } });
-        if (existingReview) {
-            return res.status(400).json({ message: 'You have already reviewed this order' });
+        const existing = await Review.findOne({
+            where: { orderId, userId }
+        });
+        if (existing) {
+            return res.status(400).json({ message: 'Review already exists' });
         }
 
         const review = await Review.create({
@@ -43,6 +45,7 @@ export const createReview = async (req: AuthRequest, res: Response) => {
 
         // Notify Admin of new review
         emitNotification(review.userId!, { type: 'created' });
+        emitReviewUpdate(review);
 
         res.status(201).json(review);
     } catch (error: any) {
@@ -91,5 +94,30 @@ export const getAllReviews = async (req: Request, res: Response) => {
     } catch (error: any) {
         console.error('Error fetching all reviews:', error);
         res.status(500).json({ message: error.message || 'Server Error' });
+    }
+};
+
+export const updateReview = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user!.id;
+        const { orderId } = req.params;
+        const { rating, comment } = req.body;
+        
+        const review = await Review.findOne({
+            where: { orderId, userId }
+        });
+        
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found' });
+        }
+        
+        review.rating = rating;
+        review.comment = comment;
+        await review.save();
+        
+        res.json(review);
+    } catch (err) {
+        console.error('Error updating review:', err);
+        res.status(500).json({ message: 'Failed to update review' });
     }
 };

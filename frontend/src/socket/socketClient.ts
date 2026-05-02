@@ -13,7 +13,7 @@ let socketInstance: Socket | null = null;
  * Reconnects infinitely to ensure real-time stability.
  */
 export const getSocket = (): Socket => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
 
   if (!socketInstance) {
     socketInstance = io(SOCKET_URL, {
@@ -47,4 +47,11 @@ export const getSocket = (): Socket => {
   }
 
   return socketInstance;
+};
+
+export const reconnectSocket = (): Socket | null => {
+  if (socketInstance) {
+    socketInstance.disconnect();
+  }
+  return getSocket();
 };
