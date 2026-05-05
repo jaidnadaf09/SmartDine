@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '@utils/api';
 import { formatTime } from '@utils/dateFormatter';
 import { useAuth } from '@context/AuthContext';
@@ -48,7 +49,8 @@ interface Order {
 }
 
 const KitchenOrders: React.FC = () => {
-  useAuth();
+    useAuth();
+    const navigate = useNavigate();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(Date.now());
@@ -205,14 +207,29 @@ const KitchenOrders: React.FC = () => {
 
     return (
         <div className="chef-page">
-
-
+            <div className="chef-live-indicator" style={{ marginBottom: '20px' }}>
+              <span className="chef-live-dot" />
+              <span>Live Orders Monitoring</span>
+            </div>
 
             {orders.length === 0 ? (
-                <div className="admin-card" style={{ textAlign: 'center', padding: '60px 20px', background: 'transparent' }}>
-                    <div className="chef-empty-icon" style={{ opacity: 0.3 }}><Icons.utensils size={64} /></div>
-                    <h3 className="chef-empty-title" style={{ marginTop: '20px' }}>No Active Orders</h3>
-                    <p className="chef-empty-sub">The kitchen is all caught up. New orders will appear here automatically.</p>
+                <div className="empty-state-card" style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div className="chef-empty-icon" style={{ opacity: 0.5 }}><Icons.utensils size={64} color="var(--brand-primary)" /></div>
+                    <h3 className="chef-empty-title" style={{ marginTop: '20px', fontSize: '1.4rem' }}>Kitchen is all caught up</h3>
+                    <p className="chef-empty-sub" style={{ opacity: 0.7, marginBottom: '24px' }}>New orders will appear here automatically in real time</p>
+                    
+                    <div className="chef-empty-actions" style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                      <button className="btn-secondary-chef" onClick={() => navigate('/chef/menu')}>
+                        View Menu
+                      </button>
+                      <button className="btn-primary-chef" onClick={() => navigate('/chef/order-history')}>
+                        View Order History
+                      </button>
+                    </div>
+
+                    <span className="auto-refresh-note" style={{ fontSize: '0.75rem', opacity: 0.5, marginTop: '30px', display: 'block' }}>
+                      Auto-refreshing every few seconds
+                    </span>
                 </div>
             ) : (
                 <div className="chef-cards-grid">

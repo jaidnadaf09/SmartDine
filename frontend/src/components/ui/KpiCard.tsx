@@ -8,6 +8,8 @@ interface KpiCardProps {
   trend?: number;
   trendLabel?: string;
   sparklineData?: number[];
+  onClick?: () => void;
+  className?: string;
 }
 
 const KpiCard: React.FC<KpiCardProps> = ({
@@ -17,7 +19,9 @@ const KpiCard: React.FC<KpiCardProps> = ({
   color,
   trend,
   trendLabel,
-  sparklineData = []
+  sparklineData = [],
+  onClick,
+  className
 }) => {
   const [displayValue, setDisplayValue] = useState<string | number>(typeof value === 'string' ? value : 0);
 
@@ -52,7 +56,10 @@ const KpiCard: React.FC<KpiCardProps> = ({
   }, [value]);
 
   return (
-    <div className={`sd-kpi-card sd-kpi-${color}`}>
+    <div 
+      className={`sd-kpi-card sd-kpi-${color} ${className || ""}`}
+      onClick={onClick}
+    >
       <div className="sd-kpi-top">
         <div className="sd-kpi-icon">{icon}</div>
         <div className="sd-kpi-title">{title}</div>

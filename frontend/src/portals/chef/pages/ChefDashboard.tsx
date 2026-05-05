@@ -24,6 +24,7 @@ const ChefDashboard: React.FC = () => {
     completedAllTime: 0,
     availableDishesToday: 0,
   });
+  const [flashPending, setFlashPending] = useState(false);
   const [loading, setLoading] = useState(true);
   const isFetchingRef = useRef(false);
   const hasFetchedRef = useRef(false);
@@ -82,6 +83,9 @@ const ChefDashboard: React.FC = () => {
     const socket = getSocket();
     
     const handleNewOrder = () => {
+        setFlashPending(true);
+        setTimeout(() => setFlashPending(false), 1200);
+
         setStats(prev => ({ ...prev, pendingOrders: prev.pendingOrders + 1 }));
         // Also fetch to stay sync with backend logic (discounts, items etc)
         fetchStats(); 
@@ -124,14 +128,22 @@ const ChefDashboard: React.FC = () => {
   return (
     <div className="chef-dashboard-page">
       <div className="chef-page">
+        {/* Live Indicator */}
+        <div className="chef-live-indicator">
+          <span className="chef-live-dot" />
+          <span>Live Kitchen Data</span>
+        </div>
+
         {/* Stat Cards */}
         <div className="chef-stats-grid">
           <KpiCard
             title="PENDING"
-            value={stats.pendingOrders}
+            value={stats.pendingOrders === 0 ? "—" : stats.pendingOrders}
             icon={<Icons.clock size={18} />}
             color="orange"
-            trendLabel="live queue"
+            trendLabel={stats.pendingOrders === 0 ? "no active orders" : "live queue"}
+            onClick={() => navigate('/chef/orders')}
+            className={`chef-kpi-clickable chef-kpi-primary ${flashPending ? 'chef-kpi-flash' : ''}`}
           />
 
           <KpiCard
@@ -140,6 +152,8 @@ const ChefDashboard: React.FC = () => {
             icon={<Icons.checkCircle size={18} />}
             color="blue"
             trendLabel="since morning"
+            onClick={() => navigate('/chef/order-history')}
+            className="chef-kpi-clickable"
           />
 
           <KpiCard
@@ -148,6 +162,8 @@ const ChefDashboard: React.FC = () => {
             icon={<Icons.chart size={18} />}
             color="green"
             trendLabel="total performance"
+            onClick={() => navigate('/chef/order-history')}
+            className="chef-kpi-clickable"
           />
 
           <KpiCard
@@ -156,18 +172,26 @@ const ChefDashboard: React.FC = () => {
             icon={<Icons.utensilsCrossed size={18} />}
             color="purple"
             trendLabel="active menu"
+            onClick={() => navigate('/chef/menu')}
+            className="chef-kpi-clickable"
           />
         </div>
 
+        {stats.pendingOrders === 0 && (
+          <div className="chef-empty-state">
+            Kitchen is calm — no pending orders
+          </div>
+        )}
+
         {/* Quick Actions */}
         <div className="chef-section">
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '20px', color: 'var(--text-primary)' }}>Quick Management</h2>
+          <h2 className="chef-section-title">Quick Management</h2>
           <div className="chef-quick-grid">
             {quickLinks.map((ql) => (
-              <button key={ql.path} className="admin-card" style={{ border: '1px solid var(--card-border)', display: 'flex', alignItems: 'center', gap: '15px', padding: '15px 24px', cursor: 'pointer', textAlign: 'left', width: '100%' }} onClick={() => navigate(ql.path)}>
-                <span style={{ color: 'var(--brand-primary)' }}>{ql.icon}</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{ql.label}</span>
-                <Icons.right size={16} style={{ marginLeft: 'auto', opacity: 0.5 }} />
+              <button key={ql.path} className="chef-quick-card" onClick={() => navigate(ql.path)}>
+                <span className="chef-quick-icon">{ql.icon}</span>
+                <span>{ql.label}</span>
+                <Icons.right size={16} className="chef-quick-arrow" />
               </button>
             ))}
           </div>

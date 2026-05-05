@@ -37,6 +37,10 @@ interface DataTableProps<T> {
     totalCount?: number;
     currentPage?: number;
     onPageChange?: (page: number) => void;
+    containerClassName?: string;
+    controlsClassName?: string;
+    tableWrapperClassName?: string;
+    rowClassName?: string;
 }
 
 const DataTable = <T extends { id: string | number }>({ 
@@ -56,7 +60,11 @@ const DataTable = <T extends { id: string | number }>({
     isServerSide = false,
     totalCount = 0,
     currentPage: parentPage,
-    onPageChange
+    onPageChange,
+    containerClassName,
+    controlsClassName,
+    tableWrapperClassName,
+    rowClassName
 }: DataTableProps<T>) => {
     const [localPage, setLocalPage] = useState(1);
     const currentPage = isServerSide ? (parentPage || 1) : localPage;
@@ -99,8 +107,8 @@ const DataTable = <T extends { id: string | number }>({
     };
 
     return (
-        <div className="admin-table-container">
-            <div className="admin-table-header menu-controls-row" style={{ 
+        <div className={`admin-table-container ${containerClassName || ''}`.trim()}>
+            <div className={`admin-table-header menu-controls-row ${controlsClassName || ''}`.trim()} style={{ 
                 padding: '1.25rem 1.5rem', 
                 borderBottom: '1px solid var(--border-color)',
                 background: 'var(--bg-card)'
@@ -162,7 +170,7 @@ const DataTable = <T extends { id: string | number }>({
                 )}
             </div>
 
-            <div style={{ overflow: 'visible' }}>
+            <div className={tableWrapperClassName} style={{ overflow: 'visible' }}>
                 <table className="admin-table">
                     <thead>
                         <tr>
@@ -175,7 +183,7 @@ const DataTable = <T extends { id: string | number }>({
                         {paginatedData.map((item) => (
                             <tr 
                                 key={item.id} 
-                                className="order-row"
+                                className={`order-row ${rowClassName || ''}`.trim()}
                                 onClick={() => onRowClick?.(item)}
                                 style={{ cursor: onRowClick ? 'pointer' : 'default' }}
                             >

@@ -61,25 +61,14 @@ const ChefMenu: React.FC = () => {
             header: 'Dish Name', 
             key: 'name',
             render: (item: MenuItem) => (
-                <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '1rem' }}>{item.name}</span>
+                <span className="dish-name">{item.name}</span>
             )
         },
         { 
             header: 'Category', 
             key: 'category',
             render: (item: MenuItem) => (
-                <span style={{
-                    fontSize: '0.8rem',
-                    fontWeight: 600,
-                    color: 'var(--brand-primary)',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    whiteSpace: 'nowrap',
-                    display: 'inline-block',
-                    letterSpacing: '-0.01em'
-                }}>
+                <span className="category-badge">
                     {item.category}
                 </span>
             )
@@ -87,22 +76,13 @@ const ChefMenu: React.FC = () => {
         { 
             header: 'Price', 
             key: 'price',
-            render: (item: MenuItem) => <span style={{ fontWeight: 800, color: 'var(--brand-primary)', fontSize: '1.05rem' }}>₹{item.price}</span>
+            render: (item: MenuItem) => <span className="price">₹{item.price}</span>
         },
         { 
             header: 'Description', 
             key: 'description',
             render: (item: MenuItem) => (
-                <span style={{ 
-                    fontSize: '0.85rem', 
-                    color: 'var(--text-muted)',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
-                    lineHeight: 1.4,
-                    maxWidth: '250px'
-                }}>
+                <span className="description">
                     {item.description || 'No description provided.'}
                 </span>
             )
@@ -141,13 +121,8 @@ const ChefMenu: React.FC = () => {
                             boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
                         }}></div>
                     </div>
-                    <span style={{ 
-                        fontSize: '0.85rem', 
-                        fontWeight: 600, 
-                        color: item.status === 'available' ? 'var(--brand-primary)' : 'var(--text-muted)',
-                        minWidth: '70px'
-                    }}>
-                        {item.status === 'available' ? 'Available' : 'Unavailable'}
+                    <span className={item.status === 'available' ? "status-on" : "status-off"}>
+                        {item.status === 'available' ? 'Available' : 'Hidden'}
                     </span>
                 </div>
             )
@@ -213,6 +188,11 @@ const ChefMenu: React.FC = () => {
                     onClearAll={clearAllFilters}
                     searchPlaceholder="Search dishes and descriptions..."
                     headerActions={null}
+                    containerClassName="chef-menu-container"
+                    controlsClassName="chef-menu-controls"
+                    tableWrapperClassName="chef-menu-table-wrapper"
+                    rowClassName="chef-menu-row"
+                    emptyMessage="No dishes found. Try adjusting filters."
                 />
             )}
         </div>
